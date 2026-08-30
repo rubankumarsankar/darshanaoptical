@@ -1,97 +1,141 @@
-import Link from "next/link";
-import {
-  Glasses,
-  Share2,
-  Camera,
-  MapPin,
-  Phone,
-  Mail,
-} from "lucide-react";
+"use client";
 
-const COLUMNS = [
-  {
-    title: "Explore",
-    links: ["Eye Testing", "Frames", "Lenses", "Progressive Lenses", "Offers"],
-  },
-  {
-    title: "Quick Links",
-    links: ["Book Eye Test", "Gallery", "About Us", "Contact Us", "Store Location"],
-  },
-];
+import Link from "next/link";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { FaInstagram, FaFacebookF, FaWhatsapp } from "react-icons/fa6";
+import { useBooking } from "../booking/BookingContext";
 
 export default function Footer() {
+  const { openBooking } = useBooking();
+
   return (
-    <footer id="contact" className="bg-surface-dark text-neutral-300">
-      <div className="container-brand grid grid-cols-1 gap-12 pt-16 pb-8 sm:grid-cols-2 lg:grid-cols-5 lg:gap-12 lg:pt-[72px]">
-        <div className="lg:col-span-2">
-          <div className="mb-4 flex items-center">
+    <footer id="contact" className="bg-[#141517] text-neutral-400 text-xs">
+      <div className="container-brand grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:gap-6">
+        {/* Col 1: Brand Info */}
+        <div className="space-y-4">
+          <div className="flex items-center">
             <img
               src="/logo.png"
               alt="Darshana Optical Logo"
-              className="h-10 sm:h-12 w-auto object-contain brightness-0 invert"
+              className="h-9 w-auto object-contain brightness-0 invert"
             />
           </div>
-          <p className="mb-6 max-w-xs text-sm leading-6 text-neutral-400">
-            Quality eye care, stylish eyewear. Better vision for a better
-            life.
+          <p className="text-neutral-400 text-xs leading-relaxed max-w-[200px]">
+            Quality eye care. Stylish eyewear. Better vision for a better life.
           </p>
-          <div className="flex items-center gap-3">
-            {[Share2, Camera].map((Icon, i) => (
-              <span
-                key={i}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border-dark text-neutral-300 transition-colors duration-fast hover:border-brand-orange hover:text-brand-orange"
-              >
-                <Icon size={16} strokeWidth={2} />
-              </span>
-            ))}
+          <div className="flex items-center gap-2 pt-1">
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-brand-orange hover:text-white transition-colors"
+            >
+              <FaInstagram size={13} />
+            </a>
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Twitter"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-brand-orange hover:text-white transition-colors"
+            >
+              <span className="text-[11px] font-bold">X</span>
+            </a>
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Facebook"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-brand-orange hover:text-white transition-colors"
+            >
+              <FaFacebookF size={12} />
+            </a>
           </div>
         </div>
 
-        {COLUMNS.map((col) => (
-          <div key={col.title}>
-            <h4 className="mb-5 text-sm font-semibold text-white">{col.title}</h4>
-            <ul className="space-y-3">
-              {col.links.map((link) => (
-                <li key={link}>
-                  <Link
-                    href="#"
-                    className="text-sm text-neutral-400 transition-colors duration-fast hover:text-brand-orange"
-                  >
-                    {link}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-
+        {/* Col 2: Explore */}
         <div>
-          <h4 className="mb-5 text-sm font-semibold text-white">Contact Us</h4>
-          <ul className="space-y-3 text-sm text-neutral-400">
+          <h4 className="mb-3 text-xs font-bold text-white uppercase tracking-wider">
+            Explore
+          </h4>
+          <ul className="space-y-2 text-xs text-neutral-400">
+            <li><Link href="/eye-testing" className="hover:text-brand-orange transition-colors">Eye Testing</Link></li>
+            <li><Link href="/frames" className="hover:text-brand-orange transition-colors">Frames</Link></li>
+            <li><Link href="/lenses" className="hover:text-brand-orange transition-colors">Lenses</Link></li>
+            <li><Link href="/progressive" className="hover:text-brand-orange transition-colors">Progressive Lenses</Link></li>
+            <li><Link href="/offers" className="hover:text-brand-orange transition-colors">Offers</Link></li>
+          </ul>
+        </div>
+
+        {/* Col 3: Quick Links */}
+        <div>
+          <h4 className="mb-3 text-xs font-bold text-white uppercase tracking-wider">
+            Quick Links
+          </h4>
+          <ul className="space-y-2 text-xs text-neutral-400">
+            <li>
+              <button onClick={openBooking} className="hover:text-brand-orange transition-colors cursor-pointer text-left">
+                Book Eye Test
+              </button>
+            </li>
+            <li><Link href="/gallery" className="hover:text-brand-orange transition-colors">Gallery</Link></li>
+            <li><Link href="/about" className="hover:text-brand-orange transition-colors">About Us</Link></li>
+            <li><Link href="/contact" className="hover:text-brand-orange transition-colors">Contact Us</Link></li>
+            <li><Link href="/contact" className="hover:text-brand-orange transition-colors">Store Location</Link></li>
+          </ul>
+        </div>
+
+        {/* Col 4: Contact Us */}
+        <div>
+          <h4 className="mb-3 text-xs font-bold text-white uppercase tracking-wider">
+            Contact Us
+          </h4>
+          <ul className="space-y-2 text-xs text-neutral-400">
+            <li className="flex items-center gap-2">
+              <Phone size={13} className="text-neutral-400 shrink-0" />
+              <a href="tel:+919876543210" className="hover:text-brand-orange">+91 98765 43210</a>
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail size={13} className="text-neutral-400 shrink-0" />
+              <a href="mailto:info@darshanaoptical.com" className="hover:text-brand-orange">info@darshanaoptical.com</a>
+            </li>
             <li className="flex items-start gap-2">
-              <MapPin size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-brand-orange" />
-              Main Road, Tiruppattur, Tamil Nadu - 635601
+              <MapPin size={13} className="text-neutral-400 shrink-0 mt-0.5" />
+              <span>Tirupattur, Tamil Nadu - 635601</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Col 5: Opening Hours */}
+        <div>
+          <h4 className="mb-3 text-xs font-bold text-white uppercase tracking-wider">
+            Opening Hours
+          </h4>
+          <ul className="space-y-2 text-xs text-neutral-400">
+            <li className="flex items-center gap-2">
+              <Clock size={13} className="text-neutral-400 shrink-0" />
+              <span>Mon - Sat : 9:30 AM - 8:30 PM</span>
             </li>
             <li className="flex items-center gap-2">
-              <Phone size={16} strokeWidth={2} className="shrink-0 text-brand-orange" />
-              +91 98765 43210
+              <Clock size={13} className="text-neutral-400 shrink-0" />
+              <span>Sunday : 10:00 AM - 2:00 PM</span>
             </li>
-            <li className="flex items-center gap-2">
-              <Mail size={16} strokeWidth={2} className="shrink-0 text-brand-orange" />
-              info@darshanaoptical.com
+            <li className="pt-1 text-brand-orange font-bold">
+              We are open all 7 days!
             </li>
           </ul>
         </div>
       </div>
 
-      <div className="border-t border-border-dark">
-        <div className="container-brand flex flex-col items-center justify-between gap-3 py-6 text-xs text-neutral-500 sm:flex-row">
-          <span>© 2026 Darshana Optical. All rights reserved.</span>
+      <div className="border-t border-neutral-800">
+        <div className="container-brand flex flex-col items-center justify-between gap-3 py-4 text-[11px] text-neutral-500 sm:flex-row">
+          <span>© 2024 Darshana Optical. All rights reserved.</span>
           <div className="flex items-center gap-6">
-            <Link href="#" className="hover:text-brand-orange">
+            <Link href="/privacy-policy" className="hover:text-brand-orange">
               Privacy Policy
             </Link>
-            <Link href="#" className="hover:text-brand-orange">
+            <Link href="/terms-conditions" className="hover:text-brand-orange">
               Terms &amp; Conditions
             </Link>
           </div>

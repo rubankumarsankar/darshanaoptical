@@ -1,132 +1,127 @@
 "use client";
 
-import { Car, Monitor, BookOpen, type LucideIcon } from "lucide-react";
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { useRef } from "react";
-import Button from "../ui/Button";
-import Reveal from "../motion/Reveal";
+import { Car, Monitor, BookOpen, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { EASE_STANDARD } from "../../lib/motion";
 
 const ZONES = [
-  { icon: Car, title: "Distance", desc: "Drive, TV, Outdoors" },
-  { icon: Monitor, title: "Intermediate", desc: "Computer, Dashboard" },
-  { icon: BookOpen, title: "Near", desc: "Reading, Mobile" },
+  { id: 0, icon: Car, title: "Distance", desc: "Drive, TV, Outdoors", zoneClass: "top-0 h-1/3" },
+  { id: 1, icon: Monitor, title: "Intermediate", desc: "Computer, Dashboard", zoneClass: "top-1/3 h-1/3" },
+  { id: 2, icon: BookOpen, title: "Near", desc: "Reading, Mobile", zoneClass: "top-2/3 h-1/3" },
 ];
 
-function ZoneGlow({ index, activeZone }: { index: number; activeZone: MotionValue<number> }) {
-  const opacity = useTransform(activeZone, (v) => (Math.round(v) === index ? 0.35 : 0));
-  return (
-    <motion.div
-      className="absolute inset-x-0"
-      style={{
-        top: `${index * 33.33}%`,
-        height: "33.33%",
-        opacity,
-        background: "linear-gradient(180deg, rgba(252,90,6,0.35), rgba(252,90,6,0))",
-      }}
-    />
-  );
-}
-
-function ZoneCard({
-  index,
-  activeZone,
-  icon: Icon,
-  title,
-  desc,
-  reduced,
-}: {
-  index: number;
-  activeZone: MotionValue<number>;
-  icon: LucideIcon;
-  title: string;
-  desc: string;
-  reduced: boolean;
-}) {
-  const opacity = useTransform(activeZone, (v) => (Math.round(v) === index ? 1 : 0.5));
-  const scale = useTransform(activeZone, (v) => (Math.round(v) === index ? 1 : 0.97));
-
-  return (
-    <motion.div
-      className="flex items-start gap-2.5"
-      style={reduced ? {} : { opacity, scale }}
-    >
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-orange/15 text-brand-orange">
-        <Icon size={15} strokeWidth={2} />
-      </span>
-      <div>
-        <p className="text-xs font-semibold text-white">{title}</p>
-        <p className="mt-0.5 text-[11px] leading-3.5 text-neutral-500">{desc}</p>
-      </div>
-    </motion.div>
-  );
-}
-
 export default function ProgressiveLens() {
-  const prefersReduced = useReducedMotion();
-  const sceneRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sceneRef,
-    offset: ["start 0.8", "end 0.3"],
-  });
-
-  // 0 -> distance zone glows, 1 -> intermediate, 2 -> near
-  const activeZone = useTransform(scrollYProgress, [0, 0.4, 0.7, 1], [0, 0, 1, 2]);
+  const [activeZone, setActiveZone] = useState<number | null>(null);
 
   return (
-    <section id="progressive" className="bg-white pb-16 md:pb-24" data-lens-cursor="true" data-lens-text="Progressive Story">
+    <section id="progressive" className="bg-white py-10 sm:py-14">
       <div className="container-brand">
-        <div
-          ref={sceneRef}
-          className="grid grid-cols-1 items-center gap-10 overflow-hidden rounded-2xl bg-surface-dark px-6 py-12 sm:px-10 sm:py-14 lg:grid-cols-2 lg:gap-8 shadow-2xl"
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: EASE_STANDARD }}
+          className="overflow-hidden rounded-3xl bg-[#1a1b1f] text-white p-8 sm:p-12 lg:p-14 shadow-2xl border border-neutral-800"
         >
-          <Reveal variant="up">
-            <p className="mb-3 text-xs font-bold tracking-[0.08em] text-brand-orange uppercase">
-              One Pair, Every Distance
-            </p>
-            <h3 className="text-h4 leading-9 font-semibold text-white sm:text-h3 sm:leading-11">
-              Experience Seamless Vision with Progressive Lenses
-            </h3>
-            <p className="mt-4 max-w-md text-sm leading-6 text-neutral-400">
-              See clearly at every distance — near, intermediate and far —
-              with smooth transitions and zero line dividers.
-            </p>
-            <Button href="#" variant="primary" className="mt-7">
-              Explore Progressive Lenses
-            </Button>
-          </Reveal>
-
-          <div className="flex items-center gap-4 lg:gap-8">
-            <div className="relative flex-1 aspect-[4/3] sm:aspect-video flex items-center justify-center overflow-hidden rounded-2xl border border-neutral-700 bg-neutral-950">
-              {/* Dynamic Lens Zone Background Scene */}
-              <img
-                src="/images/lens-progressive.jpg"
-                alt="Progressive Lenses"
-                className="w-full h-full object-cover opacity-75 transition-all duration-700"
-              />
-
-              {/* Glowing Active Optical Zone Highlights */}
-              {!prefersReduced &&
-                [0, 1, 2].map((i) => <ZoneGlow key={i} index={i} activeZone={activeZone} />)}
-
-              {/* Lens Outer Frame Silhouette */}
-              <div className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-white/20 shadow-inner" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left Content */}
+            <div className="lg:col-span-5 space-y-4">
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="text-[11px] font-bold uppercase tracking-wider text-brand-orange"
+              >
+                ONE PAIR, EVERY DISTANCE.
+              </motion.span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight">
+                Experience Seamless Vision with Progressive Lenses
+              </h2>
+              <p className="text-xs sm:text-sm text-neutral-400 font-normal leading-relaxed max-w-md">
+                See clearly at every distance — near, intermediate and far — with smooth transitions.
+              </p>
+              <div className="pt-2">
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Link
+                    href="/progressive"
+                    className="inline-flex items-center gap-2 rounded-lg bg-brand-orange px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-md shadow-brand-orange/25 hover:bg-brand-orange-hover transition-colors"
+                  >
+                    <span>Explore Progressive Lenses</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                </motion.div>
+              </div>
             </div>
 
-            <div className="flex flex-col justify-center gap-6 sm:gap-8 min-w-[140px]">
-              {ZONES.map((zone, i) => (
-                <ZoneCard
-                  key={zone.title}
-                  index={i}
-                  activeZone={activeZone}
-                  icon={zone.icon}
-                  title={zone.title}
-                  desc={zone.desc}
-                  reduced={!!prefersReduced}
+            {/* Right: Progressive Lens Visual & 3 Zone Markers */}
+            <div className="lg:col-span-7 flex flex-col sm:flex-row items-center gap-6 lg:gap-8 justify-center">
+              {/* Lens Silhouette Image with Dynamic Zone Highlight */}
+              <div className="relative w-full max-w-sm aspect-16/10 rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-700/80 shadow-2xl flex items-center justify-center p-2 group">
+                <img
+                  src="/images/lens-progressive.jpg"
+                  alt="Progressive Multi-Zone Lens"
+                  className="w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
                 />
-              ))}
+                <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/60 pointer-events-none" />
+
+                {/* Interactive Glowing Zone Overlay */}
+                {activeZone !== null && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.4 }}
+                    exit={{ opacity: 0 }}
+                    className={`absolute inset-x-0 ${ZONES[activeZone].zoneClass} bg-linear-to-b from-brand-orange/60 via-brand-orange/30 to-transparent pointer-events-none border-y border-brand-orange/50 shadow-[0_0_20px_rgba(252,90,6,0.5)]`}
+                  />
+                )}
+
+                {/* Zone lines indication */}
+                <div className="absolute inset-x-8 top-1/3 border-b border-dashed border-white/20 pointer-events-none" />
+                <div className="absolute inset-x-8 top-2/3 border-b border-dashed border-white/20 pointer-events-none" />
+              </div>
+
+              {/* 3 Zone Labels with Interactive Highlight */}
+              <div className="flex flex-col gap-3 sm:gap-4 w-full sm:w-auto shrink-0">
+                {ZONES.map((z) => {
+                  const Icon = z.icon;
+                  const isHovered = activeZone === z.id;
+                  return (
+                    <motion.div
+                      key={z.title}
+                      onMouseEnter={() => setActiveZone(z.id)}
+                      onMouseLeave={() => setActiveZone(null)}
+                      whileHover={{ x: 4 }}
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                        isHovered
+                          ? "bg-neutral-800/90 border-brand-orange shadow-md shadow-brand-orange/10"
+                          : "bg-neutral-900/60 border-neutral-800 hover:border-neutral-700"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors shrink-0 ${
+                          isHovered
+                            ? "bg-brand-orange text-white"
+                            : "bg-neutral-800 text-brand-orange"
+                        }`}
+                      >
+                        <Icon size={18} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white leading-tight">
+                          {z.title}
+                        </div>
+                        <div className="text-[10px] text-neutral-400 mt-0.5">
+                          {z.desc}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

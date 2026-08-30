@@ -1,43 +1,66 @@
 "use client";
 
-import Button from "../ui/Button";
-import Reveal from "../motion/Reveal";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { EASE_STANDARD } from "../../lib/motion";
 
 export default function OfferBanner() {
   return (
-    <section id="offers" className="bg-white pb-16 md:pb-24">
+    <section id="offer-banner" className="bg-white py-8 sm:py-12">
       <div className="container-brand">
-        <Reveal variant="focus">
-          <motion.div
-            whileHover={{ y: -6 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 items-center gap-6 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-orange to-amber-600 sm:grid-cols-2 shadow-xl"
-          >
-            <div className="px-6 py-10 sm:px-10 sm:py-12">
-              <span className="relative mb-3 inline-flex items-center gap-1.5 overflow-hidden rounded-full bg-white/20 px-3 py-1 text-xs font-extrabold tracking-[0.08em] text-white uppercase backdrop-blur-xs shadow-xs">
-                🔥 Limited Offer
-                <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-              </span>
-              <h3 className="text-h4 leading-9 font-bold text-white sm:text-3xl">
-                Computer Glasses
-                <br />
-                Starting From ₹1,499*
-              </h3>
-              <p className="mt-2 text-sm text-white/95 font-medium">Frame + Blue Protect Anti-Glare Lens Included</p>
-              <Button href="#" variant="dark" className="mt-6 shadow-md">
-                Shop Offer Now →
-              </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: EASE_STANDARD }}
+          whileHover={{ y: -4, transition: { duration: 0.25 } }}
+          className="relative overflow-hidden rounded-3xl bg-linear-to-r from-[#ff4500] via-[#fc5a06] to-[#ff6a1a] shadow-xl text-white group"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-12 items-center">
+            {/* Left Content */}
+            <div className="md:col-span-7 p-8 sm:p-12 lg:p-14 space-y-4">
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-block rounded-full bg-white/20 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-widest text-white backdrop-blur-xs shadow-xs"
+              >
+                SPECIAL OFFER
+              </motion.span>
+
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+                Computer Glasses <br />
+                Starting From ₹1499*
+              </h2>
+
+              <p className="text-sm sm:text-base font-semibold text-white/90">
+                Frame + Blue Protect Lens
+              </p>
+
+              <div className="pt-2">
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Link
+                    href="/offers"
+                    className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-neutral-900 transition-colors"
+                  >
+                    <span>Shop Offer Now</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                </motion.div>
+              </div>
             </div>
-            <div className="relative aspect-4/3 overflow-hidden bg-brand-orange-hover sm:aspect-auto sm:h-full sm:min-h-[240px]">
+
+            {/* Right Product Image */}
+            <div className="md:col-span-5 relative h-64 md:h-full min-h-[260px] overflow-hidden flex items-center justify-center p-4">
               <img
                 src="/images/offer-glasses.jpg"
-                alt="Computer Glasses Offer"
-                className="h-full w-full object-cover object-center mix-blend-multiply opacity-90 transition-transform duration-500 hover:scale-105"
+                alt="Computer Glasses Special Offer"
+                className="w-full h-full object-cover rounded-2xl md:rounded-l-2xl md:rounded-r-none transition-transform duration-700 group-hover:scale-105"
               />
             </div>
-          </motion.div>
-        </Reveal>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

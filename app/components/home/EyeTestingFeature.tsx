@@ -1,134 +1,149 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, Check, Sparkles, Activity } from "lucide-react";
-import Button from "../ui/Button";
-import Reveal from "../motion/Reveal";
+import { CalendarCheck, Check, ArrowRight } from "lucide-react";
+import { useBooking } from "../booking/BookingContext";
 import FrameFinderQuiz from "./FrameFinderQuiz";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { EASE_STANDARD } from "../../lib/motion";
 
-const PROCESS_STEPS = [
-  { num: "01", title: "Preliminary Check", desc: "Corneal curvature & pressure test" },
-  { num: "02", title: "Auto Refraction", desc: "Precision optical measurement" },
-  { num: "03", title: "Subjective Refraction", desc: "Distance & reading clarity fine-tuning" },
-  { num: "04", title: "Vision Analysis", desc: "Binocular & digital strain evaluation" },
-  { num: "05", title: "Expert Prescription", desc: "Custom lens recommendation" },
+const EYE_CARE_POINTS = [
+  "Computerised Eye Testing",
+  "Refraction & Prescription",
+  "Vision Analysis",
+  "Expert Consultation",
 ];
 
 export default function EyeTestingFeature() {
   const [showQuiz, setShowQuiz] = useState(false);
+  const { openBooking } = useBooking();
 
   return (
-    <section id="eye-testing" className="bg-surface-warm py-16 md:py-24">
-      <div className="container-brand space-y-16">
+    <section id="eye-testing" className="bg-white py-12 sm:py-16">
+      <div className="container-brand space-y-8">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Eye Test Equipment Card with Subtle Hover Scan Line */}
-          <Reveal variant="clip" className="grid grid-cols-1 gap-6 overflow-hidden rounded-2xl bg-white p-6 sm:grid-cols-2 sm:p-8 border border-neutral-100 shadow-sm group relative">
-            <div className="relative aspect-3/4 sm:col-span-1 overflow-hidden rounded-xl bg-neutral-100">
-              <img
-                src="/images/eye-test.jpg"
-                alt="Professional Eye Examination"
-                className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Subtle Laser Scan Line on Hover */}
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-brand-orange to-transparent opacity-0 shadow-[0_0_12px_#fc5a06] transition-opacity duration-300 group-hover:opacity-100 animate-[scanline_2.5s_linear_infinite]" />
-            </div>
-
-            <div className="flex flex-col justify-center">
-              <p className="mb-3 flex items-center gap-1.5 text-xs font-bold tracking-[0.08em] text-brand-orange uppercase">
-                <Activity size={14} /> Professional Eye Care
-              </p>
-              <h3 className="text-h4 leading-9 font-semibold text-neutral-950">
-                Advanced Eye Testing for Clearer Vision
-              </h3>
-              <p className="mt-3 text-sm leading-6 text-text-secondary">
-                Our computerized eye tests ensure pin-point prescription accuracy and 360° retinal health inspection.
-              </p>
-
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Button href="#book" variant="primary" icon={CalendarCheck}>
-                  Book Eye Test
-                </Button>
-              </div>
-            </div>
-          </Reveal>
-
-          {/* Interactive Frame Finder Card */}
-          <Reveal variant="focus" delay={0.1} className="flex flex-col justify-between overflow-hidden rounded-2xl bg-surface-dark p-6 sm:p-8 relative">
-            <div>
-              <p className="mb-3 flex items-center gap-1.5 text-xs font-bold tracking-[0.08em] text-brand-orange uppercase">
-                <Sparkles size={13} strokeWidth={2} />
-                Smart Recommendation
-              </p>
-              <h3 className="text-h4 leading-9 font-semibold text-white">
-                Find Your Perfect Frame in 60 Seconds
-              </h3>
-              <p className="mt-3 max-w-sm text-sm leading-6 text-neutral-400">
-                Answer a few simple questions about your style, face shape and budget to discover your matching frames.
-              </p>
-              <button
-                onClick={() => setShowQuiz(!showQuiz)}
-                className="mt-6 btn-primary cursor-pointer"
-              >
-                {showQuiz ? "Close Frame Quiz" : "Start Frame Finder →"}
-              </button>
-            </div>
-            <div className="relative mt-8 aspect-16/9 overflow-hidden rounded-xl bg-neutral-900 border border-neutral-800">
-              <img
-                src="/images/frame-finder.jpg"
-                alt="Stylish Frame Collection"
-                className="h-full w-full object-cover object-center opacity-85 transition-transform duration-500 hover:scale-105"
-              />
-            </div>
-          </Reveal>
-        </div>
-
-        {/* Embedded Interactive Quiz Panel */}
-        {showQuiz && (
+          {/* 1. Left Card: Professional Eye Care */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55, ease: EASE_STANDARD }}
+            className="flex flex-col sm:flex-row overflow-hidden rounded-2xl bg-neutral-50/80 border border-neutral-200/80 shadow-xs hover:shadow-lg transition-all duration-300 group"
           >
-            <FrameFinderQuiz />
-          </motion.div>
-        )}
-
-        {/* Eye Test Process Timeline Journey */}
-        <Reveal variant="up" className="rounded-2xl bg-white p-6 sm:p-10 border border-neutral-100 shadow-sm">
-          <div className="mb-8">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-orange">
-              Precision Care Journey
-            </span>
-            <h4 className="text-xl font-bold text-neutral-950 sm:text-2xl mt-1">
-              Our 5-Step Computerized Eye Examination
-            </h4>
-          </div>
-
-          <div className="relative grid grid-cols-1 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-            {/* Connecting Timeline Line */}
-            <div className="hidden lg:block absolute top-6 inset-x-12 h-0.5 bg-neutral-200 -z-0">
-              <div className="h-full w-3/4 bg-brand-orange" />
+            {/* Image on left */}
+            <div className="relative sm:w-1/2 min-h-[220px] sm:min-h-full overflow-hidden bg-neutral-100">
+              <img
+                src="/images/eye-test.jpg"
+                alt="Advanced Eye Examination"
+                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-108"
+              />
             </div>
 
-            {PROCESS_STEPS.map((step, idx) => (
-              <motion.div
-                key={step.num}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ delay: idx * 0.1 }}
-                className="relative z-10 flex flex-col rounded-xl bg-neutral-50 p-4 border border-neutral-200/60 transition-all hover:-translate-y-1 hover:shadow-md hover:border-brand-orange/40"
-              >
-                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-brand-orange text-xs font-bold text-white shadow-sm">
-                  {step.num}
+            {/* Content on right */}
+            <div className="p-6 sm:p-7 sm:w-1/2 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-brand-orange">
+                  PROFESSIONAL EYE CARE
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-950 leading-tight">
+                  Advanced Eye Testing for Clearer Vision
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-600 font-normal leading-relaxed">
+                  Our comprehensive eye tests ensure accurate prescription and better eye health.
+                </p>
+
+                {/* 4 checklist points */}
+                <div className="grid grid-cols-1 gap-2 pt-1">
+                  {EYE_CARE_POINTS.map((pt, idx) => (
+                    <motion.div
+                      key={pt}
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.15 + idx * 0.08 }}
+                      className="flex items-center gap-2 text-xs font-semibold text-neutral-700"
+                    >
+                      <Check size={15} className="text-brand-orange shrink-0" strokeWidth={2.5} />
+                      <span>{pt}</span>
+                    </motion.div>
+                  ))}
                 </div>
-                <h5 className="text-sm font-bold text-neutral-900">{step.title}</h5>
-                <p className="mt-1 text-xs leading-5 text-neutral-500">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </Reveal>
+              </div>
+
+              <div>
+                <motion.button
+                  onClick={openBooking}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-xs font-bold text-neutral-900 shadow-xs hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
+                >
+                  <CalendarCheck size={15} className="text-brand-orange" />
+                  <span>Book Eye Test</span>
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 2. Right Card: Find Your Perfect Frame (Dark Theme) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55, delay: 0.1, ease: EASE_STANDARD }}
+            className="flex flex-col sm:flex-row overflow-hidden rounded-2xl bg-[#1c1d22] text-white border border-neutral-800 shadow-xs hover:shadow-xl transition-all duration-300 group"
+          >
+            {/* Content on left */}
+            <div className="p-6 sm:p-7 sm:w-7/12 flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-brand-orange">
+                  NEW FEATURE
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
+                  Find Your Perfect Frame In 60 Seconds
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-400 font-normal leading-relaxed">
+                  Answer a few simple questions about your style, face shape and budget. We&apos;ll suggest the perfect frames for you.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <motion.button
+                  onClick={() => setShowQuiz(!showQuiz)}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-brand-orange px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-orange/20 hover:bg-brand-orange-hover transition-colors cursor-pointer"
+                >
+                  <span>{showQuiz ? "Close Quiz" : "Start Frame Finder"}</span>
+                  <ArrowRight size={14} />
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Image on right */}
+            <div className="relative sm:w-5/12 min-h-[180px] sm:min-h-full overflow-hidden bg-neutral-900">
+              <img
+                src="/images/frame-finder.jpg"
+                alt="Frame Finder Selection"
+                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+              />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Interactive Quiz Popup Panel when active */}
+        <AnimatePresence>
+          {showQuiz && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.35, ease: EASE_STANDARD }}
+              className="overflow-hidden pt-4"
+            >
+              <FrameFinderQuiz />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

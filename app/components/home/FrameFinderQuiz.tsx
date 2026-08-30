@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Check, ArrowRight, RotateCcw } from "lucide-react";
 import Button from "../ui/Button";
+import { useBooking } from "../booking/BookingContext";
 
 const FACE_SHAPES = [
   {
@@ -55,6 +56,7 @@ export default function FrameFinderQuiz() {
   const [selectedFace, setSelectedFace] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [hoveredFace, setHoveredFace] = useState<string | null>(null);
+  const { openBooking } = useBooking();
 
   const activeFaceObj = FACE_SHAPES.find((f) => f.id === (hoveredFace || selectedFace));
 
@@ -246,9 +248,8 @@ export default function FrameFinderQuiz() {
               <p className="text-xs font-bold text-brand-orange uppercase">Top Recommendation:</p>
               <p className="mt-1 text-base font-bold text-white">DO-301 Square Tortoise Frame</p>
               <p className="text-xs text-neutral-400 mt-1">Lightweight acetate, anti-glare ready</p>
-              <div className="mt-3 flex items-center justify-between border-t border-neutral-800 pt-3">
-                <span className="text-lg font-bold text-brand-orange">₹2,199</span>
-                <Button href="#book" variant="primary" size="sm">
+              <div className="mt-3 flex items-center justify-end border-t border-neutral-800 pt-3">
+                <Button onClick={openBooking} variant="primary" size="sm">
                   Try On At Store
                 </Button>
               </div>

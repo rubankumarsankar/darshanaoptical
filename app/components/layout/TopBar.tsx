@@ -1,4 +1,5 @@
-import { MapPin, Phone, Clock, Camera, Share2 } from "lucide-react";
+import { MapPin, Phone, Clock } from "lucide-react";
+import { FaInstagram, FaFacebookF, FaWhatsapp } from "react-icons/fa6";
 
 export default function TopBar() {
   return (
@@ -6,22 +7,26 @@ export default function TopBar() {
       <div className="container-brand flex h-8 items-center justify-between text-xs">
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1.5">
-            <MapPin size={13} strokeWidth={2} />
-            Tiruppattur, Tamil Nadu
+            <MapPin size={13} strokeWidth={2} className="text-brand-orange" />
+            Tirupattur, Tamil Nadu
           </span>
           <span className="flex items-center gap-1.5">
-            <Phone size={13} strokeWidth={2} />
+            <Phone size={13} strokeWidth={2} className="text-brand-orange" />
             +91 98765 43210
           </span>
         </div>
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1.5">
-            <Clock size={13} strokeWidth={2} />
-            Mon - Sat : 9.30 AM - 8.30 PM
+            <Clock size={13} strokeWidth={2} className="text-brand-orange" />
+            Mon - Sat : 9:30 AM - 8:30 PM
           </span>
           <div className="flex items-center gap-3">
-            <Camera size={14} strokeWidth={2} />
-            <Share2 size={14} strokeWidth={2} />
+            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors">
+              <FaInstagram size={13} />
+            </a>
+            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors">
+              <FaFacebookF size={12} />
+            </a>
           </div>
         </div>
       </div>

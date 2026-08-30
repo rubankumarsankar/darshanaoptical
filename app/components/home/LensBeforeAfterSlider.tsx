@@ -129,14 +129,13 @@ export default function LensBeforeAfterSlider() {
 
         {/* BEFORE / WITHOUT LENS IMAGE (Clipped) */}
         <div
-          className="absolute inset-y-0 left-0 overflow-hidden"
-          style={{ width: `${sliderPosition}%` }}
+          className="absolute inset-0 overflow-hidden"
+          style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
         >
           <img
             src={currentMode.beforeImg}
             alt={currentMode.beforeLabel}
-            className="absolute inset-0 h-full w-full object-cover max-w-none"
-            style={{ width: containerRef.current?.clientWidth || "100%" }}
+            className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute top-4 left-4 rounded-full bg-black/70 px-3 py-1.5 text-xs font-medium text-neutral-300 backdrop-blur-md">
             ✕ {currentMode.beforeLabel}

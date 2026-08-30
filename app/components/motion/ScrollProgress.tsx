@@ -22,7 +22,7 @@ export default function ScrollProgress() {
 
       {/* Progress Fill Bar */}
       <motion.div
-        className="h-full origin-left bg-gradient-to-r from-brand-orange via-brand-orange-hover to-amber-500 shadow-[0_0_8px_rgba(252,90,6,0.6)]"
+        className="h-full origin-left bg-linear-to-r from-brand-orange via-brand-orange-hover to-amber-500 shadow-[0_0_8px_rgba(252,90,6,0.6)]"
         style={{ scaleX: progress }}
       />
 

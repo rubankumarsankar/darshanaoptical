@@ -1,58 +1,176 @@
-import { Star, User } from "lucide-react";
-import SectionHeading from "../ui/SectionHeading";
-import Reveal from "../motion/Reveal";
-import { StaggerGroup, StaggerItem } from "../motion/StaggerGroup";
+"use client";
 
-const CUSTOMERS = [
-  "/images/avatar-1.jpg",
-  "/images/avatar-2.jpg",
-  "/images/avatar-3.jpg",
-  "/images/avatar-4.jpg",
-  "/images/avatar-5.jpg",
+import { Star, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const REVIEWS = [
+  {
+    name: "Priya S.",
+    avatar: "/images/review-avatar-priya.png",
+    rating: 5,
+    text: "Excellent eye testing and very professional staff. Loved the collection and services!",
+  },
+  {
+    name: "Karthik R.",
+    avatar: "/images/avatar-1.jpg",
+    rating: 5,
+    text: "Very advanced equipment and accurate testing. Highly recommend Darshana Optical for frames and lenses.",
+  },
+  {
+    name: "Anitha M.",
+    avatar: "/images/avatar-2.jpg",
+    rating: 5,
+    text: "Friendly staff and thorough check-up. Got my perfect progressive prescription. Very satisfied!",
+  },
+  {
+    name: "Suresh K.",
+    avatar: "/images/avatar-3.jpg",
+    rating: 5,
+    text: "Great selection of computer glasses. My eye strain has completely reduced. Super fast delivery.",
+  },
+  {
+    name: "Divya N.",
+    avatar: "/images/avatar-4.jpg",
+    rating: 5,
+    text: "Best optical store in Tirupattur! Courteous guidance and great discounts on branded frames.",
+  },
 ];
 
 export default function Testimonials() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev === 0 ? REVIEWS.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === REVIEWS.length - 1 ? 0 : prev + 1));
+  };
+
+  const currentReview = REVIEWS[currentIndex];
+
   return (
-    <section className="bg-surface-warm py-16 md:py-24">
-      <div className="container-brand">
-        <Reveal variant="up">
-          <SectionHeading title="What Our Customers Say" action={{ label: "View All Reviews", href: "#" }} />
-        </Reveal>
-        <div className="flex flex-col items-start gap-8 sm:flex-row sm:items-center sm:justify-between">
-          <Reveal variant="up" className="max-w-lg rounded-2xl bg-white p-6 shadow-sm sm:p-7 border border-neutral-100">
-            <div className="mb-3 flex items-center gap-1 text-warning">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={16} fill="currentColor" strokeWidth={0} />
+    <section className="bg-white py-12 sm:py-16 border-t border-neutral-100">
+      <div className="container-brand space-y-8">
+        {/* Section Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight">
+            What Our Customers Say
+          </h2>
+          <a
+            href="https://maps.google.com/?q=Darshana+Optical+Tirupattur"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-brand-orange hover:underline"
+          >
+            View All Reviews <ArrowRight size={14} />
+          </a>
+        </div>
+
+        {/* Testimonials Main Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left: Active Review Card */}
+          <div className="lg:col-span-7">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-5 rounded-2xl bg-neutral-50 p-6 sm:p-7 border border-neutral-200/80 shadow-xs"
+              >
+                {/* Customer Avatar */}
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-full border-2 border-brand-orange/30 shadow-xs bg-white">
+                  <img
+                    src={currentReview.avatar}
+                    alt={currentReview.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                {/* Review Text, Rating & Name */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1 text-brand-orange">
+                    {Array.from({ length: currentReview.rating }).map((_, i) => (
+                      <Star key={i} size={15} fill="currentColor" strokeWidth={0} />
+                    ))}
+                  </div>
+
+                  <p className="text-xs sm:text-sm leading-relaxed text-neutral-700 font-medium italic">
+                    &ldquo;{currentReview.text}&rdquo;
+                  </p>
+
+                  <div className="pt-1">
+                    <div className="text-xs sm:text-sm font-bold text-neutral-950">
+                      {currentReview.name}
+                    </div>
+                    <div className="text-[11px] font-medium text-neutral-500">
+                      Google Review
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Right: Avatar Selectors + Pagination + Nav Arrows */}
+          <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center space-y-4">
+            {/* Avatars Row */}
+            <div className="flex items-center gap-3">
+              {REVIEWS.slice(0, 4).map((r, idx) => (
+                <button
+                  key={r.name}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-full border-2 transition-all cursor-pointer ${
+                    currentIndex === idx
+                      ? "border-brand-orange scale-105 shadow-md ring-2 ring-brand-orange/20"
+                      : "border-neutral-200 opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <img
+                    src={r.avatar}
+                    alt={r.name}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
               ))}
-            </div>
-            <p className="text-sm leading-6 text-neutral-700 font-medium">
-              &ldquo;Excellent eye testing and very professional staff. Loved
-              the collection and services!&rdquo;
-            </p>
-            <div className="mt-5 flex items-center gap-3">
-              <img
-                src={CUSTOMERS[0]}
-                alt="Priya S."
-                className="h-11 w-11 rounded-full object-cover border-2 border-brand-orange-soft"
-              />
-              <div>
-                <p className="text-sm font-semibold text-neutral-900">Priya S.</p>
-                <p className="text-xs text-text-muted">Google Review</p>
+
+              {/* Nav Arrows */}
+              <div className="flex items-center gap-2 pl-2">
+                <button
+                  onClick={handlePrev}
+                  aria-label="Previous review"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-xs hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={handleNext}
+                  aria-label="Next review"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-xs hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
-          </Reveal>
 
-          <StaggerGroup className="flex items-center gap-3" stagger={0.08}>
-            {CUSTOMERS.map((imgUrl, i) => (
-              <StaggerItem key={i}>
-                <img
-                  src={imgUrl}
-                  alt={`Customer ${i + 1}`}
-                  className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm transition-transform duration-300 hover:scale-110"
+            {/* Pagination Dots */}
+            <div className="flex items-center gap-1.5 pt-1">
+              {REVIEWS.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    currentIndex === idx
+                      ? "w-4 bg-brand-orange"
+                      : "w-1.5 bg-neutral-300 hover:bg-neutral-400"
+                  }`}
                 />
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
