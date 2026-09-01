@@ -10,7 +10,7 @@ export default function CTABanner() {
 
   const handleWhatsApp = () => {
     const msg = encodeURIComponent("Hello Darshana Optical, I would like to know more and book an eye test appointment.");
-    window.open(`https://wa.me/919876543210?text=${msg}`, "_blank");
+    window.open(`https://wa.me/918870571536?text=${msg}`, "_blank");
   };
 
   return (

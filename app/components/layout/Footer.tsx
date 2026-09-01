@@ -94,15 +94,15 @@ export default function Footer() {
           <ul className="space-y-2 text-xs text-neutral-400">
             <li className="flex items-center gap-2">
               <Phone size={13} className="text-neutral-400 shrink-0" />
-              <a href="tel:+919876543210" className="hover:text-brand-orange">+91 98765 43210</a>
+              <a href="tel:+918870571536" className="hover:text-brand-orange">+91 88705 71536</a>
             </li>
             <li className="flex items-center gap-2">
               <Mail size={13} className="text-neutral-400 shrink-0" />
-              <a href="mailto:info@darshanaoptical.com" className="hover:text-brand-orange">info@darshanaoptical.com</a>
+              <a href="mailto:darshanado@gmail.com" className="hover:text-brand-orange">darshanado@gmail.com</a>
             </li>
             <li className="flex items-start gap-2">
               <MapPin size={13} className="text-neutral-400 shrink-0 mt-0.5" />
-              <span>Tirupattur, Tamil Nadu - 635601</span>
+              <span>Tvk nagar, salem bypass road, Vasanth & co opposite, Harur - 636903</span>
             </li>
           </ul>
         </div>

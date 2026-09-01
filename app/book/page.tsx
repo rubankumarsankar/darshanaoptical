@@ -59,13 +59,13 @@ export default function DedicatedBookPage() {
       `*Notes:* ${notes || "None"}\n\n` +
       `Please confirm my slot!`
     );
-    window.open(`https://wa.me/919876543210?text=${msg}`, "_blank");
+    window.open(`https://wa.me/918870571536?text=${msg}`, "_blank");
   };
 
   const handleAddToCalendar = () => {
     const title = encodeURIComponent("Eye Test Appointment at Darshana Optical");
-    const details = encodeURIComponent(`Eye Test Visit for ${name}. Location: Darshana Optical, Tirupattur.`);
-    const location = encodeURIComponent("Darshana Optical, Main Road, Tirupattur");
+    const details = encodeURIComponent(`Eye Test Visit for ${name}. Location: Darshana Optical, Harur.`);
+    const location = encodeURIComponent("Darshana Optical, Tvk nagar, salem bypass road, Harur");
     window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}`, "_blank");
   };
 
@@ -89,7 +89,7 @@ export default function DedicatedBookPage() {
                     Book Your Eye Test
                   </h1>
                   <p className="text-sm text-neutral-600 font-medium leading-relaxed">
-                    Choose a convenient date and time to request your appointment at Darshana Optical, Tirupattur.
+                    Choose a convenient date and time to request your appointment at Darshana Optical, Harur.
                   </p>
                 </div>
 
@@ -122,7 +122,7 @@ export default function DedicatedBookPage() {
                         <input
                           type="tel"
                           required
-                          placeholder="e.g. +91 98765 43210"
+                          placeholder="e.g. +91 88705 71536"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 px-4 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none"
@@ -293,7 +293,7 @@ export default function DedicatedBookPage() {
                   </button>
 
                   <a
-                    href="https://maps.google.com/?q=Darshana+Optical+Tirupattur"
+                    href="https://maps.google.com/?q=Darshana+Optical+Harur"
                     target="_blank"
                     rel="noreferrer"
                     className="btn-secondary gap-2 text-xs font-bold cursor-pointer"

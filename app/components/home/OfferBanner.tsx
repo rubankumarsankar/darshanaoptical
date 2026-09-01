@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles, Laptop, ShieldCheck, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { EASE_STANDARD } from "../../lib/motion";
 
@@ -24,9 +24,10 @@ export default function OfferBanner() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="inline-block rounded-full bg-white/20 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-widest text-white backdrop-blur-xs shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-widest text-white backdrop-blur-xs shadow-xs"
               >
-                SPECIAL OFFER
+                <Tag size={13} />
+                <span>SPECIAL IN-STORE OFFER</span>
               </motion.span>
 
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
@@ -34,9 +35,14 @@ export default function OfferBanner() {
                 Starting From ₹1499*
               </h2>
 
-              <p className="text-sm sm:text-base font-semibold text-white/90">
-                Frame + Blue Protect Lens
-              </p>
+              <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm font-semibold text-white/95 pt-1">
+                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg">
+                  <Laptop size={15} /> Frame Included
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg">
+                  <ShieldCheck size={15} /> Blue Protect Lens
+                </span>
+              </div>
 
               <div className="pt-2">
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>

@@ -8,11 +8,11 @@ export default function TopBar() {
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1.5">
             <MapPin size={13} strokeWidth={2} className="text-brand-orange" />
-            Tirupattur, Tamil Nadu
+            Harur, Tamil Nadu
           </span>
           <span className="flex items-center gap-1.5">
             <Phone size={13} strokeWidth={2} className="text-brand-orange" />
-            +91 98765 43210
+            +91 88705 71536
           </span>
         </div>
         <div className="flex items-center gap-6">

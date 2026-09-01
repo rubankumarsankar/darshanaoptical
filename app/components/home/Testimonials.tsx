@@ -33,7 +33,7 @@ const REVIEWS = [
     name: "Divya N.",
     avatar: "/images/avatar-4.jpg",
     rating: 5,
-    text: "Best optical store in Tirupattur! Courteous guidance and great discounts on branded frames.",
+    text: "Best optical store in Harur! Courteous guidance and great discounts on branded frames.",
   },
 ];
 
@@ -59,7 +59,7 @@ export default function Testimonials() {
             What Our Customers Say
           </h2>
           <a
-            href="https://maps.google.com/?q=Darshana+Optical+Tirupattur"
+            href="https://maps.google.com/?q=Darshana+Optical+Harur"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-brand-orange hover:underline"

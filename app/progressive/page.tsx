@@ -3,36 +3,53 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, Eye, Layers, ShieldCheck, CheckCircle2, MessageCircle, HelpCircle, ArrowRight } from "lucide-react";
+import {
+  Sparkles,
+  Eye,
+  Layers,
+  ShieldCheck,
+  CheckCircle2,
+  MessageCircle,
+  ArrowRight,
+  Sun,
+  Monitor,
+  Check,
+  Calendar,
+  Award,
+  Zap,
+  MapPin,
+  Phone
+} from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
 import LensCursor from "../components/motion/LensCursor";
+import { useBooking } from "../components/booking/BookingContext";
 
 const ZONES = [
   {
     id: "upper",
     title: "Distance Vision",
-    scene: "Highway / Outdoors",
-    desc: "Provides crystal-clear optics for driving, walking, outdoor activities, and viewing distant objects.",
+    scene: "Highway & Outdoors",
+    desc: "Provides crystal-clear optics for driving, walking, outdoor activities, and viewing distant objects clearly.",
     color: "bg-blue-500",
-    img: "/images/cat-office.jpg",
+    img: "/images/hero-woman.jpg",
   },
   {
     id: "middle",
     title: "Intermediate Vision",
-    scene: "Computer / Workspace",
+    scene: "Computer & Workspace",
     desc: "Smooth progressive corridor designed for computer monitor distances, car dashboards, and desk work.",
     color: "bg-amber-500",
-    img: "/images/cat-premium.jpg",
+    img: "/images/cat-office.jpg",
   },
   {
     id: "lower",
     title: "Near & Reading Vision",
-    scene: "Book / Smartphone",
-    desc: "Optimized bottom segment engineered for comfortable reading of smartphones, books, and fine print.",
+    scene: "Smartphone & Fine Print",
+    desc: "Optimized bottom segment engineered for comfortable reading of smartphones, books, and fine text.",
     color: "bg-emerald-500",
-    img: "/images/frame-1.jpg",
+    img: "/images/cat-women.jpg",
   },
 ];
 
@@ -68,6 +85,7 @@ const WHO_FOR_POINTS = [
 ];
 
 export default function ProgressivePage() {
+  const { openBooking } = useBooking();
   const [activeZone, setActiveZone] = useState("upper");
   const [activeTier, setActiveTier] = useState("advanced");
 
@@ -75,8 +93,8 @@ export default function ProgressivePage() {
   const activeTierObj = COMPARISON_TIERS.find((t) => t.id === activeTier) || COMPARISON_TIERS[1];
 
   const handleWhatsAppTalk = () => {
-    const msg = encodeURIComponent("Hello Darshana Optical, I would like to ask about Progressive Lens options and expert fitting at your Tirupattur store.");
-    window.open(`https://wa.me/919876543210?text=${msg}`, "_blank");
+    const msg = encodeURIComponent("Hello Darshana Optical, I would like to ask about Progressive Lens options and expert fitting at your Harur store.");
+    window.open(`https://wa.me/918870571536?text=${msg}`, "_blank");
   };
 
   return (
@@ -85,108 +103,122 @@ export default function ProgressivePage() {
       <Header />
 
       <main className="flex-1 bg-white">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden bg-linear-to-b from-surface-warm via-white to-white py-16 sm:py-24">
-          <div className="container-brand text-center max-w-4xl mx-auto space-y-6">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-bold uppercase tracking-wider">
-              <Sparkles size={14} /> Seamless Multi-Focal Vision
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-neutral-950 tracking-tight">
-              See Near. See Far. <br className="hidden sm:inline" />
-              <span className="text-brand-orange">And Everything Between.</span>
-            </h1>
-            <p className="text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto font-medium leading-relaxed">
-              Progressive lenses combine multiple viewing zones into one pair of glasses without the visible segment lines associated with traditional bifocal designs.
-            </p>
-            <div className="pt-2">
-              <button
-                onClick={handleWhatsAppTalk}
-                className="btn-primary gap-2 text-base font-bold shadow-lg shadow-brand-orange/20 cursor-pointer"
-              >
-                <MessageCircle size={18} /> Ask About Progressives
-              </button>
+        {/* HERO SECTION */}
+        <section className="relative overflow-hidden bg-[#faf8f5] py-12 sm:py-16 lg:py-20 border-b border-neutral-200/60">
+          <div className="container-brand grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
+            <div className="lg:col-span-6 space-y-5 text-left">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-extrabold uppercase tracking-wider">
+                <Sparkles size={14} /> Seamless Multi-Focal Optics
+              </span>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-neutral-950 tracking-tight leading-none">
+                See Near. See Far. <br />
+                <span className="text-brand-orange">And Everything Between.</span>
+              </h1>
+              <p className="text-sm sm:text-base text-neutral-600 font-medium leading-relaxed max-w-xl">
+                Progressive lenses combine multiple viewing zones into one pair of glasses without visible segment lines. Experience smooth, uninterrupted vision across all distances.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <button
+                  onClick={openBooking}
+                  className="btn-primary gap-2 text-xs sm:text-sm font-bold shadow-md shadow-brand-orange/20 cursor-pointer"
+                >
+                  <Calendar size={16} />
+                  <span>Book Eye Test</span>
+                </button>
+                <button
+                  onClick={handleWhatsAppTalk}
+                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-white px-5 py-3 text-xs sm:text-sm font-bold text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs cursor-pointer"
+                >
+                  <MessageCircle size={16} />
+                  <span>Ask About Progressives</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Hero Right Visual */}
+            <div className="lg:col-span-6 flex justify-center">
+              <div className="relative w-full max-w-md aspect-4/3 rounded-3xl overflow-hidden shadow-2xl border border-stone-200">
+                <img
+                  src="/images/lens-progressive.jpg"
+                  alt="Progressive Lenses"
+                  className="h-full w-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/70 via-transparent to-transparent flex items-end p-6">
+                  <div className="text-white space-y-1">
+                    <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Multi-Focal Technology</span>
+                    <h3 className="text-lg font-bold">No Bifocal Line. Total Clarity.</h3>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* How Progressive Lenses Work — Interactive Diagram with Real-World Scene Transition */}
-        <section className="py-16 sm:py-24 bg-surface-warm border-y border-neutral-200/80">
+        {/* HOW PROGRESSIVE LENSES WORK */}
+        <section className="py-16 bg-white border-b border-neutral-100">
           <div className="container-brand space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="inline-block text-xs font-bold uppercase tracking-wider text-brand-orange bg-brand-orange-soft px-3 py-1 rounded-full">
-                Optical Engineering & Simulation
-              </span>
-              <h2 className="text-3xl font-extrabold text-neutral-950 tracking-tight">
-                How Progressive Lenses Work
-              </h2>
-              <p className="text-sm text-neutral-600 font-medium">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950">How Progressive Lenses Work</h2>
+              <p className="text-xs sm:text-sm text-neutral-600 font-medium">
                 Click on the viewing zones below to simulate how the lens delivers crisp optics for distance, computer, and reading.
               </p>
             </div>
 
-            {/* Lens Diagram Card with Visual Scene Transition */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white rounded-3xl p-8 border border-neutral-200/80 shadow-xl">
-              {/* Left Lens Graphic with Simulated Environment */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-neutral-50 rounded-3xl p-8 border border-neutral-200/80 shadow-sm">
               <div className="lg:col-span-6 flex flex-col items-center">
-                <div className="relative w-full max-w-sm aspect-4/3 rounded-3xl bg-neutral-950 border-4 border-neutral-800 p-2 shadow-2xl flex flex-col overflow-hidden group">
-                  {/* Inside-the-lens simulated scene */}
+                <div className="relative w-full max-w-sm aspect-4/3 rounded-3xl bg-neutral-950 border-4 border-neutral-800 p-2 shadow-xl flex flex-col overflow-hidden">
                   <div className="relative h-full w-full rounded-2xl overflow-hidden">
                     <img
                       src={activeZoneObj.img}
                       alt={activeZoneObj.title}
-                      className="h-full w-full object-cover transition-all duration-700 filter brightness-95"
+                      className="h-full w-full object-cover transition-all duration-700"
                     />
-                    <div className="absolute inset-0 bg-radial from-transparent to-black/60 pointer-events-none" />
-
-                    {/* Zone indicators inside lens */}
+                    <div className="absolute inset-0 bg-neutral-950/40 pointer-events-none" />
                     <div className="absolute top-3 left-3 bg-neutral-950/80 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-bold text-white shadow-md">
                       Simulating: {activeZoneObj.scene}
                     </div>
                   </div>
 
-                  {/* Interactive Zone Trigger Bars */}
-                  <div className="absolute inset-2 flex flex-col pointer-events-auto">
+                  <div className="absolute inset-2 flex flex-col">
                     <div
                       onClick={() => setActiveZone("upper")}
-                      className={`flex-1 rounded-t-xl transition-all duration-300 flex items-center justify-center cursor-pointer border-b border-dashed border-white/20 ${
-                        activeZone === "upper" ? "bg-blue-600/30 ring-2 ring-blue-400" : "bg-transparent hover:bg-white/10"
+                      className={`flex-1 rounded-t-xl transition-all duration-300 flex items-center justify-center cursor-pointer border-b border-dashed border-white/30 ${
+                        activeZone === "upper" ? "bg-blue-600/40 ring-2 ring-blue-400" : "bg-transparent hover:bg-white/10"
                       }`}
                     >
-                      <span className="text-[11px] font-bold text-white drop-shadow-md">Upper Zone (Distance)</span>
+                      <span className="text-[11px] font-bold text-white drop-shadow-md">Distance Zone</span>
                     </div>
 
                     <div
                       onClick={() => setActiveZone("middle")}
-                      className={`h-14 my-1 transition-all duration-300 flex items-center justify-center cursor-pointer border-b border-dashed border-white/20 ${
-                        activeZone === "middle" ? "bg-amber-600/30 ring-2 ring-amber-400" : "bg-transparent hover:bg-white/10"
+                      className={`h-14 my-1 transition-all duration-300 flex items-center justify-center cursor-pointer border-b border-dashed border-white/30 ${
+                        activeZone === "middle" ? "bg-amber-600/40 ring-2 ring-amber-400" : "bg-transparent hover:bg-white/10"
                       }`}
                     >
-                      <span className="text-[11px] font-bold text-white drop-shadow-md">Middle Zone (Intermediate)</span>
+                      <span className="text-[11px] font-bold text-white drop-shadow-md">Intermediate Zone</span>
                     </div>
 
                     <div
                       onClick={() => setActiveZone("lower")}
                       className={`flex-1 rounded-b-xl transition-all duration-300 flex items-center justify-center cursor-pointer ${
-                        activeZone === "lower" ? "bg-emerald-600/30 ring-2 ring-emerald-400" : "bg-transparent hover:bg-white/10"
+                        activeZone === "lower" ? "bg-emerald-600/40 ring-2 ring-emerald-400" : "bg-transparent hover:bg-white/10"
                       }`}
                     >
-                      <span className="text-[11px] font-bold text-white drop-shadow-md">Lower Zone (Reading)</span>
+                      <span className="text-[11px] font-bold text-white drop-shadow-md">Reading Zone</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Zone Info */}
               <div className="lg:col-span-6 space-y-4">
                 {ZONES.map((zone) => (
-                  <motion.div
+                  <div
                     key={zone.id}
                     onClick={() => setActiveZone(zone.id)}
-                    whileHover={{ x: 4 }}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer ${
                       activeZone === zone.id
-                        ? "bg-brand-orange-soft/40 border-brand-orange shadow-md scale-[1.02]"
-                        : "bg-neutral-50 border-neutral-200/70 hover:bg-white"
+                        ? "bg-white border-brand-orange shadow-md scale-[1.01]"
+                        : "bg-white/80 border-neutral-200/80 hover:bg-white"
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-1.5">
@@ -196,19 +228,19 @@ export default function ProgressivePage() {
                     <p className="text-xs leading-relaxed text-neutral-600 font-medium pl-6">
                       {zone.desc}
                     </p>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* Progressive Tier Corridor Width Comparison */}
-            <div className="mt-12 rounded-3xl bg-white p-8 border border-neutral-200 shadow-md space-y-6">
+            {/* Corridor Comparison */}
+            <div className="rounded-3xl bg-white p-8 border border-neutral-200 shadow-sm space-y-6">
               <div className="text-center max-w-xl mx-auto">
                 <span className="text-xs font-bold uppercase tracking-wider text-brand-orange">
-                  Corridor Comparison
+                  Corridor Width
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-950 mt-1">
-                  Viewing Corridor Width By Lens Tier
+                  Viewing Corridor By Lens Tier
                 </h3>
               </div>
 
@@ -219,7 +251,7 @@ export default function ProgressivePage() {
                     onClick={() => setActiveTier(tier.id)}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       activeTier === tier.id
-                        ? "bg-brand-orange text-white shadow-md shadow-brand-orange/20 scale-105"
+                        ? "bg-brand-orange text-white shadow-md shadow-brand-orange/20"
                         : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
                     }`}
                   >
@@ -230,11 +262,8 @@ export default function ProgressivePage() {
 
               <div className="max-w-md mx-auto rounded-2xl bg-neutral-950 p-6 text-white text-center space-y-3">
                 <div className="text-xs text-neutral-400 font-bold uppercase">Active Corridor: {activeTierObj.corridor}</div>
-                <div className="h-6 rounded-full bg-neutral-800 p-1 flex items-center justify-center">
-                  <motion.div
-                    layout
-                    className={`h-full rounded-full bg-linear-to-r from-brand-orange to-amber-400 ${activeTierObj.corridorWidth} transition-all duration-500`}
-                  />
+                <div className="h-5 rounded-full bg-neutral-800 p-1 flex items-center justify-center">
+                  <div className={`h-full rounded-full bg-gradient-to-r from-brand-orange to-amber-400 ${activeTierObj.corridorWidth} transition-all duration-500`} />
                 </div>
                 <p className="text-xs text-neutral-300 font-medium">{activeTierObj.desc}</p>
               </div>
@@ -242,88 +271,54 @@ export default function ProgressivePage() {
           </div>
         </section>
 
-        {/* Who Are They For? */}
-        <section className="py-16 sm:py-24 bg-white">
-          <div className="container-brand space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="inline-block text-xs font-bold uppercase tracking-wider text-brand-orange bg-brand-orange-soft px-3 py-1 rounded-full">
-                Ideal Candidates
-              </span>
-              <h2 className="text-3xl font-extrabold text-neutral-950 tracking-tight">
-                Who Are They For?
-              </h2>
-              <p className="text-sm text-neutral-600 font-medium">
-                Progressive lenses may be worth discussing with our optometrist if you:
-              </p>
+        {/* STORE VISIT STRIP */}
+        <section className="py-16 bg-neutral-50 border-t border-neutral-200/80">
+          <div className="container-brand space-y-8">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950">Visit Our Harur Store</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {WHO_FOR_POINTS.map((point, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-4 rounded-2xl bg-neutral-50 p-6 border border-neutral-200/80 shadow-sm"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-orange text-white">
-                    <CheckCircle2 size={20} />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-4 space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <MapPin size={20} className="text-brand-orange shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-base font-bold text-neutral-950">Darshana Optical</h4>
+                    <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
+                      Tvk nagar, salem bypass road, Vasanth & co opposite, Harur - 636903
+                    </p>
                   </div>
-                  <p className="text-sm font-semibold text-neutral-900 leading-relaxed">
-                    {point}
-                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Progressive Selection Equation */}
-        <section className="py-16 sm:py-24 bg-surface-warm border-t border-neutral-200/80">
-          <div className="container-brand space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="inline-block text-xs font-bold uppercase tracking-wider text-brand-orange bg-brand-orange-soft px-3 py-1 rounded-full">
-                Custom Fitting
-              </span>
-              <h2 className="text-3xl font-extrabold text-neutral-950 tracking-tight">
-                Progressive Lenses Aren&apos;t One-Size-Fits-All
-              </h2>
-              <p className="text-sm text-neutral-600 font-medium">
-                The appropriate progressive design depends on your prescription, frame measurements, working distance, lifestyle, and budget.
-              </p>
-            </div>
-
-            {/* Selection Formula Diagram */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 max-w-4xl mx-auto items-center text-center">
-              <div className="rounded-2xl bg-white p-5 border border-neutral-200 shadow-sm font-bold text-sm text-neutral-900">
-                Prescription
               </div>
-              <div className="text-xl font-extrabold text-brand-orange">+</div>
-              <div className="rounded-2xl bg-white p-5 border border-neutral-200 shadow-sm font-bold text-sm text-neutral-900">
-                Measurements
-              </div>
-              <div className="text-xl font-extrabold text-brand-orange">+</div>
-              <div className="col-span-2 sm:col-span-1 rounded-2xl bg-brand-orange text-white p-5 shadow-lg font-bold text-sm">
-                Personalised Setup
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Adaptation & Final CTA */}
-        <section className="py-16 bg-brand-dark text-white text-center">
-          <div className="container-brand max-w-3xl space-y-6">
-            <span className="inline-block text-xs font-bold uppercase tracking-wider text-brand-orange bg-brand-orange/20 px-3 py-1 rounded-full">
-              Adaptation Period
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Your First Progressive Lenses?</h2>
-            <p className="text-base text-neutral-300 font-medium leading-relaxed">
-              Adaptation can vary by wearer. Precise pupillary height measurements, correct frame fitting, and professional optician guidance make all the difference.
-            </p>
-            <div className="pt-2">
-              <button
-                onClick={handleWhatsAppTalk}
-                className="btn-primary gap-2 text-base font-bold shadow-lg shadow-brand-orange/20 cursor-pointer"
-              >
-                <MessageCircle size={18} /> Talk to Our Team
-              </button>
+              {/* 4 Store Photos Grid */}
+              <div className="lg:col-span-5 grid grid-cols-4 gap-3">
+                {["/images/store-1.jpg", "/images/store-2.jpg", "/images/store-3.jpg", "/images/store-4.jpg"].map((img, idx) => (
+                  <div key={idx} className="aspect-square overflow-hidden rounded-xl border border-neutral-200 bg-white">
+                    <img src={img} alt={`Store ${idx + 1}`} className="h-full w-full object-cover" />
+                  </div>
+                ))}
+              </div>
+
+              <div className="lg:col-span-3 space-y-3 text-xs">
+                <div className="flex items-center gap-2 text-neutral-800 font-bold">
+                  <Phone size={16} className="text-brand-orange" />
+                  <span>+91 88705 71536</span>
+                </div>
+                <div className="flex items-center gap-2 text-neutral-800 font-bold">
+                  <MessageCircle size={16} className="text-brand-orange" />
+                  <span>WhatsApp Us</span>
+                </div>
+                <a
+                  href="https://maps.google.com/?q=Darshana+Optical+Harur"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-primary gap-2 text-xs font-bold w-full justify-center mt-2"
+                >
+                  <span>Get Directions</span>
+                  <ArrowRight size={14} />
+                </a>
+              </div>
             </div>
           </div>
         </section>

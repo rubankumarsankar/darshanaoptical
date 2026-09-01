@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, RotateCcw, MessageCircle, Eye, AlertCircle } from "lucide-react";
+import { Sparkles, ArrowRight, RotateCcw, MessageCircle, Eye, Shield, Sun, Layers, Check } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
@@ -72,21 +72,27 @@ export default function SmartLensFinderPage() {
                   exit={{ opacity: 0, y: -16 }}
                   className="text-center space-y-6 py-6"
                 >
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-orange-soft text-brand-orange shadow-md">
-                    <Eye size={32} />
+                  <div className="relative w-32 h-32 mx-auto overflow-hidden rounded-full border-4 border-orange-100 shadow-md">
+                    <img
+                      src="/images/lens-progressive.jpg"
+                      alt="Smart Lens Finder"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
-                  <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950">
-                    Find a Lens That Fits Your Life
-                  </h1>
-                  <p className="text-base text-neutral-600 max-w-md mx-auto font-medium leading-relaxed">
-                    A quick diagnostic guide to help you understand which lens categories may be worth discussing with our optical team.
-                  </p>
+                  <div className="space-y-2">
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950">
+                      Find Your Ideal Lens Solution
+                    </h1>
+                    <p className="text-base text-neutral-600 max-w-md mx-auto font-medium leading-relaxed">
+                      A quick diagnostic quiz to find the optimal lens type and coatings customized to your everyday screen time and lifestyle.
+                    </p>
+                  </div>
                   <div className="pt-4">
                     <button
                       onClick={() => setStep(1)}
                       className="btn-primary gap-2 text-base font-bold shadow-lg shadow-brand-orange/20 cursor-pointer"
                     >
-                      Start Lens Finder <ArrowRight size={18} />
+                      Start Lens Quiz <ArrowRight size={18} />
                     </button>
                   </div>
                 </motion.div>
@@ -101,26 +107,40 @@ export default function SmartLensFinderPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-neutral-950">
-                    1. What do you currently need help seeing?
-                  </h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {["Distance", "Reading", "Both Near + Far", "Not Sure"].map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => {
-                          setVisionNeed(opt);
-                          setStep(2);
-                        }}
-                        className={`p-5 rounded-2xl border text-left font-bold text-base transition-all cursor-pointer ${
-                          visionNeed === opt
-                            ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                            : "bg-neutral-50 border-neutral-200/80 text-neutral-900 hover:bg-white hover:border-brand-orange"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-950">What is your primary vision need?</h2>
+                    <p className="text-xs text-neutral-500 mt-1">Select your main focal requirement.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      { label: "Distance Only (Driving / Distance)", desc: "Clear single-vision for outdoor and road viewing", icon: Eye },
+                      { label: "Near / Reading Only", desc: "Close-up magnification for books, hobbies, and reading", icon: Eye },
+                      { label: "Both Near & Far (Multifocal)", desc: "Seamless correction for distance, computer, and reading", icon: Layers },
+                      { label: "Zero Power (Screen Protection)", desc: "Plano lenses with Blue Light & UV protection filters", icon: Shield }
+                    ].map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() => {
+                            setVisionNeed(opt.label);
+                            setStep(2);
+                          }}
+                          className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${
+                            visionNeed === opt.label
+                              ? "border-brand-orange bg-brand-orange-soft/40 shadow-md ring-2 ring-brand-orange/30"
+                              : "border-neutral-200/80 bg-neutral-50 hover:bg-white"
+                          }`}
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-2xs text-brand-orange mb-3">
+                            <Icon size={20} />
+                          </div>
+                          <div className="font-bold text-sm text-neutral-950">{opt.label}</div>
+                          <p className="text-xs text-neutral-600 mt-1">{opt.desc}</p>
+                        </button>
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
@@ -134,31 +154,41 @@ export default function SmartLensFinderPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-neutral-950">
-                    2. How much time do you spend on digital screens daily?
-                  </h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {["Low", "2–4 Hours", "4–8 Hours", "8+ Hours"].map((opt) => (
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-950">How many hours do you spend on screens?</h2>
+                    <p className="text-xs text-neutral-500 mt-1">Smartphones, laptops, monitors, or TV daily.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                      { label: "Light (Under 2 hours)", desc: "Minimal digital exposure", img: "/images/cat-office.jpg" },
+                      { label: "Moderate (2 – 6 hours)", desc: "Standard daily work & phone use", img: "/images/hero-woman.jpg" },
+                      { label: "Heavy (6+ hours)", desc: "High digital strain / IT professionals", img: "/images/cat-women.jpg" }
+                    ].map((opt) => (
                       <button
-                        key={opt}
+                        key={opt.label}
                         onClick={() => {
-                          setScreenTime(opt);
+                          setScreenTime(opt.label);
                           setStep(3);
                         }}
-                        className={`p-5 rounded-2xl border text-left font-bold text-base transition-all cursor-pointer ${
-                          screenTime === opt
-                            ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                            : "bg-neutral-50 border-neutral-200/80 text-neutral-900 hover:bg-white hover:border-brand-orange"
+                        className={`p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                          screenTime === opt.label
+                            ? "border-brand-orange bg-brand-orange-soft/40 shadow-md ring-2 ring-brand-orange/30"
+                            : "border-neutral-200/80 bg-neutral-50 hover:bg-white"
                         }`}
                       >
-                        {opt}
+                        <div className="h-20 w-20 mx-auto overflow-hidden rounded-full mb-3 border-2 border-white shadow-xs">
+                          <img src={opt.img} alt={opt.label} className="h-full w-full object-cover" />
+                        </div>
+                        <div className="font-bold text-xs text-neutral-950">{opt.label}</div>
+                        <p className="text-[11px] text-neutral-500 mt-1">{opt.desc}</p>
                       </button>
                     ))}
                   </div>
                 </motion.div>
               )}
 
-              {/* Q3: PRIMARY ACTIVITY */}
+              {/* Q3: OUTDOOR & SUNLIGHT */}
               {step === 3 && (
                 <motion.div
                   key="q3"
@@ -167,31 +197,44 @@ export default function SmartLensFinderPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-neutral-950">
-                    3. What do you do most often during the day?
-                  </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {["Office Work", "Driving", "Reading", "Outdoor Activities", "Mixed Daily Use"].map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => {
-                          setActivity(opt);
-                          setStep(4);
-                        }}
-                        className={`p-4 rounded-2xl border text-center font-bold text-sm transition-all cursor-pointer ${
-                          activity === opt
-                            ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                            : "bg-neutral-50 border-neutral-200/80 text-neutral-900 hover:bg-white hover:border-brand-orange"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-950">How often are you outdoors or driving?</h2>
+                    <p className="text-xs text-neutral-500 mt-1">To determine photochromic light adaptation and night glare needs.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                      { label: "Mostly Indoors", desc: "Standard anti-reflective clarity", icon: Shield },
+                      { label: "Frequent Outdoor Travel", desc: "Photochromic Transitions tint recommended", icon: Sun },
+                      { label: "Night Driving Focus", desc: "Anti-glare Night Drive coating recommended", icon: Eye }
+                    ].map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.label}
+                          onClick={() => {
+                            setActivity(opt.label);
+                            setStep(4);
+                          }}
+                          className={`p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                            activity === opt.label
+                              ? "border-brand-orange bg-brand-orange-soft/40 shadow-md ring-2 ring-brand-orange/30"
+                              : "border-neutral-200/80 bg-neutral-50 hover:bg-white"
+                          }`}
+                        >
+                          <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-2xl bg-white shadow-2xs text-brand-orange mb-3">
+                            <Icon size={24} />
+                          </div>
+                          <div className="font-bold text-xs text-neutral-950">{opt.label}</div>
+                          <p className="text-[11px] text-neutral-500 mt-1">{opt.desc}</p>
+                        </button>
+                      );
+                    })}
                   </div>
                 </motion.div>
               )}
 
-              {/* Q4: MULTIPLE GLASSES */}
+              {/* Q4: MULTIPLE GLASSES PREFERENCE */}
               {step === 4 && (
                 <motion.div
                   key="q4"
@@ -200,89 +243,94 @@ export default function SmartLensFinderPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-neutral-950">
-                    4. Do you currently use more than one pair of glasses?
-                  </h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {["Yes", "No"].map((opt) => (
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-950">Do you prefer one single pair for everything?</h2>
+                    <p className="text-xs text-neutral-500 mt-1">Or dedicated separate pairs for reading/computer.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      { label: "Yes, One Pair for Everything", desc: "Seamless Progressive or Anti-Fatigue All-in-One" },
+                      { label: "No, Dedicated Specialized Pairs", desc: "Separate reading, driving, or computer glasses" }
+                    ].map((opt) => (
                       <button
-                        key={opt}
+                        key={opt.label}
                         onClick={() => {
-                          setMultiGlasses(opt);
+                          setMultiGlasses(opt.label);
                           setStep(5);
                         }}
-                        className={`p-6 rounded-2xl border text-center font-bold text-lg transition-all cursor-pointer ${
-                          multiGlasses === opt
-                            ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                            : "bg-neutral-50 border-neutral-200/80 text-neutral-900 hover:bg-white hover:border-brand-orange"
+                        className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${
+                          multiGlasses === opt.label
+                            ? "border-brand-orange bg-brand-orange-soft/40 shadow-md ring-2 ring-brand-orange/30"
+                            : "border-neutral-200/80 bg-neutral-50 hover:bg-white"
                         }`}
                       >
-                        {opt}
+                        <div className="font-bold text-sm text-neutral-950">{opt.label}</div>
+                        <p className="text-xs text-neutral-600 mt-1">{opt.desc}</p>
                       </button>
                     ))}
                   </div>
                 </motion.div>
               )}
 
-              {/* RESULT */}
+              {/* STEP 5: RESULTS */}
               {step === 5 && (
                 <motion.div
-                  key="result"
+                  key="step5"
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="space-y-6 text-center py-4"
                 >
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-bold uppercase tracking-wider">
-                    <Sparkles size={12} /> Personalized Recommendation
+                    <Sparkles size={12} /> Diagnostic Complete
                   </span>
 
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950">
-                    {visionNeed === "Both Near + Far" || multiGlasses === "Yes"
-                      ? "Progressive Lenses May Suit Your Needs"
-                      : "Single Vision with Blue-Light Filter May Suit You"}
-                  </h2>
+                  <h2 className="text-3xl font-extrabold text-neutral-950">Recommended Lens Solutions</h2>
 
-                  <p className="text-xs text-neutral-600 max-w-md mx-auto leading-relaxed">
-                    Based on your answers (screen time: {screenTime}, primary activity: {activity}), here are recommended topics to discuss during your test:
-                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
+                    <div className="rounded-2xl bg-neutral-50 p-5 border border-neutral-200/80 flex items-center gap-4">
+                      <div className="w-20 h-20 shrink-0 overflow-hidden rounded-xl bg-white p-1">
+                        <img src="/images/lens-progressive.jpg" alt="Lens Match" className="h-full w-full object-cover rounded-lg" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase text-brand-orange">Primary Recommendation</span>
+                        <h3 className="text-base font-bold text-neutral-950">High-Definition Progressive</h3>
+                        <p className="text-xs text-neutral-600 font-medium">
+                          Engineered for all-day seamless focus.
+                        </p>
+                      </div>
+                    </div>
 
-                  {/* Points */}
-                  <div className="space-y-2 text-left max-w-md mx-auto bg-neutral-50 p-5 rounded-2xl border border-neutral-200/80 text-xs font-bold text-neutral-800">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-brand-orange" />
-                      <span>{visionNeed === "Both Near + Far" ? "Custom Progressive Design" : "Precision Single Vision Power"}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-brand-orange" />
-                      <span>Anti-Reflective Coating (Reduces glare from headlights & screens)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-brand-orange" />
-                      <span>100% UV Protection & Blue-Light Filter</span>
+                    <div className="rounded-2xl bg-neutral-50 p-5 border border-neutral-200/80 flex items-center gap-4">
+                      <div className="w-20 h-20 shrink-0 overflow-hidden rounded-xl bg-white p-1">
+                        <img src="/images/hero-woman.jpg" alt="Coating Match" className="h-full w-full object-cover rounded-lg" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase text-brand-orange">Essential Coating</span>
+                        <h3 className="text-base font-bold text-neutral-950">Blue-Cut + Anti-Glare</h3>
+                        <p className="text-xs text-neutral-600 font-medium">
+                          Protects from screen strain and night glare.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="pt-4 flex flex-wrap justify-center gap-4">
+                  <div className="pt-6 flex flex-wrap justify-center gap-4">
+                    <Link href="/lenses" className="btn-primary">
+                      Explore All Lenses
+                    </Link>
                     <button
                       onClick={handleDiscussWhatsApp}
-                      className="btn-primary gap-2 text-sm font-bold shadow-lg shadow-brand-orange/20 cursor-pointer"
+                      className="btn-secondary gap-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 cursor-pointer"
                     >
-                      <MessageCircle size={18} /> Discuss This Recommendation
+                      <MessageCircle size={18} /> Discuss with Optometrist
                     </button>
-
                     <button
                       onClick={handleReset}
                       className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 hover:text-neutral-900 cursor-pointer"
                     >
-                      <RotateCcw size={14} /> Start Over
+                      <RotateCcw size={14} /> Retake Quiz
                     </button>
-                  </div>
-
-                  {/* Disclaimer */}
-                  <div className="mt-6 pt-4 border-t border-neutral-100 text-[11px] text-neutral-400 font-medium leading-relaxed max-w-lg mx-auto flex items-center justify-center gap-1.5">
-                    <AlertCircle size={14} className="shrink-0 text-amber-500" />
-                    <span>This finder provides general guidance and does not replace professional eye testing or an individual lens prescription recommendation.</span>
                   </div>
                 </motion.div>
               )}

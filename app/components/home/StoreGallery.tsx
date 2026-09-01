@@ -91,9 +91,9 @@ export default function StoreGallery() {
                 <div>
                   <p className="font-bold text-neutral-950">Darshana Optical</p>
                   <p className="text-neutral-500 text-xs mt-0.5 leading-relaxed">
-                    Main Road, Tirupattur,
+                    Tvk nagar, salem bypass road, Vasanth & co opposite,
                     <br />
-                    Tamil Nadu – 635601
+                    Harur – 636903
                   </p>
                 </div>
               </div>
@@ -101,17 +101,17 @@ export default function StoreGallery() {
               <div className="flex items-center gap-3.5 group">
                 <Phone size={20} className="text-brand-orange shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 <a
-                  href="tel:+919876543210"
+                  href="tel:+918870571536"
                   className="font-medium text-neutral-800 hover:text-brand-orange transition-colors"
                 >
-                  +91 98765 43210
+                  +91 88705 71536
                 </a>
               </div>
 
               <div className="flex items-center gap-3.5 group">
                 <MessageCircle size={20} className="text-brand-orange shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 <a
-                  href="https://wa.me/919876543210"
+                  href="https://wa.me/918870571536"
                   target="_blank"
                   rel="noreferrer"
                   className="font-medium text-neutral-800 hover:text-brand-orange transition-colors"
@@ -125,7 +125,7 @@ export default function StoreGallery() {
               <motion.a
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                href="https://maps.google.com/?q=Darshana+Optical+Tirupattur"
+                href="https://maps.google.com/?q=Darshana+Optical+Harur"
                 target="_blank"
                 rel="noreferrer"
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand-orange/40 bg-white py-3 text-xs sm:text-sm font-bold text-brand-orange shadow-xs hover:bg-brand-orange hover:text-white transition-all cursor-pointer"

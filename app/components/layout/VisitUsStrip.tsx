@@ -26,7 +26,7 @@ export default function VisitUsStrip() {
                 <div>
                   <div className="font-bold text-neutral-900">Darshana Optical</div>
                   <div className="text-neutral-500 text-[11px] leading-tight mt-0.5">
-                    Main Road, Tirupattur, Tamil Nadu - 635601
+                    Tvk nagar, salem bypass road, Vasanth & co opposite, Harur - 636903
                   </div>
                 </div>
               </div>
@@ -35,7 +35,7 @@ export default function VisitUsStrip() {
               <div className="flex items-start gap-2.5">
                 <Phone size={16} className="text-brand-orange shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-neutral-900">+91 98765 43210</div>
+                  <div className="font-bold text-neutral-900">+91 88705 71536</div>
                   <div className="text-neutral-500 text-[11px] mt-0.5">Call Us</div>
                 </div>
               </div>
@@ -66,7 +66,7 @@ export default function VisitUsStrip() {
             {/* Right Action */}
             <div className="md:col-span-2 flex justify-start md:justify-end">
               <a
-                href="https://maps.google.com/?q=Darshana+Optical+Tirupattur"
+                href="https://maps.google.com/?q=Darshana+Optical+Harur"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand-orange bg-white px-4 py-2.5 text-xs font-bold text-brand-orange hover:bg-orange-50 transition-colors shadow-xs"

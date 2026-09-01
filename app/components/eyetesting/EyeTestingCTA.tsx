@@ -63,7 +63,7 @@ export default function EyeTestingCTA({ onBookClick }: EyeTestingCTAProps) {
               </button>
 
               <p className="mt-3 text-xs font-medium text-white/90">
-                or Call Us: <a href="tel:+919876543210" className="font-bold hover:underline">+91 98765 43210</a>
+                or Call Us: <a href="tel:+918870571536" className="font-bold hover:underline">+91 88705 71536</a>
               </p>
             </div>
           </div>

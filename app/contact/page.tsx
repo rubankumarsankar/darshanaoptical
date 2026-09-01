@@ -34,7 +34,7 @@ export default function ContactPage() {
     );
 
     setTimeout(() => {
-      window.open(`https://wa.me/919876543210?text=${formattedMsg}`, "_blank");
+      window.open(`https://wa.me/918870571536?text=${formattedMsg}`, "_blank");
     }, 1000);
   };
 
@@ -79,10 +79,10 @@ export default function ContactPage() {
                 </div>
                 <div className="mt-6 pt-4 border-t border-neutral-100">
                   <a
-                    href="tel:+919876543210"
+                    href="tel:+918870571536"
                     className="btn-primary w-full justify-center text-xs font-bold gap-2"
                   >
-                    <Phone size={16} /> Call Now: +91 98765 43210
+                    <Phone size={16} /> Call Now: +91 88705 71536
                   </a>
                 </div>
               </motion.div>
@@ -103,7 +103,7 @@ export default function ContactPage() {
                 </div>
                 <div className="mt-6 pt-4 border-t border-neutral-100">
                   <a
-                    href="https://wa.me/919876543210"
+                    href="https://wa.me/918870571536"
                     target="_blank"
                     rel="noreferrer"
                     className="btn-secondary border-emerald-600 text-emerald-700 hover:bg-emerald-50 w-full justify-center text-xs font-bold gap-2"
@@ -148,7 +148,7 @@ export default function ContactPage() {
               <div>
                 <h2 className="text-2xl font-extrabold text-neutral-950">Darshana Optical Store Information</h2>
                 <p className="mt-1 text-xs text-neutral-500 font-medium">
-                  Verified address and opening hours for our main store location in Tirupattur.
+                  Verified address and opening hours for our main store location in Harur.
                 </p>
               </div>
 
@@ -164,7 +164,7 @@ export default function ContactPage() {
                   </motion.div>
                   <div>
                     <div className="font-bold text-neutral-950">Verified Address</div>
-                    <div className="text-neutral-600 text-xs">Main Road, Tirupattur, Tamil Nadu - 635601</div>
+                    <div className="text-neutral-600 text-xs">Tvk nagar, salem bypass road, Vasanth & co opposite, Harur - 636903</div>
                   </div>
                 </div>
 
@@ -172,7 +172,7 @@ export default function ContactPage() {
                   <Phone size={20} className="text-brand-orange mt-0.5 shrink-0" />
                   <div>
                     <div className="font-bold text-neutral-950">Verified Phone</div>
-                    <div className="text-neutral-600 text-xs">+91 98765 43210</div>
+                    <div className="text-neutral-600 text-xs">+91 88705 71536</div>
                   </div>
                 </div>
 
@@ -190,7 +190,7 @@ export default function ContactPage() {
               <div className="relative aspect-16/10 overflow-hidden rounded-2xl border border-neutral-200 shadow-md">
                 <iframe
                   title="Darshana Optical Google Map Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3896.613437142717!2d78.5638!3d12.4925!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bac534123456789%3A0x123456789abcdef!2sTirupattur%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3899.7123!2d78.4908!3d12.0621!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bac457891234567%3A0x987654321fedcba!2sHarur%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
                   className="h-full w-full border-0"
                   allowFullScreen
                   loading="lazy"
@@ -199,7 +199,7 @@ export default function ContactPage() {
 
               <div>
                 <a
-                  href="https://maps.google.com/?q=Darshana+Optical+Tirupattur"
+                  href="https://maps.google.com/?q=Darshana+Optical+Harur"
                   target="_blank"
                   rel="noreferrer"
                   className="btn-primary gap-2 w-full justify-center font-bold"
@@ -254,7 +254,7 @@ export default function ContactPage() {
                         </label>
                         <input
                           type="email"
-                          placeholder="you@example.com"
+                          placeholder="darshanado@gmail.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="w-full rounded-xl border border-neutral-200 bg-white py-3 px-4 text-sm text-neutral-900 focus:border-brand-orange focus:outline-none"

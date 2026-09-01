@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, ArrowLeft, Check, RotateCcw, MessageCircle, Glasses } from "lucide-react";
+import { Sparkles, ArrowRight, ArrowLeft, Check, RotateCcw, MessageCircle, Glasses, ShieldCheck, Heart } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
@@ -81,15 +81,21 @@ export default function SmartFrameFinderPage() {
                   exit={{ opacity: 0, y: -16 }}
                   className="text-center space-y-6 py-6"
                 >
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-orange-soft text-brand-orange shadow-md">
-                    <Glasses size={32} />
+                  <div className="relative w-32 h-32 mx-auto overflow-hidden rounded-full border-4 border-orange-100 shadow-md">
+                    <img
+                      src="/images/frame-finder.jpg"
+                      alt="Smart Frame Finder"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
-                  <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950">
-                    Let&apos;s Find Your Frame 👓
-                  </h1>
-                  <p className="text-base text-neutral-600 max-w-md mx-auto font-medium leading-relaxed">
-                    Answer a few quick questions and we&apos;ll suggest frame styles tailored to your face shape, style preference, and budget.
-                  </p>
+                  <div className="space-y-2">
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950">
+                      Find Your Ideal Frame
+                    </h1>
+                    <p className="text-base text-neutral-600 max-w-md mx-auto font-medium leading-relaxed">
+                      Answer a few quick questions and we&apos;ll suggest frame styles tailored to your face shape, style preference, and budget.
+                    </p>
+                  </div>
                   <div className="pt-4">
                     <button
                       onClick={() => setStep(1)}
@@ -101,7 +107,7 @@ export default function SmartFrameFinderPage() {
                 </motion.div>
               )}
 
-              {/* STEP 1: GENDER */}
+              {/* STEP 1: GENDER / TARGET */}
               {step === 1 && (
                 <motion.div
                   key="step1"
@@ -110,22 +116,33 @@ export default function SmartFrameFinderPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-neutral-950">Who are you shopping for?</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {["Men", "Women", "Kids", "No Preference"].map((opt) => (
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-950">Who is this frame for?</h2>
+                    <p className="text-xs text-neutral-500 mt-1">Select your preferred category.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[
+                      { label: "Men", img: "/images/cat-men.jpg" },
+                      { label: "Women", img: "/images/cat-women.jpg" },
+                      { label: "Kids", img: "/images/cat-kids.jpg" }
+                    ].map((opt) => (
                       <button
-                        key={opt}
+                        key={opt.label}
                         onClick={() => {
-                          setGender(opt);
+                          setGender(opt.label);
                           setStep(2);
                         }}
-                        className={`p-5 rounded-2xl border text-left font-bold text-base transition-all cursor-pointer ${
-                          gender === opt
-                            ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                            : "bg-neutral-50 border-neutral-200/80 text-neutral-900 hover:bg-white hover:border-brand-orange"
+                        className={`group p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                          gender === opt.label
+                            ? "border-brand-orange bg-brand-orange-soft/40 shadow-md ring-2 ring-brand-orange/30"
+                            : "border-neutral-200/80 bg-neutral-50 hover:bg-white hover:border-neutral-300"
                         }`}
                       >
-                        {opt}
+                        <div className="h-20 w-20 mx-auto overflow-hidden rounded-full mb-3 border-2 border-white shadow-xs">
+                          <img src={opt.img} alt={opt.label} className="h-full w-full object-cover" />
+                        </div>
+                        <span className="font-bold text-sm text-neutral-900 group-hover:text-brand-orange">{opt.label}</span>
                       </button>
                     ))}
                   </div>
@@ -141,38 +158,42 @@ export default function SmartFrameFinderPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-neutral-950">What&apos;s your face shape?</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-950">What is your face shape?</h2>
+                    <p className="text-xs text-neutral-500 mt-1">We balance angles and curves for the perfect look.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     {[
-                      { name: "Round", desc: "Soft circular lines" },
-                      { name: "Oval", desc: "Balanced proportions" },
-                      { name: "Square", desc: "Strong jaw & forehead" },
-                      { name: "Heart", desc: "Wider forehead, slender chin" },
-                      { name: "Not Sure", desc: "We will measure in store" },
+                      { label: "Oval", img: "/images/avatar-2.jpg" },
+                      { label: "Round", img: "/images/avatar-1.jpg" },
+                      { label: "Square", img: "/images/avatar-3.jpg" },
+                      { label: "Heart", img: "/images/avatar-4.jpg" },
+                      { label: "Diamond", img: "/images/avatar-5.jpg" }
                     ].map((opt) => (
                       <button
-                        key={opt.name}
+                        key={opt.label}
                         onClick={() => {
-                          setFaceShape(opt.name);
+                          setFaceShape(opt.label);
                           setStep(3);
                         }}
-                        className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                          faceShape === opt.name
-                            ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                            : "bg-neutral-50 border-neutral-200/80 text-neutral-900 hover:bg-white hover:border-brand-orange"
+                        className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                          faceShape === opt.label
+                            ? "border-brand-orange bg-brand-orange-soft/40 shadow-md ring-2 ring-brand-orange/30"
+                            : "border-neutral-200/80 bg-neutral-50 hover:bg-white"
                         }`}
                       >
-                        <div className="font-bold text-sm">{opt.name}</div>
-                        <div className={`text-[11px] mt-0.5 ${faceShape === opt.name ? "text-white/80" : "text-neutral-500"}`}>
-                          {opt.desc}
+                        <div className="h-14 w-14 mx-auto overflow-hidden rounded-full mb-2 border border-neutral-200">
+                          <img src={opt.img} alt={opt.label} className="h-full w-full object-cover" />
                         </div>
+                        <span className="font-bold text-xs text-neutral-900">{opt.label}</span>
                       </button>
                     ))}
                   </div>
                 </motion.div>
               )}
 
-              {/* STEP 3: STYLE */}
+              {/* STEP 3: STYLE PREFERENCE */}
               {step === 3 && (
                 <motion.div
                   key="step3"
@@ -181,29 +202,41 @@ export default function SmartFrameFinderPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <h2 className="text-2xl font-bold text-neutral-950">What&apos;s your preferred style?</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {["Minimal", "Professional", "Classic", "Trendy", "Bold", "Sporty"].map((opt) => (
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-950">Select your preferred style</h2>
+                    <p className="text-xs text-neutral-500 mt-1">Choose the aesthetic you love most.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {[
+                      { label: "Classic & Timeless", img: "/images/frame-1.jpg" },
+                      { label: "Modern & Bold", img: "/images/frame-3.jpg" },
+                      { label: "Minimalist & Thin", img: "/images/frame-2.jpg" },
+                      { label: "Trendy & Colorful", img: "/images/frame-6.jpg" }
+                    ].map((opt) => (
                       <button
-                        key={opt}
+                        key={opt.label}
                         onClick={() => {
-                          setStyle(opt);
+                          setStyle(opt.label);
                           setStep(4);
                         }}
-                        className={`p-5 rounded-2xl border text-center font-bold text-sm transition-all cursor-pointer ${
-                          style === opt
-                            ? "bg-brand-orange text-white border-brand-orange shadow-md"
-                            : "bg-neutral-50 border-neutral-200/80 text-neutral-900 hover:bg-white hover:border-brand-orange"
+                        className={`p-4 rounded-2xl border text-center transition-all cursor-pointer ${
+                          style === opt.label
+                            ? "border-brand-orange bg-brand-orange-soft/40 shadow-md"
+                            : "border-neutral-200/80 bg-neutral-50 hover:bg-white"
                         }`}
                       >
-                        {opt}
+                        <div className="aspect-4/3 overflow-hidden rounded-xl bg-white mb-3 p-1">
+                          <img src={opt.img} alt={opt.label} className="h-full w-full object-contain" />
+                        </div>
+                        <span className="font-bold text-xs text-neutral-900">{opt.label}</span>
                       </button>
                     ))}
                   </div>
                 </motion.div>
               )}
 
-              {/* STEP 4: PRIORITIES (MULTI-SELECT) */}
+              {/* STEP 4: PRIORITIES */}
               {step === 4 && (
                 <motion.div
                   key="step4"
@@ -213,12 +246,12 @@ export default function SmartFrameFinderPage() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-bold text-neutral-950">What matters most?</h2>
-                    <p className="text-xs text-neutral-500 mt-1">Select all that apply to you.</p>
+                    <h2 className="text-2xl font-bold text-neutral-950">What matters most to you?</h2>
+                    <p className="text-xs text-neutral-500 mt-1">Select all key factors.</p>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {["Lightweight", "Durability", "Comfort", "Premium Look", "Budget", "Flexible Fit"].map((opt) => {
+                    {["Ultra Lightweight", "High Durability", "All-Day Comfort", "Premium Brand", "Best Value Price", "Flexible TR90 Fit"].map((opt) => {
                       const isSel = priorities.includes(opt);
                       return (
                         <button
@@ -242,13 +275,13 @@ export default function SmartFrameFinderPage() {
                       onClick={() => setStep(5)}
                       className="btn-primary gap-2 text-sm font-bold shadow-lg shadow-brand-orange/20 cursor-pointer"
                     >
-                      See Matches <ArrowRight size={16} />
+                      See Recommended Matches <ArrowRight size={16} />
                     </button>
                   </div>
                 </motion.div>
               )}
 
-              {/* STEP 5: RESULTS */}
+              {/* STEP 5: RESULTS WITH REAL IMAGES */}
               {step === 5 && (
                 <motion.div
                   key="step5"
@@ -257,36 +290,48 @@ export default function SmartFrameFinderPage() {
                   className="space-y-6 text-center py-4"
                 >
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-bold uppercase tracking-wider">
-                    <Sparkles size={12} /> Matching Complete
+                    <Sparkles size={12} /> Personalized Recommendation
                   </span>
 
-                  <h2 className="text-3xl font-extrabold text-neutral-950">Your Frame Matches</h2>
+                  <h2 className="text-3xl font-extrabold text-neutral-950">Your Curated Matches</h2>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
-                    <div className="rounded-2xl bg-neutral-50 p-6 border border-neutral-200/80">
-                      <h3 className="text-lg font-bold text-brand-orange">Rectangle & Square Frames</h3>
-                      <p className="mt-1 text-xs text-neutral-600 font-medium leading-relaxed">
-                        A great option to explore based on your selected {faceShape || "Oval"} face geometry and {style || "Classic"} aesthetic.
-                      </p>
+                    <div className="rounded-2xl bg-neutral-50 p-5 border border-neutral-200/80 flex items-center gap-4">
+                      <div className="w-24 h-20 shrink-0 overflow-hidden rounded-xl bg-white p-1">
+                        <img src="/images/frame-1.jpg" alt="Match 1" className="h-full w-full object-contain" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase text-brand-orange">Top Fit</span>
+                        <h3 className="text-base font-bold text-neutral-950">Classic Acetate & Square</h3>
+                        <p className="text-xs text-neutral-600 font-medium">
+                          Ideal for {faceShape || "balanced"} face contours.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="rounded-2xl bg-neutral-50 p-6 border border-neutral-200/80">
-                      <h3 className="text-lg font-bold text-brand-orange">Lightweight TR90 & Metal</h3>
-                      <p className="mt-1 text-xs text-neutral-600 font-medium leading-relaxed">
-                        Matches your key priorities: {priorities.join(", ") || "Comfort & Durability"}.
-                      </p>
+                    <div className="rounded-2xl bg-neutral-50 p-5 border border-neutral-200/80 flex items-center gap-4">
+                      <div className="w-24 h-20 shrink-0 overflow-hidden rounded-xl bg-white p-1">
+                        <img src="/images/frame-3.jpg" alt="Match 2" className="h-full w-full object-contain" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase text-brand-orange">Alternative Pick</span>
+                        <h3 className="text-base font-bold text-neutral-950">Featherlight TR90 / Metal</h3>
+                        <p className="text-xs text-neutral-600 font-medium">
+                          Prioritizes {priorities[0] || "comfort and durability"}.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
                   <div className="pt-6 flex flex-wrap justify-center gap-4">
                     <Link href="/frames" className="btn-primary">
-                      View Frames
+                      Browse Full Collection
                     </Link>
                     <button
                       onClick={handleShareWhatsApp}
                       className="btn-secondary gap-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 cursor-pointer"
                     >
-                      <MessageCircle size={18} /> Show Results In Store
+                      <MessageCircle size={18} /> Show Results on WhatsApp
                     </button>
                     <button
                       onClick={handleReset}

@@ -32,7 +32,7 @@ export default function BookingModal() {
         `Please confirm my booking.`
       );
       setTimeout(() => {
-        window.open(`https://wa.me/919876543210?text=${message}`, "_blank");
+        window.open(`https://wa.me/918870571536?text=${message}`, "_blank");
       }, 1500);
     }
   };
@@ -84,7 +84,7 @@ export default function BookingModal() {
                   </span>
                   <h3 className="text-2xl font-extrabold text-neutral-950">Book Your Eye Test</h3>
                   <p className="mt-1 text-xs sm:text-sm text-neutral-500">
-                    Schedule a visit with our certified optometrist at Tirupattur.
+                    Schedule a visit with our certified optometrist at Harur.
                   </p>
                 </div>
 
@@ -161,7 +161,7 @@ export default function BookingModal() {
                             <input
                               type="tel"
                               required
-                              placeholder="e.g. +91 98765 43210"
+                              placeholder="e.g. +91 88705 71536"
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
                               className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
@@ -338,7 +338,7 @@ export default function BookingModal() {
                   className="pt-4 flex flex-col sm:flex-row justify-center gap-3"
                 >
                   <a
-                    href="https://maps.google.com/?q=Darshana+Optical+Tirupattur"
+                    href="https://maps.google.com/?q=Darshana+Optical+Harur"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 px-5 py-2.5 text-xs font-bold text-neutral-800 hover:bg-neutral-50"
