@@ -4,6 +4,7 @@ import "./globals.css";
 import SmoothScroll from "./components/motion/SmoothScroll";
 import { BookingProvider } from "./components/booking/BookingContext";
 import BookingModal from "./components/booking/BookingModal";
+import Script from "next/script";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -19,6 +20,21 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${manrope.variable} h-full antialiased scroll-smooth`}>
+      <head>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-10ZFZ1TVTY"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-10ZFZ1TVTY');
+          `}
+        </Script>
+      </head>
       <body className="min-h-full flex flex-col">
         <SmoothScroll />
         <BookingProvider>
