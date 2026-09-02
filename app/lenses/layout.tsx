@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Prescription Lenses — Anti-Glare, Blue Cut & Progressive | Darshana Optical",
     description:
       "Premium anti-glare, blue cut, photochromic & progressive lenses at Darshana Optical Harur. Expert fitting included.",
-    url: "https://darshanaoptical.in/lenses",
+    url: "https://www.darshanaoptical.com/lenses",
     images: [{ url: "/images/og-image.jpg", width: 1200, height: 630 }],
   },
 };

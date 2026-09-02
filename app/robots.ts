@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/_next/"],
       },
     ],
-    sitemap: "https://darshanaoptical.in/sitemap.xml",
-    host: "https://darshanaoptical.in",
+    sitemap: "https://www.darshanaoptical.com/sitemap.xml",
+    host: "https://www.darshanaoptical.com",
   };
 }

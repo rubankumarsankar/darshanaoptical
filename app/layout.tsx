@@ -13,7 +13,7 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const BASE_URL = "https://darshanaoptical.in";
+const BASE_URL = "https://www.darshanaoptical.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

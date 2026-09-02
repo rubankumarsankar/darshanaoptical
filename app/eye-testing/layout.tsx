@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Eye Testing — Advanced Eye Examination | Darshana Optical",
     description:
       "Professional computerised eye testing at Darshana Optical, Harur. Expert optometrists, advanced equipment, accurate prescriptions.",
-    url: "https://darshanaoptical.in/eye-testing",
+    url: "https://www.darshanaoptical.com/eye-testing",
     images: [{ url: "/images/og-image.jpg", width: 1200, height: 630 }],
   },
 };

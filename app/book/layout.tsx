@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: "Book Eye Test Appointment | Darshana Optical Harur",
     description:
       "Schedule your professional eye test at Darshana Optical, Harur. Expert optometrists, advanced equipment, same-day prescription.",
-    url: "https://darshanaoptical.in/book",
+    url: "https://www.darshanaoptical.com/book",
     images: [{ url: "/images/og-image.jpg", width: 1200, height: 630 }],
   },
 };

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: "Spectacle Frames — Men, Women & Kids | Darshana Optical",
     description:
       "1200+ frames for men, women & kids. Premium brands, full rim, rimless, aviators & more at Darshana Optical Harur.",
-    url: "https://darshanaoptical.in/frames",
+    url: "https://www.darshanaoptical.com/frames",
     images: [{ url: "/images/og-image.jpg", width: 1200, height: 630 }],
   },
 };

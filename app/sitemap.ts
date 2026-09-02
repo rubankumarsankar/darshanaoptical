@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://darshanaoptical.in";
+  const base = "https://www.darshanaoptical.com";
 
   const routes = [
     { url: "/", priority: 1.0, changeFrequency: "weekly" as const },

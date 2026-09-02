@@ -3,8 +3,8 @@ export default function LocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "Optician",
     name: "Darshana Optical",
-    image: "https://darshanaoptical.in/logo.png",
-    url: "https://darshanaoptical.in",
+    image: "https://www.darshanaoptical.com/logo.png",
+    url: "https://www.darshanaoptical.com",
     telephone: "+91-8870571536",
     description:
       "Darshana Optical in Harur offers premium eyewear, stylish frames, advanced lens solutions, and professional eye testing services.",

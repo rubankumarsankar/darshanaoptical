@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     title: "Contact Darshana Optical — Harur, Tamil Nadu",
     description:
       "Visit us at TVK Nagar, Salem Bypass Road, Harur. Call +91 88705 71536. Open Mon–Sat 9:30 AM to 8:30 PM.",
-    url: "https://darshanaoptical.in/contact",
+    url: "https://www.darshanaoptical.com/contact",
     images: [{ url: "/images/og-image.jpg", width: 1200, height: 630 }],
   },
 };

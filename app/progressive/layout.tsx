@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     title: "Progressive Lenses — No-Line Bifocal | Darshana Optical",
     description:
       "Premium progressive lenses for all-distance vision at Darshana Optical, Harur. Expert fitting by trained optometrists.",
-    url: "https://darshanaoptical.in/progressive",
+    url: "https://www.darshanaoptical.com/progressive",
     images: [{ url: "/images/og-image.jpg", width: 1200, height: 630 }],
   },
 };
