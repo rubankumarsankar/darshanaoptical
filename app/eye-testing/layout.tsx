@@ -3,22 +3,26 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Eye Testing in Harur | Darshana Optical",
   description:
-    "Professional 6-step computerized eye testing in Harur with advanced autorefractometer, phoropter, and precision vision care at Darshana Optical.",
-  alternates: {
-    canonical: "/eye-testing",
-  },
+    "Professional 6-step computerized eye testing in Harur with advanced autorefractometer, phoropter, and precision vision care at Darshana Optical. Call 088705 71536.",
+  keywords: [
+    "eye testing Harur",
+    "eye test Harur",
+    "computerised eye test Harur",
+    "optometrist Harur",
+    "eye examination Tamil Nadu",
+    "vision test Harur",
+    "eye checkup Dharmapuri",
+  ],
+  alternates: { canonical: "/eye-testing" },
   openGraph: {
     title: "Eye Testing in Harur | Darshana Optical",
     description:
       "Professional 6-step computerized eye testing in Harur with advanced autorefractometer, phoropter, and precision vision care at Darshana Optical.",
     url: "https://darshanaoptical.com/eye-testing",
+    images: [{ url: "/images/og-darshana-optical.jpg", width: 1200, height: 630 }],
   },
 };
 
-export default function EyeTestingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function EyeTestingLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

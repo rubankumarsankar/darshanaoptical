@@ -4,6 +4,8 @@ import "./globals.css";
 import SmoothScroll from "./components/motion/SmoothScroll";
 import { BookingProvider } from "./components/booking/BookingContext";
 import BookingModal from "./components/booking/BookingModal";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import LocalBusinessSchema from "./components/seo/LocalBusinessSchema";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -11,22 +13,47 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const BASE_URL = "https://darshanaoptical.com";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://darshanaoptical.com"),
+  metadataBase: new URL(BASE_URL),
   title: {
     default: "Darshana Optical Harur | Eye Testing, Frames & Lenses",
     template: "%s | Darshana Optical",
   },
   description:
     "Visit Darshana Optical in Harur for eye testing, prescription glasses, stylish frames, progressive lenses and sunglasses. Call 088705 71536.",
+  keywords: [
+    "Darshana Optical",
+    "Darshana Optical Harur",
+    "optical shop Harur",
+    "eyewear Harur",
+    "eye testing Harur",
+    "spectacles Harur",
+    "frames Harur Tamil Nadu",
+    "lenses Harur",
+    "progressive lenses Harur",
+    "optician Harur",
+    "best optical shop Dharmapuri",
+    "eye care Tamil Nadu",
+    "prescription glasses Harur",
+  ],
+  authors: [{ name: "Darshana Optical", url: BASE_URL }],
+  creator: "Darshana Optical",
+  publisher: "Darshana Optical",
   alternates: {
     canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
   openGraph: {
     title: "Darshana Optical Harur | Eye Testing, Frames & Lenses",
     description:
       "Visit Darshana Optical in Harur for eye testing, prescription glasses, stylish frames, progressive lenses and sunglasses.",
-    url: "https://darshanaoptical.com/",
+    url: BASE_URL,
     siteName: "Darshana Optical",
     images: [
       {
@@ -48,59 +75,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
-};
-
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "Optician",
-  "@id": "https://darshanaoptical.com/#business",
-  name: "Darshana Optical",
-  url: "https://darshanaoptical.com/",
-  logo: "https://darshanaoptical.com/logo.png",
-  image: "https://darshanaoptical.com/images/og-darshana-optical.jpg",
-  telephone: "+918870571536",
-  email: "darshanado@gmail.com",
-  priceRange: "₹₹",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "Tvk nagar, salem bypass road, Vasanth & co opposite",
-    addressLocality: "Harur",
-    addressRegion: "Tamil Nadu",
-    postalCode: "636903",
-    addressCountry: "IN",
-  },
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: 12.0621,
-    longitude: 78.4908,
-  },
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ],
-      opens: "09:30",
-      closes: "20:30",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Sunday"],
-      opens: "10:00",
-      closes: "14:00",
-    },
-  ],
-  hasMap: "https://maps.google.com/?q=Darshana+Optical+Harur",
-  sameAs: [
-    "https://instagram.com",
-    "https://facebook.com",
-  ],
 };
 
 export default function RootLayout({
@@ -114,12 +91,7 @@ export default function RootLayout({
       className={`${manrope.variable} h-full antialiased scroll-smooth`}
     >
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(localBusinessSchema),
-          }}
-        />
+        <LocalBusinessSchema />
       </head>
       <body className="min-h-full flex flex-col">
         <SmoothScroll />
@@ -128,6 +100,7 @@ export default function RootLayout({
           <BookingModal />
         </BookingProvider>
       </body>
+      <GoogleAnalytics gaId="G-10ZFZ1TVTY" />
     </html>
   );
 }

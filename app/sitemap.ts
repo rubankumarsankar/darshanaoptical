@@ -3,24 +3,28 @@ import type { MetadataRoute } from "next";
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://darshanaoptical.com";
 
-  const pages = [
-    "",
-    "/eye-testing",
-    "/frames",
-    "/lenses",
-    "/progressive-lenses",
-    "/frame-finder",
-    "/lens-finder",
-    "/offers",
-    "/gallery",
-    "/contact",
-    "/book-eye-test",
+  const routes = [
+    { url: "", priority: 1.0, changeFrequency: "daily" as const },
+    { url: "/eye-testing", priority: 0.9, changeFrequency: "weekly" as const },
+    { url: "/frames", priority: 0.9, changeFrequency: "weekly" as const },
+    { url: "/lenses", priority: 0.9, changeFrequency: "weekly" as const },
+    { url: "/progressive-lenses", priority: 0.9, changeFrequency: "weekly" as const },
+    { url: "/progressive", priority: 0.8, changeFrequency: "weekly" as const },
+    { url: "/book-eye-test", priority: 0.9, changeFrequency: "weekly" as const },
+    { url: "/book", priority: 0.8, changeFrequency: "weekly" as const },
+    { url: "/frame-finder", priority: 0.8, changeFrequency: "monthly" as const },
+    { url: "/lens-finder", priority: 0.8, changeFrequency: "monthly" as const },
+    { url: "/offers", priority: 0.8, changeFrequency: "weekly" as const },
+    { url: "/gallery", priority: 0.7, changeFrequency: "monthly" as const },
+    { url: "/contact", priority: 0.8, changeFrequency: "monthly" as const },
+    { url: "/privacy-policy", priority: 0.3, changeFrequency: "yearly" as const },
+    { url: "/terms-conditions", priority: 0.3, changeFrequency: "yearly" as const },
   ];
 
-  return pages.map((page) => ({
-    url: `${base}${page}`,
+  return routes.map(({ url, priority, changeFrequency }) => ({
+    url: `${base}${url}`,
     lastModified: new Date(),
-    changeFrequency: page === "" ? "daily" : "weekly",
-    priority: page === "" ? 1.0 : 0.8,
+    changeFrequency,
+    priority,
   }));
 }
