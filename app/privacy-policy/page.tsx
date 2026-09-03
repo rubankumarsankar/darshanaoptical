@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | Darshana Optical",
+  description: "Privacy Policy for Darshana Optical store in Harur, Tamil Nadu.",
+  alternates: {
+    canonical: "/privacy-policy",
+  },
+};
 
 const SECTIONS = [
   {

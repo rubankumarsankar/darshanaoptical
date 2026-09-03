@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
+
+export const metadata: Metadata = {
+  title: "Terms & Conditions | Darshana Optical",
+  description: "Terms and conditions for services and purchases at Darshana Optical in Harur, Tamil Nadu.",
+  alternates: {
+    canonical: "/terms-conditions",
+  },
+};
 
 const SECTIONS = [
   {

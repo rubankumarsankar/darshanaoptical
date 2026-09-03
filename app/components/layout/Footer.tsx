@@ -63,7 +63,7 @@ export default function Footer() {
             <li><Link href="/eye-testing" className="hover:text-brand-orange transition-colors">Eye Testing</Link></li>
             <li><Link href="/frames" className="hover:text-brand-orange transition-colors">Frames</Link></li>
             <li><Link href="/lenses" className="hover:text-brand-orange transition-colors">Lenses</Link></li>
-            <li><Link href="/progressive" className="hover:text-brand-orange transition-colors">Progressive Lenses</Link></li>
+            <li><Link href="/progressive-lenses" className="hover:text-brand-orange transition-colors">Progressive Lenses</Link></li>
             <li><Link href="/offers" className="hover:text-brand-orange transition-colors">Offers</Link></li>
           </ul>
         </div>
@@ -74,14 +74,10 @@ export default function Footer() {
             Quick Links
           </h4>
           <ul className="space-y-2 text-xs text-neutral-400">
-            <li>
-              <button onClick={openBooking} className="hover:text-brand-orange transition-colors cursor-pointer text-left">
-                Book Eye Test
-              </button>
-            </li>
+            <li><Link href="/book-eye-test" className="hover:text-brand-orange transition-colors">Book Eye Test</Link></li>
+            <li><Link href="/frame-finder" className="hover:text-brand-orange transition-colors">Smart Frame Finder</Link></li>
+            <li><Link href="/lens-finder" className="hover:text-brand-orange transition-colors">Smart Lens Finder</Link></li>
             <li><Link href="/gallery" className="hover:text-brand-orange transition-colors">Gallery</Link></li>
-            <li><Link href="/about" className="hover:text-brand-orange transition-colors">About Us</Link></li>
-            <li><Link href="/contact" className="hover:text-brand-orange transition-colors">Contact Us</Link></li>
             <li><Link href="/contact" className="hover:text-brand-orange transition-colors">Store Location</Link></li>
           </ul>
         </div>

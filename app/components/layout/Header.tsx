@@ -52,7 +52,7 @@ export default function Header() {
   }, [mobileMenuOpen]);
 
   const isLensesActive =
-    pathname === "/lenses" || pathname === "/progressive" || pathname === "/lens-finder";
+    pathname === "/lenses" || pathname === "/progressive" || pathname === "/progressive-lenses" || pathname === "/lens-finder";
 
   return (
     <header
@@ -150,15 +150,15 @@ export default function Header() {
 
             {/* Progressive */}
             <Link
-              href="/progressive"
+              href="/progressive-lenses"
               className={`group relative py-1 text-sm font-medium transition-colors duration-fast hover:text-brand-orange ${
-                pathname === "/progressive" ? "text-brand-orange font-bold" : "text-neutral-700"
+                pathname === "/progressive-lenses" || pathname === "/progressive" ? "text-brand-orange font-bold" : "text-neutral-700"
               }`}
             >
               Progressive
               <span
                 className={`absolute -bottom-0.5 left-0 h-0.5 rounded-pill bg-brand-orange transition-transform duration-220 ease-out ${
-                  pathname === "/progressive" ? "w-full scale-x-100" : "w-full origin-left scale-x-0 group-hover:scale-x-100"
+                  pathname === "/progressive-lenses" || pathname === "/progressive" ? "w-full scale-x-100" : "w-full origin-left scale-x-0 group-hover:scale-x-100"
                 }`}
               />
             </Link>
@@ -252,9 +252,9 @@ export default function Header() {
                 </Link>
               ))}
               <Link
-                href="/progressive"
+                href="/progressive-lenses"
                 className={`rounded-lg px-2 py-3 pl-6 text-sm font-medium transition-colors ${
-                  pathname === "/progressive"
+                  pathname === "/progressive-lenses" || pathname === "/progressive"
                     ? "text-brand-orange"
                     : "text-neutral-600 hover:text-brand-orange"
                 }`}
