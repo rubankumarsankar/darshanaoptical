@@ -69,6 +69,8 @@ export default function StoreGallery() {
                   <img
                     src={img.src}
                     alt={img.title}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

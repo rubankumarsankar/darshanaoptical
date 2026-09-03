@@ -116,6 +116,8 @@ export default function NewArrivals() {
                     <img
                       src={p.image}
                       alt={p.code}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-108"
                     />
                   </div>

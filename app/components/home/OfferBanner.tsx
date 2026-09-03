@@ -62,6 +62,8 @@ export default function OfferBanner() {
               <img
                 src="/images/offer-glasses.jpg"
                 alt="Computer Glasses Special Offer"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover rounded-2xl md:rounded-l-2xl md:rounded-r-none transition-transform duration-700 group-hover:scale-105"
               />
             </div>

@@ -86,6 +86,8 @@ export default function Testimonials() {
                   <img
                     src={currentReview.avatar}
                     alt={currentReview.name}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -132,6 +134,8 @@ export default function Testimonials() {
                   <img
                     src={r.avatar}
                     alt={r.name}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                   />
                 </button>

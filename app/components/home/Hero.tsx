@@ -185,6 +185,11 @@ export default function Hero() {
                 <img
                   src="/images/hero-woman.jpg"
                   alt="Darshana Optical - Stylish Eyewear"
+                  width={600}
+                  height={600}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                 />
               </motion.div>

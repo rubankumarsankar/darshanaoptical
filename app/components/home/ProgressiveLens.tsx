@@ -62,6 +62,8 @@ export default function ProgressiveLens() {
                 <img
                   src="/images/lens-progressive.jpg"
                   alt="Progressive Multi-Zone Lens"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/60 pointer-events-none" />

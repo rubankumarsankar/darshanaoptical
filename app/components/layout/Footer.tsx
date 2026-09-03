@@ -17,6 +17,10 @@ export default function Footer() {
             <img
               src="/logo.png"
               alt="Darshana Optical Logo"
+              width={150}
+              height={36}
+              loading="lazy"
+              decoding="async"
               className="h-9 w-auto object-contain brightness-0 invert"
             />
           </div>

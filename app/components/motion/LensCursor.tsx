@@ -7,6 +7,7 @@ export default function LensCursor() {
   const prefersReduced = useReducedMotion();
   const [active, setActive] = useState(false);
   const [hoverText, setHoverText] = useState<string | null>(null);
+  const [isPointerFine, setIsPointerFine] = useState(false);
 
   const mouseX = useMotionValue(-100);
   const mouseY = useMotionValue(-100);
@@ -17,6 +18,10 @@ export default function LensCursor() {
 
   useEffect(() => {
     if (prefersReduced) return;
+    if (typeof window === "undefined" || !window.matchMedia("(pointer: fine)").matches) {
+      return;
+    }
+    setIsPointerFine(true);
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
@@ -34,11 +39,11 @@ export default function LensCursor() {
       }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [mouseX, mouseY, prefersReduced]);
 
-  if (prefersReduced || !active) return null;
+  if (prefersReduced || !isPointerFine || !active) return null;
 
   return (
     <motion.div

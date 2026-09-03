@@ -83,6 +83,9 @@ export default function Header() {
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               src="/logo.png"
               alt="Darshana Optical Logo"
+              width={180}
+              height={48}
+              decoding="async"
               className="h-10 sm:h-12 w-auto object-contain transition-all duration-300"
             />
           </Link>
