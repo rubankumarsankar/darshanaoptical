@@ -23,6 +23,19 @@ export default function ContactPage() {
     e.preventDefault();
     setSubmitted(true);
 
+    // Save inquiry to TiDB MySQL Database
+    fetch("/api/inquiries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        phone,
+        email: email || null,
+        interest,
+        message: message || null,
+      }),
+    }).catch((err) => console.error("Database save error:", err));
+
     const formattedMsg = encodeURIComponent(
       `Hello Darshana Optical,\n\nNew Website Inquiry:\n` +
       `*Name:* ${name}\n` +

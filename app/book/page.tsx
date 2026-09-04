@@ -45,6 +45,22 @@ export default function DedicatedBookPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+
+    // Save appointment request to TiDB MySQL Database
+    fetch("/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        phone,
+        email: email || null,
+        preferred_date: date || null,
+        preferred_time: selectedTime,
+        test_type: reason,
+        wears_glasses: wearsGlasses,
+        notes: notes || null,
+      }),
+    }).catch((err) => console.error("Database save error:", err));
   };
 
   const handleWhatsAppConfirm = () => {

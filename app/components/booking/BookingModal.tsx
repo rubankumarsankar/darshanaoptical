@@ -22,6 +22,19 @@ export default function BookingModal() {
       setStep((prev) => prev + 1);
     } else {
       setIsSuccess(true);
+      // Persist appointment to TiDB MySQL Database
+      fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone,
+          preferred_date: date || null,
+          preferred_time: time,
+          test_type: testType,
+        }),
+      }).catch((err) => console.error("Database save error:", err));
+
       const message = encodeURIComponent(
         `Hello Darshana Optical,\n\nI would like to book an Eye Test appointment.\n\n` +
         `*Name:* ${name}\n` +
