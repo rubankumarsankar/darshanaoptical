@@ -272,6 +272,22 @@ export default function QuickCounterPage() {
       createdAt: new Date().toISOString(),
     };
 
+    // Record stock movements for sales
+    for (const item of items) {
+      if (item.category === 'service') continue;
+      store.stockMovements.unshift({
+        id: generateId('sm'),
+        productId: item.productId,
+        productName: item.productName,
+        productCode: item.productCode,
+        type: 'sale',
+        quantity: -item.quantity,
+        reference: invNumber,
+        createdBy: user?.name ?? 'Counter Staff',
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     store.invoices.unshift(newInvoice);
 
     saveStore(store);
