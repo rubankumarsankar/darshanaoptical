@@ -1,300 +1,261 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import { Database, Send, CheckCircle2, Code2, Copy, Check, Terminal, ExternalLink } from "lucide-react";
-
-const ENDPOINTS = [
-  {
-    id: "appointments-post",
-    method: "POST",
-    path: "/api/appointments",
-    title: "Create Eye Test Appointment",
-    description: "Saves a new customer appointment booking into the TiDB MySQL database.",
-    requestBody: {
-      name: "Ramesh Kumar (Required)",
-      phone: "+91 88705 71536 (Required)",
-      email: "ramesh@example.com (Optional)",
-      preferred_date: "2026-09-10 (Optional)",
-      preferred_time: "10:30 AM (Optional)",
-      test_type: "Comprehensive Eye Test",
-      wears_glasses: "Yes",
-      notes: "Looking for progressive lenses",
-    },
-    samplePayload: {
-      name: "Ramesh Kumar",
-      phone: "+918870571536",
-      email: "ramesh@example.com",
-      preferred_date: "2026-09-10",
-      preferred_time: "10:30 AM",
-      test_type: "Comprehensive Eye Test",
-      wears_glasses: "Yes",
-      notes: "Looking for progressive lenses",
-    },
-    sampleResponse: {
-      success: true,
-      message: "Appointment request saved successfully.",
-      id: 1,
-    },
-  },
-  {
-    id: "appointments-get",
-    method: "GET",
-    path: "/api/appointments",
-    title: "Get Total Appointments Count",
-    description: "Fetches aggregate appointment metrics and database health.",
-    requestBody: null,
-    samplePayload: null,
-    sampleResponse: {
-      success: true,
-      count: [{ total: 12 }],
-    },
-  },
-  {
-    id: "inquiries-post",
-    method: "POST",
-    path: "/api/inquiries",
-    title: "Submit Contact / Product Inquiry",
-    description: "Saves a customer inquiry message into the TiDB MySQL database.",
-    requestBody: {
-      name: "Priya Sundaram (Required)",
-      phone: "+91 88705 71536 (Required)",
-      email: "priya@example.com (Optional)",
-      interest: "Progressive Lenses",
-      message: "Need price details on blue cut progressive glasses.",
-    },
-    samplePayload: {
-      name: "Priya Sundaram",
-      phone: "+918870571536",
-      email: "priya@example.com",
-      interest: "Progressive Lenses",
-      message: "Need price details on blue cut progressive glasses.",
-    },
-    sampleResponse: {
-      success: true,
-      message: "Inquiry saved successfully.",
-      id: 1,
-    },
-  },
-  {
-    id: "inquiries-get",
-    method: "GET",
-    path: "/api/inquiries",
-    title: "Get Total Inquiries Count",
-    description: "Fetches aggregate customer inquiry metrics.",
-    requestBody: null,
-    samplePayload: null,
-    sampleResponse: {
-      success: true,
-      count: [{ total: 28 }],
-    },
-  },
-];
+import { Sparkles, Layers, BookOpen, ExternalLink, Code } from "lucide-react";
 
 export default function ApiDocsPage() {
-  const [activeTab, setActiveTab] = useState(ENDPOINTS[0].id);
-  const [copied, setCopied] = useState<string | null>(null);
-  const [testResponse, setTestResponse] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [activeViewer, setActiveViewer] = useState<"swagger" | "scalar">("swagger");
 
-  const activeEndpoint = ENDPOINTS.find((e) => e.id === activeTab) || ENDPOINTS[0];
+  // Load Swagger UI when activeViewer is swagger
+  useEffect(() => {
+    if (activeViewer !== "swagger") return;
 
-  const handleCopy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-  };
-
-  const runTestRequest = async () => {
-    setLoading(true);
-    setTestResponse(null);
-    try {
-      const res = await fetch(activeEndpoint.path, {
-        method: activeEndpoint.method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body:
-          activeEndpoint.method === "POST" && activeEndpoint.samplePayload
-            ? JSON.stringify(activeEndpoint.samplePayload)
-            : undefined,
-      });
-      const data = await res.json();
-      setTestResponse(JSON.stringify(data, null, 2));
-    } catch (err: any) {
-      setTestResponse(JSON.stringify({ error: err.message }, null, 2));
-    } finally {
-      setLoading(false);
+    // Load Swagger CSS
+    let link = document.getElementById("swagger-ui-css") as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement("link");
+      link.id = "swagger-ui-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css";
+      document.head.appendChild(link);
     }
-  };
+
+    // Load Swagger JS Bundle
+    let script = document.getElementById("swagger-ui-bundle") as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "swagger-ui-bundle";
+      script.src = "https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui-bundle.js";
+      script.async = true;
+      script.onload = () => {
+        initSwagger();
+      };
+      document.body.appendChild(script);
+    } else {
+      initSwagger();
+    }
+
+    function initSwagger() {
+      if ((window as any).SwaggerUIBundle) {
+        (window as any).SwaggerUIBundle({
+          url: "/openapi.json",
+          dom_id: "#swagger-ui-container",
+          deepLinking: true,
+          presets: [
+            (window as any).SwaggerUIBundle.presets.apis,
+            (window as any).SwaggerUIBundle.SwaggerUIStandalonePreset,
+          ],
+          layout: "BaseLayout",
+          docExpansion: "list",
+          defaultModelsExpandDepth: 2,
+        });
+      }
+    }
+  }, [activeViewer]);
+
+  // Load Scalar when activeViewer is scalar
+  useEffect(() => {
+    if (activeViewer !== "scalar") return;
+
+    let script = document.getElementById("scalar-script") as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "scalar-script";
+      script.src = "https://cdn.jsdelivr.net/npm/@scalar/api-reference";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, [activeViewer]);
 
   return (
     <>
       <Header />
-      <main className="flex-1 bg-[#0f1117] text-neutral-100 min-h-screen py-10 sm:py-16">
-        <div className="container-brand max-w-6xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="border-b border-neutral-800 pb-6 space-y-3">
-            <div className="flex items-center gap-2 text-brand-orange text-xs font-bold uppercase tracking-wider">
-              <Database size={16} /> TiDB Cloud MySQL API Reference
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Darshana Optical API Documentation
-            </h1>
-            <p className="text-sm text-neutral-400 max-w-2xl font-medium">
-              Interactive documentation for testing and integrating backend database endpoints for appointments and customer inquiries.
-            </p>
-          </div>
-
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Sidebar List */}
-            <div className="lg:col-span-4 space-y-2">
-              <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
-                Available Endpoints
+      <main className="min-h-screen bg-[#0f1117] text-white">
+        {/* Top Control Bar */}
+        <div className="border-b border-neutral-800 bg-[#161922] py-4">
+          <div className="container-brand flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h1 className="text-lg font-bold text-white tracking-tight">
+                  Darshana Optical API Reference
+                </h1>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-brand-orange/20 text-brand-orange border border-brand-orange/30">
+                  OpenAPI 3.1
+                </span>
               </div>
-              {ENDPOINTS.map((ep) => (
-                <button
-                  key={ep.id}
-                  onClick={() => {
-                    setActiveTab(ep.id);
-                    setTestResponse(null);
-                  }}
-                  className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                    activeTab === ep.id
-                      ? "bg-neutral-800/90 border-brand-orange text-white shadow-md shadow-brand-orange/10"
-                      : "bg-neutral-900/50 border-neutral-800 text-neutral-400 hover:bg-neutral-800/50 hover:text-white"
-                  }`}
-                >
-                  <div className="space-y-1 pr-2">
-                    <div className="text-xs font-bold text-white">{ep.title}</div>
-                    <div className="text-[11px] font-mono text-neutral-400">{ep.path}</div>
-                  </div>
-                  <span
-                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md shrink-0 ${
-                      ep.method === "POST"
-                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                    }`}
-                  >
-                    {ep.method}
-                  </span>
-                </button>
-              ))}
+              <p className="text-xs text-neutral-400 mt-0.5">
+                TiDB Cloud MySQL Backend • Interactive Sandbox
+              </p>
             </div>
 
-            {/* Endpoint Detail & Interactive Console */}
-            <div className="lg:col-span-8 space-y-6">
-              <div className="rounded-2xl bg-neutral-900/80 border border-neutral-800 p-6 sm:p-8 space-y-6">
-                {/* Method & Path Header */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-800 pb-5">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`text-xs font-bold uppercase px-2.5 py-1 rounded-md ${
-                          activeEndpoint.method === "POST"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                        }`}
-                      >
-                        {activeEndpoint.method}
-                      </span>
-                      <code className="text-sm sm:text-base font-mono font-bold text-neutral-100">
-                        {activeEndpoint.path}
-                      </code>
-                    </div>
-                    <p className="text-xs text-neutral-400 pt-1">{activeEndpoint.description}</p>
-                  </div>
+            {/* UI Theme & Viewer Switcher */}
+            <div className="flex items-center gap-2 bg-neutral-900/90 p-1 rounded-xl border border-neutral-800">
+              <button
+                onClick={() => setActiveViewer("swagger")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeViewer === "swagger"
+                    ? "bg-brand-orange text-white shadow-md shadow-brand-orange/20"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Sparkles size={14} />
+                <span>Swagger UI</span>
+              </button>
 
-                  <button
-                    onClick={runTestRequest}
-                    disabled={loading}
-                    className="inline-flex items-center gap-2 rounded-xl bg-brand-orange px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-brand-orange-hover transition-all disabled:opacity-50 cursor-pointer"
-                  >
-                    {loading ? (
-                      <span>Executing...</span>
-                    ) : (
-                      <>
-                        <Send size={14} />
-                        <span>Send Live Test</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+              <button
+                onClick={() => setActiveViewer("scalar")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeViewer === "scalar"
+                    ? "bg-brand-orange text-white shadow-md shadow-brand-orange/20"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Layers size={14} />
+                <span>Modern Docs</span>
+              </button>
 
-                {/* Request Payload */}
-                {activeEndpoint.samplePayload && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                        Request Body (JSON)
-                      </span>
-                      <button
-                        onClick={() =>
-                          handleCopy(
-                            JSON.stringify(activeEndpoint.samplePayload, null, 2),
-                            "req"
-                          )
-                        }
-                        className="text-[11px] text-neutral-400 hover:text-white flex items-center gap-1 cursor-pointer"
-                      >
-                        {copied === "req" ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                        <span>{copied === "req" ? "Copied" : "Copy Payload"}</span>
-                      </button>
-                    </div>
-                    <pre className="rounded-xl bg-neutral-950 p-4 text-xs font-mono text-emerald-300 overflow-x-auto border border-neutral-800">
-                      {JSON.stringify(activeEndpoint.samplePayload, null, 2)}
-                    </pre>
-                  </div>
-                )}
-
-                {/* Live Output or Sample Response */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                      {testResponse ? "Live API Server Response" : "Expected Response Schema"}
-                    </span>
-                    {testResponse && (
-                      <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 size={13} /> HTTP 200 OK
-                      </span>
-                    )}
-                  </div>
-                  <pre className="rounded-xl bg-neutral-950 p-4 text-xs font-mono text-amber-300 overflow-x-auto border border-neutral-800">
-                    {testResponse || JSON.stringify(activeEndpoint.sampleResponse, null, 2)}
-                  </pre>
-                </div>
-
-                {/* cURL Example */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
-                      <Terminal size={14} /> cURL Command
-                    </span>
-                    <button
-                      onClick={() => {
-                        const curlCmd =
-                          activeEndpoint.method === "POST"
-                            ? `curl -X POST https://darshanaoptical.com${activeEndpoint.path} \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(activeEndpoint.samplePayload)}'`
-                            : `curl -X GET https://darshanaoptical.com${activeEndpoint.path}`;
-                        handleCopy(curlCmd, "curl");
-                      }}
-                      className="text-[11px] text-neutral-400 hover:text-white flex items-center gap-1 cursor-pointer"
-                    >
-                      {copied === "curl" ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                      <span>{copied === "curl" ? "Copied" : "Copy cURL"}</span>
-                    </button>
-                  </div>
-                  <pre className="rounded-xl bg-neutral-950 p-4 text-xs font-mono text-neutral-300 overflow-x-auto border border-neutral-800">
-                    {activeEndpoint.method === "POST"
-                      ? `curl -X POST https://darshanaoptical.com${activeEndpoint.path} \\\n  -H "Content-Type: application/json" \\\n  -d '${JSON.stringify(activeEndpoint.samplePayload)}'`
-                      : `curl -X GET https://darshanaoptical.com${activeEndpoint.path}`}
-                  </pre>
-                </div>
-              </div>
+              <a
+                href="/openapi.json"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-400 hover:text-white transition-colors"
+                title="View Raw OpenAPI Spec"
+              >
+                <Code size={13} />
+                <span>JSON</span>
+                <ExternalLink size={11} />
+              </a>
             </div>
           </div>
+        </div>
+
+        {/* Viewer Content */}
+        <div className="w-full">
+          {activeViewer === "swagger" && (
+            <div className="p-4 sm:p-8 max-w-6xl mx-auto">
+              <style jsx global>{`
+                #swagger-ui-container .swagger-ui {
+                  color: #e5e7eb;
+                  font-family: inherit;
+                }
+                #swagger-ui-container .swagger-ui .info .title {
+                  color: #ffffff;
+                }
+                #swagger-ui-container .swagger-ui .info p,
+                #swagger-ui-container .swagger-ui .info li {
+                  color: #9ca3af;
+                }
+                #swagger-ui-container .swagger-ui .scheme-container {
+                  background: #161922;
+                  box-shadow: none;
+                  border: 1px solid #262935;
+                  border-radius: 16px;
+                  padding: 16px;
+                  margin-bottom: 24px;
+                }
+                #swagger-ui-container .swagger-ui .opblock {
+                  border-radius: 14px;
+                  border: 1px solid #262935;
+                  background: #161922;
+                  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+                  margin-bottom: 16px;
+                }
+                #swagger-ui-container .swagger-ui .opblock .opblock-summary {
+                  padding: 12px 16px;
+                }
+                #swagger-ui-container .swagger-ui .opblock.opblock-post {
+                  border-color: rgba(16, 185, 129, 0.3);
+                  background: rgba(16, 185, 129, 0.05);
+                }
+                #swagger-ui-container .swagger-ui .opblock.opblock-get {
+                  border-color: rgba(59, 130, 246, 0.3);
+                  background: rgba(59, 130, 246, 0.05);
+                }
+                #swagger-ui-container .swagger-ui .opblock .opblock-summary-method {
+                  border-radius: 8px;
+                  font-weight: 800;
+                  font-size: 11px;
+                }
+                #swagger-ui-container .swagger-ui .opblock .opblock-summary-path {
+                  color: #f3f4f6;
+                  font-weight: 600;
+                }
+                #swagger-ui-container .swagger-ui .opblock .opblock-summary-description {
+                  color: #9ca3af;
+                  font-size: 13px;
+                }
+                #swagger-ui-container .swagger-ui .opblock-body {
+                  background: #11131a;
+                  border-top: 1px solid #262935;
+                }
+                #swagger-ui-container .swagger-ui .opblock-section-header {
+                  background: #161922;
+                  color: #ffffff;
+                }
+                #swagger-ui-container .swagger-ui .tabli button {
+                  color: #9ca3af;
+                }
+                #swagger-ui-container .swagger-ui .tabli.active button {
+                  color: #fc5a06;
+                  font-weight: 700;
+                }
+                #swagger-ui-container .swagger-ui .btn.execute {
+                  background-color: #fc5a06;
+                  border-color: #fc5a06;
+                  color: #ffffff;
+                  border-radius: 10px;
+                  font-weight: 700;
+                }
+                #swagger-ui-container .swagger-ui .btn.execute:hover {
+                  background-color: #e04e03;
+                }
+                #swagger-ui-container .swagger-ui .btn.try-out__btn {
+                  border-radius: 8px;
+                  color: #f3f4f6;
+                  border-color: #374151;
+                }
+                #swagger-ui-container .swagger-ui select,
+                #swagger-ui-container .swagger-ui input[type="text"],
+                #swagger-ui-container .swagger-ui textarea {
+                  background: #0b0c10;
+                  color: #f3f4f6;
+                  border: 1px solid #374151;
+                  border-radius: 8px;
+                }
+                #swagger-ui-container .swagger-ui .highlight-code {
+                  background: #0b0c10;
+                }
+                #swagger-ui-container .swagger-ui table.model {
+                  color: #e5e7eb;
+                }
+                #swagger-ui-container .swagger-ui section.models {
+                  border: 1px solid #262935;
+                  border-radius: 16px;
+                  background: #161922;
+                }
+                #swagger-ui-container .swagger-ui section.models h4 {
+                  color: #ffffff;
+                }
+              `}</style>
+              <div id="swagger-ui-container" />
+            </div>
+          )}
+
+          {activeViewer === "scalar" && (
+            <div className="w-full">
+              {/* @ts-ignore */}
+              <scalar-api-reference
+                data-url="/openapi.json"
+                data-proxy-url=""
+                data-theme="purple"
+                data-layout="modern"
+                data-show-sidebar="true"
+              />
+            </div>
+          )}
         </div>
       </main>
       <Footer />
