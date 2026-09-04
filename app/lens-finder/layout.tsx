@@ -4,6 +4,13 @@ export const metadata: Metadata = {
   title: "Find the Right Lens | Darshana Optical",
   description:
     "Interactive Smart Lens Finder to help you choose the ideal lens type, coatings, and protection suited for your vision and daily work routine.",
+  keywords: [
+    "Darshana Optical",
+    "Darshana Opticals",
+    "Darshana Opticals lens finder",
+    "Darshana Opticals Harur",
+    "lens selector Harur",
+  ],
   alternates: {
     canonical: "/lens-finder",
   },

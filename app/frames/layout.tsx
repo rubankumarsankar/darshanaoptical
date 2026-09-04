@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   description:
     "Explore our collection of lightweight, durable, and stylish spectacle frames for men, women, and kids at Darshana Optical in Harur. Visit us on Salem Bypass Road.",
   keywords: [
+    "Darshana Optical",
+    "Darshana Opticals",
+    "Darshana Opticals Harur",
+    "Darshana Opticals frames",
+    "Darshana Optical glasses",
     "spectacle frames Harur",
     "eyeglass frames Harur",
     "buy glasses Harur",
@@ -14,6 +19,7 @@ export const metadata: Metadata = {
     "rimless frames",
     "aviator glasses",
     "cat-eye frames Harur",
+    "opticals in Harur",
   ],
   alternates: { canonical: "/frames" },
   openGraph: {

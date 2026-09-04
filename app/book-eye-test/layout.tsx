@@ -4,6 +4,14 @@ export const metadata: Metadata = {
   title: "Book an Eye Test | Darshana Optical",
   description:
     "Schedule your comprehensive computerized eye testing appointment online with our expert optometrists at Darshana Optical in Harur.",
+  keywords: [
+    "Darshana Optical",
+    "Darshana Opticals",
+    "Darshana Opticals Harur",
+    "Darshana Opticals eye test",
+    "book eye test Harur",
+    "opticals in Harur",
+  ],
   alternates: {
     canonical: "/book-eye-test",
   },

@@ -4,6 +4,12 @@ export default function LocalBusinessSchema() {
     "@type": "Optician",
     "@id": "https://darshanaoptical.com/#business",
     name: "Darshana Optical",
+    alternateName: [
+      "Darshana Opticals",
+      "Darshana Optical Harur",
+      "Darshana Opticals Harur",
+      "Darshana Opticals Optical Store"
+    ],
     image: "https://darshanaoptical.com/images/og-darshana-optical.jpg",
     logo: "https://darshanaoptical.com/logo.png",
     url: "https://darshanaoptical.com/",

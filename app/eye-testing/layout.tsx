@@ -5,8 +5,11 @@ export const metadata: Metadata = {
   description:
     "Professional 6-step computerized eye testing in Harur with advanced autorefractometer, phoropter, and precision vision care at Darshana Optical. Call 088705 71536.",
   keywords: [
+    "Darshana Opticals eye test",
+    "Darshana Optical eye testing",
     "eye testing Harur",
     "eye test Harur",
+    "opticals in Harur",
     "computerised eye test Harur",
     "optometrist Harur",
     "eye examination Tamil Nadu",

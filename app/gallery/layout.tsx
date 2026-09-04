@@ -4,6 +4,14 @@ export const metadata: Metadata = {
   title: "Darshana Optical Gallery | Harur",
   description:
     "Explore photos of our modern showroom, eyecare equipment, frame collections, and optical clinic in Harur.",
+  keywords: [
+    "Darshana Optical",
+    "Darshana Opticals",
+    "Darshana Opticals showroom",
+    "Darshana Opticals Harur",
+    "optical shop photos Harur",
+    "opticals in Harur",
+  ],
   alternates: {
     canonical: "/gallery",
   },

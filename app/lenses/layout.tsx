@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   description:
     "Premium eyeglass lenses in Harur. Blue cut digital protection, anti-reflective coatings, photochromic, and high-index progressive lenses at Darshana Optical.",
   keywords: [
+    "Darshana Optical",
+    "Darshana Opticals",
+    "Darshana Opticals Harur",
+    "Darshana Opticals lenses",
     "prescription lenses Harur",
     "anti glare lenses Harur",
     "blue cut lenses Harur",
@@ -13,6 +17,7 @@ export const metadata: Metadata = {
     "UV protection lenses",
     "lens replacement Harur",
     "bifocal lenses Harur",
+    "opticals in Harur",
   ],
   alternates: { canonical: "/lenses" },
   openGraph: {

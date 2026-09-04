@@ -5,12 +5,17 @@ export const metadata: Metadata = {
   description:
     "Explore line-free progressive lenses in Harur. Enjoy smooth, uninterrupted distance, computer, and reading vision at Darshana Optical. Expert fitting by optometrists.",
   keywords: [
+    "Darshana Optical",
+    "Darshana Opticals",
+    "Darshana Opticals progressive lenses",
+    "Darshana Opticals Harur",
     "progressive lenses Harur",
     "no-line bifocal Harur",
     "varifocal lenses Tamil Nadu",
     "progressive glasses Harur",
     "multifocal lenses Harur",
     "progressive lens fitting",
+    "opticals in Harur",
   ],
   alternates: { canonical: "/progressive" },
   openGraph: {
