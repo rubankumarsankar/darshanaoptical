@@ -63,5 +63,5 @@ export const staggerItem: Variants = {
   },
 };
 
-export const viewportOnce = { once: false, amount: 0.2 };
+export const viewportOnce = { once: true, amount: 0.2 };
 export const viewportBidirectional = { once: false, amount: 0.2 };

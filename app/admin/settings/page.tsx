@@ -1,130 +1,113 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/lib/admin/auth-context';
-import { Shield, Store, Phone, MapPin, FileText, Lock } from 'lucide-react';
-
-const PERMISSIONS_MATRIX = [
-  { action: 'View Dashboard', admin: true, manager: true, staff: true },
-  { action: 'View Reports', admin: true, manager: true, staff: false },
-  { action: 'View Purchase Price', admin: true, manager: true, staff: false },
-  { action: 'View Inventory Value', admin: true, manager: true, staff: false },
-  { action: 'Add/Edit Products', admin: true, manager: true, staff: false },
-  { action: 'Adjust Stock', admin: true, manager: true, staff: false },
-  { action: 'Create Invoice', admin: true, manager: true, staff: true },
-  { action: 'Receive Payments', admin: true, manager: true, staff: true },
-  { action: 'Cancel Invoice', admin: true, manager: true, staff: false },
-  { action: 'Apply Discount up to 5%', admin: true, manager: true, staff: true },
-  { action: 'Apply Discount up to 15%', admin: true, manager: true, staff: false },
-  { action: 'Apply Discount > 15%', admin: true, manager: false, staff: false },
-  { action: 'Manage Suppliers', admin: true, manager: true, staff: false },
-  { action: 'Add Expenses', admin: true, manager: true, staff: false },
-  { action: 'Manage Staff', admin: true, manager: false, staff: false },
-  { action: 'View Audit Logs', admin: true, manager: true, staff: false },
-  { action: 'Change Settings', admin: true, manager: false, staff: false },
-];
-
-const SHOP_INFO = {
-  name: 'Darshana Optical',
-  phone: '088705 71536',
-  address: 'Harur, Tamil Nadu, India',
-  gst: 'Add GST number here',
-};
+import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { adminPut } from '@/app/lib/admin/api';
+import { Save } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<'shop' | 'permissions'>('shop');
-  const [shop, setShop] = useState(SHOP_INFO);
-  const [saved, setSaved] = useState(false);
+  const { data, loading, refetch } = useAdminFetch<{ settings: any }>('/api/admin/settings');
+  const [form, setForm] = useState<any>({});
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+  const [ok, setOk] = useState('');
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    if (data?.settings) setForm(data.settings);
+  }, [data]);
+
+  const set = (key: string, val: any) => setForm((f: any) => ({ ...f, [key]: val }));
+
+  const handleSave = async () => {
+    setSaving(true); setErr(''); setOk('');
+    try {
+      await adminPut('/api/admin/settings', form);
+      setOk('Settings saved successfully!');
+      refetch();
+    } catch (e: any) { setErr(e.message); }
+    setSaving(false);
   };
+
+  if (loading) return <div style={{ padding: 32, color: '#94a3b8' }}>Loading settings…</div>;
+  if (user?.role !== 'admin') {
+    return <div style={{ padding: 32, color: '#94a3b8', textAlign: 'center' }}>Admin access required.</div>;
+  }
+
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', marginBottom: 14, borderBottom: '1px solid #f1f5f9', paddingBottom: 10 }}>{title}</div>
+      {children}
+    </div>
+  );
+
+  const Field = ({ label, k, type = 'text', placeholder = '' }: { label: string; k: string; type?: string; placeholder?: string }) => (
+    <div>
+      <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>{label}</label>
+      <input type={type} className="adm-input" placeholder={placeholder} value={form[k] ?? ''} onChange={(e) => set(k, type === 'number' ? +e.target.value : e.target.value)} />
+    </div>
+  );
 
   return (
     <div>
       <div className="adm-page-header">
-        <div className="adm-page-title">Settings</div>
+        <div className="adm-page-title">Shop Settings</div>
+        <button className="adm-btn adm-btn-primary" disabled={saving} onClick={handleSave}>
+          <Save size={14} /> {saving ? 'Saving…' : 'Save Settings'}
+        </button>
       </div>
+      {err && <div style={{ color: '#ef4444', padding: 12, marginBottom: 12, background: '#fef2f2', borderRadius: 8 }}>{err}</div>}
+      {ok && <div style={{ color: '#16a34a', padding: 12, marginBottom: 12, background: '#f0fdf4', borderRadius: 8 }}>{ok}</div>}
 
-      <div className="adm-tabs" style={{ marginBottom: 20, width: 'fit-content' }}>
-        <button className={`adm-tab${tab === 'shop' ? ' active' : ''}`} onClick={() => setTab('shop')}><Store width={13} height={13} style={{ marginRight: 6 }} />Shop Details</button>
-        <button className={`adm-tab${tab === 'permissions' ? ' active' : ''}`} onClick={() => setTab('permissions')}><Shield width={13} height={13} style={{ marginRight: 6 }} />Role Permissions</button>
-      </div>
+      <Section title="Shop Info">
+        <div className="adm-grid-3" style={{ gap: 12 }}>
+          <Field label="Shop Name" k="shop_name" />
+          <Field label="Tagline" k="tagline" />
+          <Field label="Phone" k="phone" />
+          <Field label="WhatsApp (with country code)" k="whatsapp" placeholder="918870571536" />
+          <Field label="Email" k="email" type="email" />
+          <Field label="GST Number" k="gst" />
+          <Field label="Address" k="address" />
+          <Field label="City" k="city" />
+          <Field label="State" k="state" />
+          <Field label="Pincode" k="pincode" />
+        </div>
+      </Section>
 
-      {tab === 'shop' && (
-        <div style={{ maxWidth: 560 }}>
-          <div className="adm-card">
-            <div className="adm-card-header"><Store width={14} height={14} style={{ color: '#fc5a06' }} /><span className="adm-card-title">Shop Information</span></div>
-            <div className="adm-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="adm-field">
-                <label className="adm-label">Shop Name</label>
-                <input className="adm-input" value={shop.name} onChange={(e) => setShop((s) => ({ ...s, name: e.target.value }))} />
-              </div>
-              <div className="adm-field">
-                <label className="adm-label">Phone Number</label>
-                <div style={{ position: 'relative' }}>
-                  <Phone style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: '#94a3b8' }} />
-                  <input className="adm-input" style={{ paddingLeft: 38 }} value={shop.phone} onChange={(e) => setShop((s) => ({ ...s, phone: e.target.value }))} />
-                </div>
-              </div>
-              <div className="adm-field">
-                <label className="adm-label">Address</label>
-                <div style={{ position: 'relative' }}>
-                  <MapPin style={{ position: 'absolute', left: 12, top: 12, width: 14, height: 14, color: '#94a3b8' }} />
-                  <textarea className="adm-textarea" style={{ paddingLeft: 38 }} value={shop.address} onChange={(e) => setShop((s) => ({ ...s, address: e.target.value }))} />
-                </div>
-              </div>
-              <div className="adm-field">
-                <label className="adm-label">GST Number</label>
-                <div style={{ position: 'relative' }}>
-                  <FileText style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: '#94a3b8' }} />
-                  <input className="adm-input" style={{ paddingLeft: 38, fontFamily: 'monospace' }} value={shop.gst} onChange={(e) => setShop((s) => ({ ...s, gst: e.target.value }))} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={handleSave} className="adm-btn adm-btn-primary">
-                  {saved ? '✓ Saved!' : 'Save Settings'}
-                </button>
-              </div>
-            </div>
+      <Section title="Invoice Settings">
+        <div className="adm-grid-3" style={{ gap: 12 }}>
+          <Field label="Invoice Prefix (e.g. DO)" k="invoice_prefix" />
+          <Field label="Customer ID Prefix" k="customer_id_prefix" />
+          <Field label="Low Stock Threshold" k="low_stock_threshold" type="number" />
+          <Field label="Tax Rate %" k="tax_rate" type="number" />
+          <div>
+            <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Tax Enabled</label>
+            <select className="adm-input" value={form.tax_enabled ? '1' : '0'} onChange={(e) => set('tax_enabled', e.target.value === '1')}>
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
           </div>
         </div>
-      )}
-
-      {tab === 'permissions' && (
-        <div>
-          <div className="adm-alert adm-alert-info" style={{ marginBottom: 16 }}>
-            <Lock width={14} height={14} style={{ flexShrink: 0 }} />
-            <span>This is a read-only view of the permission matrix. Permissions are enforced server-side and cannot be changed from the UI in Phase 1.</span>
+        <div className="adm-grid-2" style={{ gap: 12, marginTop: 12 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Invoice Footer</label>
+            <textarea className="adm-input" rows={2} value={form.invoice_footer ?? ''} onChange={(e) => set('invoice_footer', e.target.value)} />
           </div>
-          <div className="adm-table-wrap">
-            <table className="adm-table">
-              <thead>
-                <tr>
-                  <th>Permission</th>
-                  <th style={{ textAlign: 'center' }}>Admin</th>
-                  <th style={{ textAlign: 'center' }}>Manager</th>
-                  <th style={{ textAlign: 'center' }}>Staff</th>
-                </tr>
-              </thead>
-              <tbody>
-                {PERMISSIONS_MATRIX.map((perm) => (
-                  <tr key={perm.action}>
-                    <td style={{ fontWeight: 500 }}>{perm.action}</td>
-                    {[perm.admin, perm.manager, perm.staff].map((allowed, i) => (
-                      <td key={i} style={{ textAlign: 'center' }}>
-                        <span style={{ fontSize: 16 }}>{allowed ? '✅' : '❌'}</span>
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Invoice Terms</label>
+            <textarea className="adm-input" rows={2} value={form.invoice_terms ?? ''} onChange={(e) => set('invoice_terms', e.target.value)} />
           </div>
         </div>
-      )}
+      </Section>
+
+      <Section title="Discount Limits by Role">
+        <div className="adm-grid-3" style={{ gap: 12 }}>
+          <Field label="Admin max discount %" k="max_discount_admin" type="number" />
+          <Field label="Manager max discount %" k="max_discount_manager" type="number" />
+          <Field label="Staff max discount %" k="max_discount_staff" type="number" />
+        </div>
+      </Section>
     </div>
   );
 }

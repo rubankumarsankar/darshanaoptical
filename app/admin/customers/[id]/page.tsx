@@ -1,55 +1,47 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { getStore, saveStore } from '@/app/lib/admin/store';
-import type { Customer, EyeTest, Invoice } from '@/app/lib/admin/types';
+import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { adminPut } from '@/app/lib/admin/api';
 import {
   ArrowLeft, Eye, ShoppingCart, Phone, Mail, MapPin, Calendar, Edit2, Save, X,
-  Receipt, FileText, CreditCard,
+  Receipt, FileText,
 } from 'lucide-react';
 
-function fmt(n: number) { return '₹' + n.toLocaleString('en-IN'); }
+function fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN'); }
 function fmtDate(d: string) { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [tab, setTab] = useState<'overview' | 'eyetests' | 'orders' | 'payments'>('overview');
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [eyeTests, setEyeTests] = useState<EyeTest[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [tab, setTab] = useState<'overview' | 'eyetests' | 'invoices'>('overview');
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<Customer>>({});
-  const router = useRouter();
+  const [editForm, setEditForm] = useState<any>({});
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const store = getStore();
-    const c = store.customers.find((c) => c.id === id);
-    if (!c) { router.replace('/admin/customers'); return; }
-    setCustomer(c);
-    setEditForm(c);
-    setEyeTests(store.eyeTests.filter((e) => e.customerId === id));
-    setInvoices(store.invoices.filter((i) => i.customerId === id));
-  }, [id, router]);
+  const { data, loading, refetch } = useAdminFetch<{ customer: any; eyeTests: any[]; invoices: any[] }>(
+    `/api/admin/customers/${id}`
+  );
 
-  const saveEdit = () => {
-    if (!customer) return;
-    const store = getStore();
-    const idx = store.customers.findIndex((c) => c.id === id);
-    if (idx === -1) return;
-    const updated = { ...customer, ...editForm };
-    store.customers[idx] = updated;
-    saveStore(store);
-    setCustomer(updated);
-    setEditing(false);
+  const customer = data?.customer;
+  const eyeTests = data?.eyeTests ?? [];
+  const invoices = data?.invoices ?? [];
+
+  const openEdit = () => { setEditForm({ ...customer }); setEditing(true); };
+  const saveEdit = async () => {
+    setSaving(true);
+    try {
+      await adminPut(`/api/admin/customers/${id}`, editForm);
+      setEditing(false); refetch();
+    } catch (e: any) { alert(e.message); }
+    setSaving(false);
   };
 
-  if (!customer) return null;
+  if (loading) return <div style={{ padding: 32, color: '#94a3b8' }}>Loading customer…</div>;
+  if (!customer) return <div style={{ padding: 32, color: '#ef4444' }}>Customer not found.</div>;
 
-  const totalSpent = invoices.reduce((s, i) => s + i.total, 0);
-  const totalPaid = invoices.reduce((s, i) => s + i.paid, 0);
-  const totalBalance = invoices.reduce((s, i) => s + i.balance, 0);
+  const totalSpent = invoices.reduce((s, i) => s + Number(i.total), 0);
+  const totalBalance = invoices.reduce((s, i) => s + Number(i.balance), 0);
 
   return (
     <div>
@@ -57,269 +49,138 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         <Link href="/admin/customers" className="adm-btn adm-btn-ghost adm-btn-sm"><ArrowLeft width={14} height={14} /> Customers</Link>
         <div style={{ flex: 1 }}>
           <div className="adm-page-title">{customer.name}</div>
-          <div className="adm-page-sub">{customer.customerId}</div>
+          <div className="adm-page-sub">{customer.customer_id}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <Link href={`/admin/eye-tests/new?customerId=${customer.id}&customerName=${encodeURIComponent(customer.name)}`} className="adm-btn adm-btn-secondary adm-btn-sm">
-            <Eye width={13} height={13} /> Eye Test
-          </Link>
-          <Link href={`/admin/pos?customerId=${customer.id}`} className="adm-btn adm-btn-primary adm-btn-sm">
-            <ShoppingCart width={13} height={13} /> New Sale
-          </Link>
+          {editing ? (
+            <>
+              <button className="adm-btn adm-btn-primary adm-btn-sm" disabled={saving} onClick={saveEdit}><Save size={13} /> {saving ? 'Saving…' : 'Save'}</button>
+              <button className="adm-btn adm-btn-ghost adm-btn-sm" onClick={() => setEditing(false)}><X size={13} /></button>
+            </>
+          ) : (
+            <button className="adm-btn adm-btn-secondary adm-btn-sm" onClick={openEdit}><Edit2 size={13} /> Edit</button>
+          )}
+          <Link href={`/admin/eye-tests/new?customerId=${id}&customerName=${encodeURIComponent(customer.name)}&customerPhone=${encodeURIComponent(customer.phone)}`} className="adm-btn adm-btn-ghost adm-btn-sm"><Eye size={13} /> Eye Test</Link>
+          <Link href={`/admin/pos?customerId=${id}`} className="adm-btn adm-btn-primary adm-btn-sm"><ShoppingCart size={13} /> New Sale</Link>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16, alignItems: 'start' }}>
-        {/* Left — Profile Card */}
-        <div>
-          <div className="adm-card">
-            <div className="adm-card-body" style={{ textAlign: 'center', paddingTop: 28, paddingBottom: 28 }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%', background: '#fc5a061a',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fc5a06', fontWeight: 800, fontSize: 24, margin: '0 auto 14px',
-              }}>
-                {customer.name.charAt(0)}
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a' }}>{customer.name}</div>
-              <div style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 4 }}>{customer.customerId}</div>
-              <span className={`adm-badge ${customer.status === 'active' ? 'adm-badge-success' : 'adm-badge-gray'}`} style={{ marginTop: 10 }}>
-                {customer.status}
-              </span>
-            </div>
-            <div style={{ borderTop: '1px solid #f1f5f9', padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <InfoRow icon={<Phone width={13} height={13} />} label={customer.phone} />
-              {customer.email && <InfoRow icon={<Mail width={13} height={13} />} label={customer.email} />}
-              {customer.address && <InfoRow icon={<MapPin width={13} height={13} />} label={customer.address} />}
-              {customer.dob && <InfoRow icon={<Calendar width={13} height={13} />} label={`DOB: ${fmtDate(customer.dob)}`} />}
-              {customer.gender && <InfoRow icon={<span style={{ width: 13 }}>⚧</span>} label={customer.gender.charAt(0).toUpperCase() + customer.gender.slice(1)} />}
-              {customer.notes && (
-                <div style={{ background: '#faf8f5', border: '1px solid #e6e6e8', borderRadius: 8, padding: '8px 10px', fontSize: 12.5, color: '#64748b', marginTop: 4 }}>
-                  📝 {customer.notes}
-                </div>
-              )}
-            </div>
-            <div style={{ padding: '12px 20px', borderTop: '1px solid #f1f5f9' }}>
-              <button onClick={() => setEditing(true)} className="adm-btn adm-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-                <Edit2 width={13} height={13} /> Edit Profile
-              </button>
-            </div>
-          </div>
-
-          {/* Summary */}
-          <div className="adm-card" style={{ marginTop: 12 }}>
-            <div className="adm-card-header">
-              <span className="adm-card-title">Financials</span>
-            </div>
-            <div className="adm-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <SummaryRow label="Total Invoices" value={String(invoices.length)} />
-              <SummaryRow label="Total Spent" value={fmt(totalSpent)} color="#0f172a" />
-              <SummaryRow label="Total Paid" value={fmt(totalPaid)} color="#16a34a" />
-              {totalBalance > 0 && <SummaryRow label="Outstanding" value={fmt(totalBalance)} color="#d97706" />}
-            </div>
-          </div>
-        </div>
-
-        {/* Right — Tabs */}
-        <div>
-          <div className="adm-tabs" style={{ marginBottom: 16 }}>
-            {(['overview', 'eyetests', 'orders', 'payments'] as const).map((t) => (
-              <button key={t} className={`adm-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
-                {t === 'eyetests' ? 'Eye Tests' : t === 'overview' ? 'Overview' : t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {tab === 'overview' && (
-            <div className="adm-card">
-              <div className="adm-card-header"><span className="adm-card-title">Latest Prescription</span></div>
-              {eyeTests.length > 0 ? (
-                <div className="adm-card-body">
-                  <PrescriptionDisplay test={eyeTests[eyeTests.length - 1]} />
-                </div>
-              ) : (
-                <div className="adm-card-body">
-                  <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8' }}>No prescriptions on record</div>
-                  <Link href={`/admin/eye-tests/new?customerId=${customer.id}&customerName=${encodeURIComponent(customer.name)}`} className="adm-btn adm-btn-primary" style={{ display: 'block', textAlign: 'center' }}>
-                    <Eye width={14} height={14} /> Start Eye Test
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
-
-          {tab === 'eyetests' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {eyeTests.length === 0 && (
-                <div className="adm-card">
-                  <div className="adm-card-body adm-empty">No eye tests recorded.</div>
-                </div>
-              )}
-              {eyeTests.slice().reverse().map((et) => (
-                <div key={et.id} className="adm-card">
-                  <div className="adm-card-header">
-                    <Eye width={14} height={14} style={{ color: '#2563eb' }} />
-                    <span className="adm-card-title">Eye Test — {fmtDate(et.date)}</span>
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>by {et.testedBy}</span>
-                  </div>
-                  <div className="adm-card-body">
-                    <PrescriptionDisplay test={et} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {tab === 'orders' && (
-            <div className="adm-table-wrap">
-              <table className="adm-table">
-                <thead><tr><th>Invoice #</th><th>Items</th><th>Total</th><th>Status</th><th>Order</th><th>Date</th></tr></thead>
-                <tbody>
-                  {invoices.length === 0 ? (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', color: '#94a3b8', padding: 32 }}>No invoices yet</td></tr>
-                  ) : (
-                    invoices.slice().reverse().map((inv) => (
-                      <tr key={inv.id}>
-                        <td><Link href={`/admin/invoices/${inv.id}`} style={{ color: '#fc5a06', fontWeight: 600, textDecoration: 'none' }}>{inv.invoiceNumber}</Link></td>
-                        <td style={{ color: '#64748b' }}>{inv.items.map((i) => i.productName).join(', ')}</td>
-                        <td style={{ fontWeight: 700 }}>{fmt(inv.total)}</td>
-                        <td><InvBadge status={inv.status} /></td>
-                        <td>{inv.orderStatus ? <InvBadge status={inv.orderStatus} /> : '—'}</td>
-                        <td style={{ color: '#94a3b8', fontSize: 12.5 }}>{fmtDate(inv.createdAt)}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {tab === 'payments' && (
-            <div className="adm-table-wrap">
-              <table className="adm-table">
-                <thead><tr><th>Invoice</th><th>Total</th><th>Paid</th><th>Balance</th><th>Last Payment</th></tr></thead>
-                <tbody>
-                  {invoices.filter((i) => i.payments.length > 0 || i.balance > 0).length === 0 ? (
-                    <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 32 }}>No payment records</td></tr>
-                  ) : (
-                    invoices.slice().reverse().map((inv) => (
-                      <tr key={inv.id}>
-                        <td><Link href={`/admin/invoices/${inv.id}`} style={{ color: '#fc5a06', fontWeight: 600, textDecoration: 'none' }}>{inv.invoiceNumber}</Link></td>
-                        <td style={{ fontWeight: 700 }}>{fmt(inv.total)}</td>
-                        <td style={{ color: '#16a34a', fontWeight: 600 }}>{fmt(inv.paid)}</td>
-                        <td style={{ color: inv.balance > 0 ? '#d97706' : '#94a3b8', fontWeight: inv.balance > 0 ? 700 : 400 }}>
-                          {inv.balance > 0 ? fmt(inv.balance) : '—'}
-                        </td>
-                        <td style={{ color: '#94a3b8', fontSize: 12.5 }}>
-                          {inv.payments.length > 0
-                            ? fmtDate(inv.payments[inv.payments.length - 1].date)
-                            : '—'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Edit Modal */}
-      {editing && (
-        <div className="adm-overlay" onClick={() => setEditing(false)}>
-          <div className="adm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="adm-modal-header">
-              <span className="adm-modal-title">Edit Customer</span>
-              <button onClick={() => setEditing(false)} className="adm-btn adm-btn-ghost adm-btn-sm"><X width={14} height={14} /></button>
-            </div>
-            <div className="adm-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="adm-grid-2" style={{ gap: 16, marginBottom: 16 }}>
+        {/* Profile Card */}
+        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20 }}>
+          {editing ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'Full Name', field: 'name', type: 'text' },
-                { label: 'Phone', field: 'phone', type: 'tel' },
-                { label: 'Email', field: 'email', type: 'email' },
-                { label: 'Address', field: 'address', type: 'text' },
-                { label: 'Notes', field: 'notes', type: 'text' },
-              ].map(({ label, field, type }) => (
-                <div key={field} className="adm-field">
-                  <label className="adm-label">{label}</label>
-                  <input
-                    className="adm-input"
-                    type={type}
-                    value={(editForm as Record<string, string>)[field] ?? ''}
-                    onChange={(e) => setEditForm((f) => ({ ...f, [field]: e.target.value }))}
-                  />
+                { label: 'Name', key: 'name' }, { label: 'Phone', key: 'phone' },
+                { label: 'Email', key: 'email', type: 'email' }, { label: 'Address', key: 'address' },
+              ].map(({ label, key, type = 'text' }) => (
+                <div key={key}>
+                  <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 3 }}>{label}</label>
+                  <input type={type} className="adm-input" value={editForm[key] ?? ''} onChange={(e) => setEditForm((f: any) => ({ ...f, [key]: e.target.value }))} />
                 </div>
               ))}
+              <div>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 3 }}>Gender</label>
+                <select className="adm-input" value={editForm.gender ?? ''} onChange={(e) => setEditForm((f: any) => ({ ...f, gender: e.target.value }))}>
+                  <option value="">—</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 3 }}>Notes</label>
+                <textarea className="adm-input" rows={2} value={editForm.notes ?? ''} onChange={(e) => setEditForm((f: any) => ({ ...f, notes: e.target.value }))} />
+              </div>
             </div>
-            <div className="adm-modal-footer">
-              <button onClick={() => setEditing(false)} className="adm-btn adm-btn-secondary">Cancel</button>
-              <button onClick={saveEdit} className="adm-btn adm-btn-primary"><Save width={13} height={13} /> Save</button>
-            </div>
-          </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fc5a06', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 24 }}>
+                  {customer.name.charAt(0)}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 18 }}>{customer.name}</div>
+                  <div style={{ fontSize: 13, color: '#94a3b8', textTransform: 'capitalize' }}>{customer.gender ?? '—'}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {customer.phone && <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}><Phone size={14} style={{ color: '#64748b' }} />{customer.phone}</div>}
+                {customer.email && <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}><Mail size={14} style={{ color: '#64748b' }} />{customer.email}</div>}
+                {customer.dob && <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}><Calendar size={14} style={{ color: '#64748b' }} />DOB: {fmtDate(customer.dob)}</div>}
+                {customer.address && <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5 }}><MapPin size={14} style={{ color: '#64748b' }} />{customer.address}</div>}
+                {customer.notes && <div style={{ marginTop: 8, background: '#f8fafc', borderRadius: 8, padding: '8px 10px', fontSize: 13, color: '#64748b' }}>{customer.notes}</div>}
+              </div>
+            </>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
 
-function InfoRow({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: '#475569', fontSize: 13 }}>
-      <span style={{ marginTop: 1, flexShrink: 0, color: '#94a3b8' }}>{icon}</span>
-      {label}
-    </div>
-  );
-}
-
-function SummaryRow({ label, value, color = '#64748b' }: { label: string; value: string; color?: string }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: 13, color: '#94a3b8' }}>{label}</span>
-      <span style={{ fontSize: 13.5, fontWeight: 700, color }}>{value}</span>
-    </div>
-  );
-}
-
-function PrescriptionDisplay({ test }: { test: EyeTest }) {
-  const rows = [
-    { eye: 'Right Eye (OD)', data: test.rightEye },
-    { eye: 'Left Eye (OS)', data: test.leftEye },
-  ];
-  return (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-        {rows.map(({ eye, data }) => (
-          <div key={eye} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{eye}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8 }}>
-              {[['SPH', data.sph], ['CYL', data.cyl], ['AXIS', data.axis], ['ADD', data.add ?? '—'], ['PD', data.pd ?? '—']].map(([k, v]) => (
-                <div key={k} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{k}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{v}</div>
-                </div>
-              ))}
+        {/* Stats */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[
+            { label: 'Total Spent', value: fmt(totalSpent), color: '#fc5a06' },
+            { label: 'Outstanding Balance', value: fmt(totalBalance), color: totalBalance > 0 ? '#d97706' : '#16a34a' },
+            { label: 'Eye Tests', value: eyeTests.length, color: '#2563eb' },
+            { label: 'Total Invoices', value: invoices.length, color: '#7c3aed' },
+          ].map((s) => (
+            <div key={s.label} className="adm-stat" style={{ padding: '12px 16px' }}>
+              <div className="adm-stat-label">{s.label}</div>
+              <div className="adm-stat-value" style={{ fontSize: 20, color: s.color }}>{s.value}</div>
             </div>
-          </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="adm-tabs" style={{ marginBottom: 12 }}>
+        {(['overview', 'eyetests', 'invoices'] as const).map((t) => (
+          <button key={t} className={`adm-tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
+            {t === 'eyetests' ? 'Eye Tests' : t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
         ))}
       </div>
-      {test.recommendation && (
-        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#1e40af' }}>
-          💡 {test.recommendation}
+
+      {tab === 'eyetests' && (
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead><tr><th>Date</th><th>RE SPH/CYL/AXIS</th><th>LE SPH/CYL/AXIS</th><th>Tested By</th><th>Recommendation</th></tr></thead>
+            <tbody>
+              {eyeTests.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>No eye tests yet. <Link href={`/admin/eye-tests/new?customerId=${id}&customerName=${encodeURIComponent(customer.name)}&customerPhone=${encodeURIComponent(customer.phone)}`} style={{ color: '#fc5a06' }}>Add one</Link></td></tr>
+              : eyeTests.map((t) => (
+                <tr key={t.id}>
+                  <td>{fmtDate(t.test_date)}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: 12.5 }}>{[t.re_sph, t.re_cyl, t.re_axis].filter(Boolean).join(' / ') || '—'}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: 12.5 }}>{[t.le_sph, t.le_cyl, t.le_axis].filter(Boolean).join(' / ') || '—'}</td>
+                  <td style={{ fontSize: 12.5, color: '#64748b' }}>{t.tested_by}</td>
+                  <td style={{ fontSize: 12.5, color: '#64748b' }}>{t.recommendation ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'invoices' && (
+        <div className="adm-table-wrap">
+          <table className="adm-table">
+            <thead><tr><th>Invoice</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Date</th><th></th></tr></thead>
+            <tbody>
+              {invoices.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>No invoices yet.</td></tr>
+              : invoices.map((inv) => (
+                <tr key={inv.id}>
+                  <td style={{ fontFamily: 'monospace', fontSize: 12.5, color: '#fc5a06', fontWeight: 700 }}>{inv.invoice_number}</td>
+                  <td>{fmt(inv.total)}</td>
+                  <td style={{ color: '#16a34a' }}>{fmt(inv.paid)}</td>
+                  <td style={{ color: Number(inv.balance) > 0 ? '#d97706' : '#94a3b8', fontWeight: Number(inv.balance) > 0 ? 700 : 400 }}>{Number(inv.balance) > 0 ? fmt(inv.balance) : '—'}</td>
+                  <td><span className={`adm-badge ${inv.status === 'paid' ? 'adm-badge-success' : inv.status === 'partially_paid' ? 'adm-badge-warning' : 'adm-badge-danger'}`}>{inv.status === 'partially_paid' ? 'Part Paid' : inv.status}</span></td>
+                  <td style={{ fontSize: 12.5, color: '#94a3b8' }}>{fmtDate(inv.created_at)}</td>
+                  <td><Link href={`/admin/invoices/${inv.id}`} className="adm-btn adm-btn-ghost adm-btn-sm">View</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   );
-}
-
-const STATUS_MAP: Record<string, [string, string]> = {
-  paid: ['Paid', 'adm-badge-success'], partially_paid: ['Part Paid', 'adm-badge-warning'],
-  pending: ['Pending', 'adm-badge-danger'], cancelled: ['Cancelled', 'adm-badge-gray'],
-  new: ['New', 'adm-badge-info'], lens_ordered: ['Lens Ordered', 'adm-badge-orange'],
-  in_process: ['In Process', 'adm-badge-warning'], ready: ['Ready', 'adm-badge-success'],
-  delivered: ['Delivered', 'adm-badge-gray'],
-};
-function InvBadge({ status }: { status: string }) {
-  const [label, cls] = STATUS_MAP[status] ?? [status, 'adm-badge-gray'];
-  return <span className={`adm-badge ${cls}`}>{label}</span>;
 }

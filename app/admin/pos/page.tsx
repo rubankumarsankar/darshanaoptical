@@ -2,14 +2,13 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getStore, saveStore, generateId, nextInvoiceNumber } from '@/app/lib/admin/store';
 import { useAuth } from '@/app/lib/admin/auth-context';
-import type { Customer, Product, InvoiceItem, PaymentMethod, EyeTest } from '@/app/lib/admin/types';
-import { can, getMaxDiscount } from '@/app/lib/admin/permissions';
-import { Search, Plus, Trash2, ShoppingCart, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { adminPost } from '@/app/lib/admin/api';
+import { Search, Plus, Trash2, ShoppingCart, CheckCircle, X } from 'lucide-react';
 import Link from 'next/link';
 
-function fmt(n: number) { return '₹' + n.toLocaleString('en-IN'); }
+function fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN'); }
 
 function POSContent() {
   const { user } = useAuth();
@@ -17,17 +16,14 @@ function POSContent() {
   const params = useSearchParams();
 
   const [step, setStep] = useState<'customer' | 'products' | 'payment' | 'done'>('customer');
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [selectedEyeTest, setSelectedEyeTest] = useState<EyeTest | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [selectedEyeTest, setSelectedEyeTest] = useState<any | null>(null);
   const [customerSearch, setCustomerSearch] = useState('');
-  const [customerResults, setCustomerResults] = useState<Customer[]>([]);
   const [productSearch, setProductSearch] = useState('');
   const [productTab, setProductTab] = useState<'all' | 'frame' | 'lens' | 'sunglass' | 'service'>('all');
-  const [cart, setCart] = useState<InvoiceItem[]>([]);
+  const [cart, setCart] = useState<any[]>([]);
   const [discountPercent, setDiscountPercent] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<string>('cash');
   const [amountPaid, setAmountPaid] = useState('');
   const [notes, setNotes] = useState('');
   const [hasOrder, setHasOrder] = useState(true);
@@ -35,199 +31,117 @@ function POSContent() {
     const d = new Date(); d.setDate(d.getDate() + 3);
     return d.toISOString().slice(0, 10);
   });
-  const [discountWarning, setDiscountWarning] = useState('');
-  const [createdInvoiceId, setCreatedInvoiceId] = useState('');
+  const [frameProduct, setFrameProduct] = useState('');
+  const [lensProduct, setLensProduct] = useState('');
+  const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState('');
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
 
+  // Load customers and products from DB
+  const { data: custData } = useAdminFetch<{ customers: any[] }>('/api/admin/customers', { params: { status: 'active' } });
+  const { data: prodData } = useAdminFetch<{ products: any[] }>('/api/admin/products', { params: { status: 'active' } });
+  const customers = custData?.customers ?? [];
+  const allProducts = prodData?.products ?? [];
+
+  // Filter customer eye tests
+  const { data: eyeTestData } = useAdminFetch<{ eyeTests: any[] }>(
+    selectedCustomer ? '/api/admin/eye-tests' : null,
+    { params: selectedCustomer ? { customerId: selectedCustomer.id } : {} }
+  );
+  const eyeTests = eyeTestData?.eyeTests ?? [];
+
+  // Pre-select customer from URL param
   useEffect(() => {
-    const store = getStore();
-    setCustomers(store.customers);
-    setProducts(store.products.filter((p) => p.status === 'active'));
-
     const cid = params.get('customerId');
-    if (cid) {
-      const c = store.customers.find((c) => c.id === cid);
-      if (c) {
-        setSelectedCustomer(c);
-        setStep('products');
-
-        const etId = params.get('eyeTestId');
-        if (etId) {
-          const test = store.eyeTests.find((e) => e.id === etId);
-          if (test) setSelectedEyeTest(test);
-        } else {
-          const latestTest = store.eyeTests.filter((e) => e.customerId === c.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-          if (latestTest) setSelectedEyeTest(latestTest);
-        }
-      }
+    if (cid && customers.length) {
+      const c = customers.find((c) => c.id === cid);
+      if (c) { setSelectedCustomer(c); setStep('products'); }
     }
-  }, [params]);
+  }, [params, customers]);
 
   // Customer search
-  useEffect(() => {
-    if (!customerSearch.trim() || selectedCustomer) { setCustomerResults([]); return; }
-    const q = customerSearch.toLowerCase();
-    setCustomerResults(customers.filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)).slice(0, 6));
-  }, [customerSearch, customers, selectedCustomer]);
+  const customerResults = customerSearch.length >= 1
+    ? customers.filter((c) => {
+        const q = customerSearch.toLowerCase();
+        return c.name?.toLowerCase().includes(q) || c.phone?.includes(q) || c.customer_id?.toLowerCase().includes(q);
+      }).slice(0, 8)
+    : [];
 
-  const filteredProducts = products.filter((p) => {
-    const matchTab = productTab === 'all' || p.category === productTab;
+  // Product filter
+  const displayedProducts = allProducts.filter((p) => {
+    const matchCat = productTab === 'all' || p.category === productTab;
     const q = productSearch.toLowerCase();
-    return matchTab && (!q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.productCode.toLowerCase().includes(q));
+    const matchQ = !q || p.name?.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q);
+    return matchCat && matchQ && p.stock > 0;
   });
 
-  const addToCart = (product: Product) => {
-    if (product.category !== 'service' && product.stock <= 0) return;
-    const existing = cart.find((i) => i.productId === product.id);
-    if (existing) {
-      setCart((c) => c.map((i) => i.productId === product.id ? { ...i, quantity: i.quantity + 1, total: (i.quantity + 1) * i.unitPrice } : i));
-    } else {
-      const item: InvoiceItem = {
-        id: generateId('ii'),
-        productId: product.id,
-        productName: product.name,
-        productCode: product.productCode,
-        category: product.category,
-        quantity: 1,
-        unitPrice: product.sellingPrice,
-        discount: 0,
-        total: product.sellingPrice,
-      };
-      setCart((c) => [...c, item]);
-    }
-  };
-
-  const removeFromCart = (itemId: string) => setCart((c) => c.filter((i) => i.id !== itemId));
-
-  const updateQty = (itemId: string, qty: number) => {
-    if (qty < 1) return;
-    setCart((c) => c.map((i) => i.id === itemId ? { ...i, quantity: qty, total: qty * i.unitPrice } : i));
-  };
-
-  const subtotal = cart.reduce((s, i) => s + i.total, 0);
-  const maxDiscount = user ? getMaxDiscount(user.role) : 0;
-
-  const handleDiscountChange = (val: number) => {
-    setDiscountPercent(val);
-    if (val > maxDiscount) {
-      setDiscountWarning(`Your role allows max ${maxDiscount}% discount. Manager approval required.`);
-    } else {
-      setDiscountWarning('');
-    }
-  };
-
-  const discountAmt = Math.round(subtotal * Math.min(discountPercent, 100) / 100);
-  const total = subtotal - discountAmt;
-  const paid = parseFloat(amountPaid) || 0;
-  const balance = total - paid;
-
-  const handleComplete = async () => {
-    if (!selectedCustomer) return;
-    if (cart.length === 0) { alert('Add at least one item.'); return; }
-    if (paid <= 0 && balance === total) {
-      if (!confirm('No payment received. Create invoice as PENDING?')) return;
-    }
-
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-
-    const store = getStore();
-    const invoiceNumber = nextInvoiceNumber();
-    const frameItem = cart.find((i) => i.category === 'frame');
-    const lensItem = cart.find((i) => i.category === 'lens');
-    const needsOrder = hasOrder && (frameItem || lensItem);
-
-    const newInvoice = {
-      id: generateId('inv'),
-      invoiceNumber,
-      customerId: selectedCustomer.id,
-      customerName: selectedCustomer.name,
-      customerPhone: selectedCustomer.phone,
-      items: cart,
-      subtotal,
-      discountAmount: discountAmt,
-      discountPercent,
-      total,
-      paid,
-      balance: total - paid,
-      status: (paid === 0 ? 'pending' : paid < total ? 'partially_paid' : 'paid') as 'paid' | 'partially_paid' | 'pending',
-      payments: paid > 0 ? [{
-        id: generateId('pay'),
-        amount: paid,
-        method: paymentMethod,
-        date: new Date().toISOString(),
-        receivedBy: user?.name ?? '',
-      }] : [],
-      orderStatus: needsOrder ? 'new' as const : undefined,
-      frameProduct: frameItem?.productName,
-      lensProduct: lensItem?.productName,
-      eyeTestId: selectedEyeTest?.id || undefined,
-      expectedDate: needsOrder ? expectedDate : undefined,
-      createdBy: user?.name ?? '',
-      createdAt: new Date().toISOString(),
-      notes: notes || undefined,
-    };
-
-    store.invoices.unshift(newInvoice);
-
-    // Update stock
-    for (const item of cart) {
-      if (item.category === 'service') continue;
-      const pi = store.products.findIndex((p) => p.id === item.productId);
-      if (pi !== -1) store.products[pi].stock -= item.quantity;
-      store.stockMovements.unshift({
-        id: generateId('sm'),
-        productId: item.productId,
-        productName: item.productName,
-        productCode: item.productCode,
-        type: 'sale',
-        quantity: -item.quantity,
-        reference: invoiceNumber,
-        createdBy: user?.name ?? '',
-        createdAt: new Date().toISOString(),
-      });
-    }
-
-    // Update customer last visit
-    const ci = store.customers.findIndex((c) => c.id === selectedCustomer.id);
-    if (ci !== -1) store.customers[ci].lastVisit = new Date().toISOString();
-
-    store.auditLogs.unshift({
-      id: generateId('al'),
-      action: 'INVOICE_CREATED',
-      entity: 'Invoice',
-      entityId: newInvoice.id,
-      details: `Invoice ${invoiceNumber} — ${fmt(total)} — ${selectedCustomer.name}`,
-      performedBy: user?.name ?? '',
-      performedByRole: user?.role ?? 'staff',
-      createdAt: new Date().toISOString(),
+  // Cart operations
+  const addToCart = (product: any) => {
+    setCart((c) => {
+      const existing = c.find((i) => i.product_id === product.id);
+      if (existing) {
+        return c.map((i) => i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...c, {
+        product_id: product.id, product_name: product.name,
+        product_code: product.product_code, category: product.category,
+        quantity: 1, unit_price: Number(product.selling_price), discount: 0,
+      }];
     });
-
-    saveStore(store);
-    setCreatedInvoiceId(newInvoice.id);
-    setSaving(false);
-    setStep('done');
   };
 
-  // DONE screen
+  const removeFromCart = (product_id: string) => setCart((c) => c.filter((i) => i.product_id !== product_id));
+  const updateQty = (product_id: string, qty: number) =>
+    qty < 1 ? removeFromCart(product_id) : setCart((c) => c.map((i) => i.product_id === product_id ? { ...i, quantity: qty } : i));
+
+  // Totals
+  const subtotal = cart.reduce((s, i) => s + i.unit_price * i.quantity - (i.discount ?? 0), 0);
+  const discountAmount = subtotal * (discountPercent / 100);
+  const total = Math.round((subtotal - discountAmount) * 100) / 100;
+  const paid = Math.min(parseFloat(amountPaid) || 0, total);
+  const balance = Math.round((total - paid) * 100) / 100;
+
+  const handleSubmit = async () => {
+    if (!selectedCustomer || !cart.length) return;
+    setSaving(true); setErr('');
+    try {
+      const result = await adminPost<any>('/api/admin/invoices', {
+        customer_id: selectedCustomer.id,
+        customer_name: selectedCustomer.name,
+        customer_phone: selectedCustomer.phone,
+        eye_test_id: selectedEyeTest?.id ?? null,
+        items: cart,
+        discount_percent: discountPercent,
+        payment_method: paymentMethod,
+        amount_paid: paid,
+        notes, has_order: hasOrder,
+        expected_date: hasOrder ? expectedDate : null,
+        frame_product: frameProduct || null,
+        lens_product: lensProduct || null,
+      });
+      setCreatedInvoiceNumber(result.invoice_number);
+      setStep('done');
+    } catch (e: any) {
+      setErr(e.message ?? 'Failed to create invoice.');
+    }
+    setSaving(false);
+  };
+
+  // ─── STEP: DONE ───────────────────────────────────────────────
   if (step === 'done') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-        <div style={{ textAlign: 'center', maxWidth: 400 }}>
-          <div style={{ width: 64, height: 64, background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#16a34a' }}>
-            <CheckCircle width={32} height={32} />
-          </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Sale Complete!</div>
-          <div style={{ color: '#64748b', marginBottom: 24 }}>
-            Invoice created · {fmt(total)} total · {fmt(paid)} received · {balance > 0 ? fmt(balance) + ' pending' : 'Fully paid'}
-          </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href={`/admin/invoices/${createdInvoiceId}`} className="adm-btn adm-btn-primary">View Invoice</Link>
-            <Link href="/admin/orders" className="adm-btn adm-btn-secondary">View Orders</Link>
-            <button onClick={() => { setStep('customer'); setSelectedCustomer(null); setCart([]); setDiscountPercent(0); setAmountPaid(''); setNotes(''); setCreatedInvoiceId(''); }} className="adm-btn adm-btn-secondary">
-              New Sale
-            </button>
-          </div>
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <CheckCircle size={60} style={{ color: '#16a34a', marginBottom: 16 }} />
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Invoice Created!</h2>
+        <p style={{ color: '#64748b', marginBottom: 24 }}>
+          Invoice <strong style={{ color: '#fc5a06' }}>{createdInvoiceNumber}</strong> for <strong>{selectedCustomer?.name}</strong> — {fmt(total)}
+        </p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button className="adm-btn adm-btn-primary" onClick={() => {
+            setStep('customer'); setSelectedCustomer(null); setCart([]); setAmountPaid(''); setDiscountPercent(0); setErr('');
+          }}>New Sale</button>
+          <Link href="/admin/invoices" className="adm-btn adm-btn-secondary">View Invoices</Link>
+          <Link href="/admin/orders" className="adm-btn adm-btn-ghost">View Orders</Link>
         </div>
       </div>
     );
@@ -236,287 +150,248 @@ function POSContent() {
   return (
     <div>
       <div className="adm-page-header">
-        <div className="adm-page-title">POS / Billing</div>
-        {/* Steps */}
-        <div style={{ display: 'flex', gap: 6, fontSize: 12.5, fontWeight: 600 }}>
+        <div className="adm-page-title">Point of Sale</div>
+        <div style={{ display: 'flex', gap: 8 }}>
           {(['customer', 'products', 'payment'] as const).map((s, i) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {i > 0 && <span style={{ color: '#d1d5db' }}>›</span>}
-              <span style={{ color: step === s ? '#fc5a06' : ['customer', 'products', 'payment'].indexOf(step) > i ? '#16a34a' : '#94a3b8', textTransform: 'capitalize' }}>{s}</span>
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {i > 0 && <div style={{ width: 20, height: 1, background: '#e2e8f0' }} />}
+              <div style={{
+                padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                background: step === s ? '#fc5a06' : s === 'products' && step === 'payment' ? '#e2e8f0' : step === 'customer' ? '#f1f5f9' : '#e2e8f0',
+                color: step === s ? 'white' : '#94a3b8',
+              }}>{i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
-        {/* Left Panel */}
-        <div>
-          {/* Step 1 — Customer */}
-          <div className="adm-card" style={{ marginBottom: 16 }}>
-            <div className="adm-card-header">
-              <span style={{ width: 22, height: 22, background: step === 'customer' || selectedCustomer ? '#fc5a06' : '#f1f5f9', color: step === 'customer' || selectedCustomer ? 'white' : '#94a3b8', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>1</span>
-              <span className="adm-card-title">Customer</span>
-              {selectedCustomer && <button onClick={() => { setSelectedCustomer(null); setStep('customer'); }} className="adm-btn adm-btn-ghost adm-btn-sm"><X width={12} height={12} /></button>}
+      {err && <div style={{ color: '#ef4444', marginBottom: 12, padding: 12, background: '#fef2f2', borderRadius: 8 }}>{err}</div>}
+
+      {/* ─── STEP 1: CUSTOMER ─── */}
+      {step === 'customer' && (
+        <div style={{ maxWidth: 560 }}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20 }}>
+            <div style={{ fontWeight: 700, marginBottom: 14 }}>Select Customer</div>
+            <div className="adm-search-wrap" style={{ marginBottom: 10 }}>
+              <Search />
+              <input className="adm-input" placeholder="Search by name, phone, customer ID…"
+                value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} autoFocus />
             </div>
-            <div className="adm-card-body">
-              {selectedCustomer ? (
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#fc5a061a', color: '#fc5a06', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, flexShrink: 0 }}>
-                      {selectedCustomer.name.charAt(0)}
+            {customerResults.length > 0 && (
+              <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
+                {customerResults.map((c) => (
+                  <div key={c.id} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    onClick={() => { setSelectedCustomer(c); setStep('products'); }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{c.name}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8' }}>{c.phone} · {c.customer_id}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, color: '#94a3b8' }}>New patient?</span>
+              <Link href="/admin/customers/new" className="adm-btn adm-btn-ghost adm-btn-sm"><Plus size={13} /> Create Customer</Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── STEP 2: PRODUCTS ─── */}
+      {step === 'products' && selectedCustomer && (
+        <div className="adm-grid-2" style={{ gap: 16 }}>
+          {/* Left: Product Picker */}
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16 }}>
+            <div style={{ fontWeight: 700, marginBottom: 10 }}>Products</div>
+            <div className="adm-search-wrap" style={{ marginBottom: 8 }}>
+              <Search />
+              <input className="adm-input" placeholder="Search products…" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} />
+            </div>
+            <div className="adm-tabs" style={{ marginBottom: 10 }}>
+              {(['all', 'frame', 'lens', 'sunglass', 'service'] as const).map((t) => (
+                <button key={t} className={`adm-tab${productTab === t ? ' active' : ''}`} onClick={() => setProductTab(t)} style={{ fontSize: 11.5 }}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+            <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+              {displayedProducts.map((p) => (
+                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
+                  onClick={() => addToCart(p)}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {p.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: 12 }}>👓</span>
+                      )}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, color: '#0f172a' }}>{selectedCustomer.name}</div>
-                      <div style={{ fontSize: 12.5, color: '#64748b' }}>{selectedCustomer.phone} · {selectedCustomer.customerId}</div>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</div>
+                      <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{p.brand} · Stock: {p.stock}</div>
                     </div>
-                    <button onClick={() => setStep('products')} className="adm-btn adm-btn-primary adm-btn-sm" style={{ marginLeft: 'auto' }}>Add Products →</button>
                   </div>
-
-                  {selectedEyeTest && (
-                    <div style={{ marginTop: 12, padding: '10px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, fontSize: 12 }}>
-                      <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: 4 }}>
-                        👁️ Attached Prescription ({new Date(selectedEyeTest.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
-                      </div>
-                      <div style={{ display: 'flex', gap: 16, color: '#1e3a8a', flexWrap: 'wrap' }}>
-                        <span><strong>OD (Right):</strong> SPH {selectedEyeTest.rightEye.sph || '0.00'} / CYL {selectedEyeTest.rightEye.cyl || '0.00'} / AXIS {selectedEyeTest.rightEye.axis || '0'}</span>
-                        <span><strong>OS (Left):</strong> SPH {selectedEyeTest.leftEye.sph || '0.00'} / CYL {selectedEyeTest.leftEye.cyl || '0.00'} / AXIS {selectedEyeTest.leftEye.axis || '0'}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ position: 'relative' }}>
-                  <div className="adm-search-wrap">
-                    <Search />
-                    <input className="adm-input" placeholder="Search by name or phone…" value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{fmt(p.selling_price)}</span>
+                    <Plus size={14} style={{ color: '#fc5a06' }} />
                   </div>
-                  {customerResults.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 50, marginTop: 4, overflow: 'hidden' }}>
-                      {customerResults.map((c) => (
-                        <button key={c.id} onClick={() => { setSelectedCustomer(c); setStep('products'); setCustomerResults([]); }}
-                          style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid #f1f5f9', fontFamily: 'inherit' }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f8fafc'; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
-                        >
-                          <div style={{ fontWeight: 600 }}>{c.name}</div>
-                          <div style={{ fontSize: 12, color: '#94a3b8' }}>{c.phone} · {c.customerId}</div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <Link href="/admin/customers/new" className="adm-btn adm-btn-secondary" style={{ marginTop: 10 }}>
-                    <Plus width={13} height={13} /> New Customer
-                  </Link>
                 </div>
-              )}
+              ))}
+              {displayedProducts.length === 0 && <div style={{ color: '#94a3b8', textAlign: 'center', padding: 24 }}>No products found.</div>}
             </div>
           </div>
 
-          {/* Step 2 — Products */}
-          {(step === 'products' || step === 'payment') && (
-            <div className="adm-card" style={{ marginBottom: 16 }}>
-              <div className="adm-card-header">
-                <span style={{ width: 22, height: 22, background: '#fc5a06', color: 'white', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>2</span>
-                <span className="adm-card-title">Products</span>
+          {/* Right: Cart */}
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontWeight: 700 }}>
+                <ShoppingCart size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                Cart — {selectedCustomer.name}
               </div>
-              <div className="adm-card-body">
-                <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-                  <div className="adm-search-wrap" style={{ flex: 1, minWidth: 200 }}>
-                    <Search />
-                    <input className="adm-input" placeholder="Search products…" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} />
-                  </div>
-                  <div className="adm-tabs">
-                    {(['all', 'frame', 'lens', 'sunglass', 'service'] as const).map((t) => (
-                      <button key={t} className={`adm-tab${productTab === t ? ' active' : ''}`} onClick={() => setProductTab(t)} style={{ fontSize: 12 }}>
-                        {t === 'sunglass' ? 'Sunglasses' : t.charAt(0).toUpperCase() + t.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10, maxHeight: 280, overflowY: 'auto' }}>
-                  {filteredProducts.map((p) => (
-                    <button key={p.id} onClick={() => addToCart(p)}
-                      disabled={p.category !== 'service' && p.stock <= 0}
-                      style={{
-                        border: '1px solid #e2e8f0', borderRadius: 10, padding: 12, background: p.stock <= 0 && p.category !== 'service' ? '#f8fafc' : 'white',
-                        cursor: p.stock <= 0 && p.category !== 'service' ? 'not-allowed' : 'pointer', textAlign: 'left', opacity: p.stock <= 0 && p.category !== 'service' ? 0.5 : 1,
-                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease', fontFamily: 'inherit',
-                      }}
-                      onMouseEnter={(e) => { if (!(p.stock <= 0)) (e.currentTarget as HTMLButtonElement).style.borderColor = '#fc5a06'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#e2e8f0'; }}
-                    >
-                      <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>{p.productCode}</div>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a', lineHeight: 1.3, marginBottom: 6 }}>{p.name}</div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                        <span style={{ fontWeight: 700, color: '#fc5a06', fontSize: 14 }}>{fmt(p.sellingPrice)}</span>
-                        {p.category !== 'service' && (
-                          <span style={{ fontSize: 11, color: p.stock <= 3 ? '#dc2626' : '#94a3b8' }}>
-                            {p.stock <= 0 ? 'Out' : `${p.stock} left`}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {cart.length > 0 && (
-                  <button onClick={() => setStep('payment')} className="adm-btn adm-btn-primary" style={{ marginTop: 14 }}>
-                    Proceed to Payment →
-                  </button>
-                )}
-              </div>
+              <button className="adm-btn adm-btn-ghost adm-btn-sm" onClick={() => setStep('customer')}>Change Customer</button>
             </div>
-          )}
 
-          {/* Step 3 — Payment */}
-          {step === 'payment' && (
-            <div className="adm-card">
-              <div className="adm-card-header">
-                <span style={{ width: 22, height: 22, background: '#fc5a06', color: 'white', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>3</span>
-                <span className="adm-card-title">Payment</span>
+            {/* Eye Test */}
+            {eyeTests.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: 11.5, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Link Prescription</label>
+                <select className="adm-input" value={selectedEyeTest?.id ?? ''} onChange={(e) => setSelectedEyeTest(eyeTests.find((t) => t.id === e.target.value) ?? null)}>
+                  <option value="">No prescription</option>
+                  {eyeTests.map((t) => <option key={t.id} value={t.id}>{new Date(t.test_date).toLocaleDateString('en-IN')} — {t.tested_by}</option>)}
+                </select>
               </div>
-              <div className="adm-card-body">
-                <div className="adm-grid-2" style={{ marginBottom: 14 }}>
-                  <div className="adm-field">
-                    <label className="adm-label">Discount %</label>
-                    <input className="adm-input" type="number" min={0} max={100} value={discountPercent} onChange={(e) => handleDiscountChange(Number(e.target.value))} />
-                    {discountWarning && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12, color: '#d97706' }}>
-                        <AlertCircle width={12} height={12} />{discountWarning}
-                      </div>
-                    )}
-                  </div>
-                  <div className="adm-field">
-                    <label className="adm-label">Payment Method</label>
-                    <select className="adm-select" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}>
-                      <option value="cash">Cash</option>
-                      <option value="upi">UPI / Google Pay</option>
-                      <option value="card">Card</option>
-                      <option value="bank">Bank Transfer</option>
-                    </select>
-                  </div>
-                </div>
+            )}
 
-                <div className="adm-field" style={{ marginBottom: 14 }}>
-                  <label className="adm-label">Amount Received (₹)</label>
-                  <input className="adm-input" type="number" placeholder={`Full amount: ${total}`} value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} />
-                  {balance > 0 && parseFloat(amountPaid) > 0 && (
-                    <div style={{ marginTop: 6, fontSize: 12.5, color: '#d97706', fontWeight: 600 }}>⚠ Balance remaining: {fmt(balance)}</div>
-                  )}
-                </div>
-
-                {/* Order info */}
-                {cart.some((i) => i.category === 'frame' || i.category === 'lens') && (
-                  <div style={{ padding: '12px 14px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10, marginBottom: 14 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 8 }}>
-                      <input type="checkbox" checked={hasOrder} onChange={(e) => setHasOrder(e.target.checked)} />
-                      <span style={{ fontSize: 13.5, fontWeight: 600, color: '#0369a1' }}>Create order (lens needs processing)</span>
-                    </label>
-                    {hasOrder && (
-                      <div className="adm-field">
-                        <label className="adm-label">Expected Delivery Date</label>
-                        <input className="adm-input" type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} min={new Date().toISOString().slice(0, 10)} />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="adm-field">
-                  <label className="adm-label">Notes</label>
-                  <textarea className="adm-textarea" style={{ minHeight: 60 }} placeholder="Any notes about this sale…" value={notes} onChange={(e) => setNotes(e.target.value)} />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Panel — Cart */}
-        <div>
-          <div className="adm-card" style={{ position: 'sticky', top: 0 }}>
-            <div className="adm-card-header">
-              <ShoppingCart width={14} height={14} style={{ color: '#fc5a06' }} />
-              <span className="adm-card-title">Cart ({cart.length})</span>
-            </div>
-            <div style={{ maxHeight: 340, overflowY: 'auto' }}>
-              {cart.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px 16px', color: '#94a3b8', fontSize: 13 }}>
-                  No items added yet.<br />Click a product to add it.
-                </div>
-              ) : (
-                cart.map((item) => (
-                  <div key={item.id} style={{ padding: '10px 14px', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.productName}</div>
-                        <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{item.productCode}</div>
-                      </div>
-                      <button onClick={() => removeFromCart(item.id)} className="adm-btn adm-btn-ghost adm-btn-sm" style={{ padding: '2px 4px', color: '#dc2626' }}>
-                        <Trash2 width={12} height={12} />
-                      </button>
+            {/* Cart Items */}
+            {cart.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: 24 }}>No items added yet</div>
+            ) : (
+              <>
+                {cart.map((item) => (
+                  <div key={item.product_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 12.5 }}>{item.product_name}</div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <button onClick={() => updateQty(item.id, item.quantity - 1)} style={{ width: 22, height: 22, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>-</button>
-                        <span style={{ fontSize: 13, fontWeight: 600, minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
-                        <button onClick={() => updateQty(item.id, item.quantity + 1)} style={{ width: 22, height: 22, borderRadius: 6, border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>+</button>
-                      </div>
-                      <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>{fmt(item.total)}</span>
-                    </div>
+                    <input type="number" style={{ width: 48, textAlign: 'center', padding: '4px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12 }}
+                      value={item.quantity} min={1} onChange={(e) => updateQty(item.product_id, +e.target.value)} />
+                    <span style={{ width: 70, textAlign: 'right', fontWeight: 600, fontSize: 13 }}>{fmt(item.unit_price * item.quantity)}</span>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }} onClick={() => removeFromCart(item.product_id)}><X size={14} /></button>
                   </div>
-                ))
-              )}
-            </div>
+                ))}
+                <div style={{ marginTop: 10 }}>
+                  <label style={{ fontSize: 11.5, fontWeight: 600, color: '#64748b' }}>Discount %</label>
+                  <input type="number" className="adm-input" style={{ width: 80 }} min={0} max={100} value={discountPercent}
+                    onChange={(e) => setDiscountPercent(Math.min(+e.target.value, 100))} />
+                </div>
+                <div style={{ marginTop: 10, borderTop: '2px solid #f1f5f9', paddingTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}><span style={{ color: '#64748b' }}>Subtotal</span><span>{fmt(subtotal)}</span></div>
+                  {discountPercent > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13, color: '#16a34a' }}><span>Discount ({discountPercent}%)</span><span>-{fmt(discountAmount)}</span></div>}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 16 }}><span>Total</span><span style={{ color: '#fc5a06' }}>{fmt(total)}</span></div>
+                </div>
+              </>
+            )}
 
-            {/* Summary */}
             {cart.length > 0 && (
-              <div style={{ padding: '14px 16px', borderTop: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b' }}>
-                  <span>Subtotal</span><span>{fmt(subtotal)}</span>
-                </div>
-                {discountAmt > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#dc2626' }}>
-                    <span>Discount ({discountPercent}%)</span><span>−{fmt(discountAmt)}</span>
-                  </div>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, color: '#0f172a', borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>
-                  <span>Total</span><span>{fmt(total)}</span>
-                </div>
-                {paid > 0 && (
-                  <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#16a34a' }}>
-                      <span>Paid</span><span>{fmt(paid)}</span>
-                    </div>
-                    {balance > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#d97706', fontWeight: 700 }}>
-                        <span>Balance</span><span>{fmt(balance)}</span>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {step === 'payment' ? (
-                  <button onClick={handleComplete} disabled={saving} className="adm-btn adm-btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 6, height: 44 }}>
-                    {saving ? 'Processing…' : <><CheckCircle width={15} height={15} /> Complete Sale</>}
-                  </button>
-                ) : (
-                  <button onClick={() => { if (selectedCustomer) setStep('payment'); }} disabled={!selectedCustomer} className="adm-btn adm-btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}>
-                    Continue to Payment →
-                  </button>
-                )}
-              </div>
+              <button className="adm-btn adm-btn-primary" style={{ width: '100%', marginTop: 14 }} onClick={() => setStep('payment')}>
+                Continue to Payment →
+              </button>
             )}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ─── STEP 3: PAYMENT ─── */}
+      {step === 'payment' && (
+        <div className="adm-grid-2" style={{ gap: 16 }}>
+          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20 }}>
+            <div style={{ fontWeight: 700, marginBottom: 14 }}>Payment Details</div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Payment Method</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+                {['cash', 'upi', 'card', 'bank'].map((m) => (
+                  <button key={m} style={{
+                    padding: '8px', borderRadius: 8, border: `2px solid ${paymentMethod === m ? '#fc5a06' : '#e2e8f0'}`,
+                    background: paymentMethod === m ? 'rgba(252,90,6,0.08)' : '#fff',
+                    fontWeight: 700, fontSize: 13, cursor: 'pointer', textTransform: 'uppercase',
+                  }} onClick={() => setPaymentMethod(m)}>{m}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Amount Paid ₹ (total: {fmt(total)})</label>
+              <input type="number" className="adm-input" value={amountPaid} min={0} max={total}
+                onChange={(e) => setAmountPaid(e.target.value)} placeholder={String(total)} />
+              {balance > 0 && <div style={{ fontSize: 12.5, color: '#d97706', marginTop: 4 }}>Balance: {fmt(balance)}</div>}
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
+                <input type="checkbox" checked={hasOrder} onChange={(e) => setHasOrder(e.target.checked)} />
+                This is an order (lens/frame to be made)
+              </label>
+            </div>
+            {hasOrder && (
+              <div className="adm-grid-3" style={{ gap: 10, marginBottom: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Expected Date</label>
+                  <input type="date" className="adm-input" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Frame</label>
+                  <input className="adm-input" value={frameProduct} onChange={(e) => setFrameProduct(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Lens</label>
+                  <input className="adm-input" value={lensProduct} onChange={(e) => setLensProduct(e.target.value)} />
+                </div>
+              </div>
+            )}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Notes</label>
+              <textarea className="adm-input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="adm-btn adm-btn-ghost" onClick={() => setStep('products')}>← Back</button>
+              <button className="adm-btn adm-btn-primary" style={{ flex: 1 }} disabled={saving} onClick={handleSubmit}>
+                <CheckCircle size={14} /> {saving ? 'Creating invoice…' : 'Create Invoice'}
+              </button>
+            </div>
+          </div>
+          {/* Order Summary */}
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20 }}>
+            <div style={{ fontWeight: 700, marginBottom: 14 }}>Order Summary</div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 2 }}>Customer</div>
+              <div style={{ fontWeight: 700 }}>{selectedCustomer?.name}</div>
+              <div style={{ fontSize: 12.5, color: '#94a3b8' }}>{selectedCustomer?.phone}</div>
+            </div>
+            {cart.map((i) => (
+              <div key={i.product_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                <span>{i.product_name} × {i.quantity}</span>
+                <span style={{ fontWeight: 600 }}>{fmt(i.unit_price * i.quantity)}</span>
+              </div>
+            ))}
+            <div style={{ borderTop: '2px solid #e2e8f0', paddingTop: 10, marginTop: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 16, marginBottom: 4 }}>
+                <span>Total</span><span style={{ color: '#fc5a06' }}>{fmt(total)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#16a34a', fontWeight: 600 }}>
+                <span>Paid</span><span>{fmt(paid)}</span>
+              </div>
+              {balance > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#d97706', fontWeight: 700 }}>
+                <span>Balance</span><span>{fmt(balance)}</span>
+              </div>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function POSPage() {
-  return (
-    <Suspense>
-      <POSContent />
-    </Suspense>
-  );
+  return <Suspense><POSContent /></Suspense>;
 }

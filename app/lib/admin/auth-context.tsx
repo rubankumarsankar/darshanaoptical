@@ -2,17 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { AdminUser, Role } from './types';
-import { MOCK_STAFF, MOCK_CREDENTIALS } from './mock-data';
 
 // ─── Auth Context ─────────────────────────────────────────────────────────────
-
-const AUTH_KEY = 'darshana_admin_auth';
 
 interface AuthContextValue {
   user: AdminUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => { success: boolean; error?: string };
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   role: Role | null;
 }
 
@@ -22,43 +19,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Restore session on mount by calling /api/admin/auth/me
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(AUTH_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw) as AdminUser;
-        const found = MOCK_STAFF.find((s) => s.id === saved.id);
-        if (found && found.status === 'active') {
-          setUser(found);
-        }
-      }
-    } catch {
-      // ignore
-    } finally {
-      setIsLoading(false);
-    }
+    fetch('/api/admin/auth/me')
+      .then(async (res) => {
+        if (!res.ok) return;
+        const { user: u } = await res.json();
+        setUser({
+          id: u.userId,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          status: 'active',
+          joinedAt: '',
+          phone: '',
+        });
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = useCallback(
-    (email: string, password: string): { success: boolean; error?: string } => {
-      const cred = MOCK_CREDENTIALS[email.toLowerCase().trim()];
-      if (!cred) return { success: false, error: 'No account found with this email.' };
-      if (cred.password !== password) return { success: false, error: 'Incorrect password.' };
+    async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const res = await fetch('/api/admin/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const json = await res.json();
+        if (!res.ok) return { success: false, error: json.error ?? 'Login failed.' };
 
-      const found = MOCK_STAFF.find((s) => s.id === cred.userId);
-      if (!found) return { success: false, error: 'User account not found.' };
-      if (found.status !== 'active') return { success: false, error: 'Your account is inactive. Contact Admin.' };
-
-      setUser(found);
-      localStorage.setItem(AUTH_KEY, JSON.stringify(found));
-      return { success: true };
+        const u = json.user;
+        setUser({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          status: 'active',
+          joinedAt: '',
+          phone: '',
+        });
+        return { success: true };
+      } catch {
+        return { success: false, error: 'Network error. Please try again.' };
+      }
     },
     []
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
     setUser(null);
-    localStorage.removeItem(AUTH_KEY);
   }, []);
 
   return (

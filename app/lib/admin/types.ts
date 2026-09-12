@@ -80,6 +80,8 @@ export interface Product {
   mrp: number;
   stock: number;
   lowStockThreshold: number;
+  imageUrl?: string;
+  image_url?: string;
   description?: string;
   status: 'active' | 'inactive';
   createdAt: string;

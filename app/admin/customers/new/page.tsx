@@ -2,13 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getStore, saveStore, generateId, nextCustomerId } from '@/app/lib/admin/store';
-import { useAuth } from '@/app/lib/admin/auth-context';
+import { adminPost } from '@/app/lib/admin/api';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewCustomerPage() {
-  const { user } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -35,41 +33,24 @@ export default function NewCustomerPage() {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
-
-    const store = getStore();
-    const newCustomer = {
-      id: generateId('cust'),
-      customerId: nextCustomerId(),
-      name: form.name.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim() || undefined,
-      dob: form.dob || undefined,
-      gender: (form.gender as 'male' | 'female' | 'other') || undefined,
-      address: form.address.trim() || undefined,
-      notes: form.notes.trim() || undefined,
-      status: 'active' as const,
-      createdAt: new Date().toISOString(),
-    };
-
-    store.customers.unshift(newCustomer);
-    store.auditLogs.unshift({
-      id: generateId('al'),
-      action: 'CUSTOMER_CREATED',
-      entity: 'Customer',
-      entityId: newCustomer.id,
-      details: `New customer created: ${newCustomer.name} (${newCustomer.phone})`,
-      performedBy: user?.name ?? 'Unknown',
-      performedByRole: user?.role ?? 'staff',
-      createdAt: new Date().toISOString(),
-    });
-    saveStore(store);
-
-    setSaving(false);
-    router.push(`/admin/customers/${newCustomer.id}`);
+    try {
+      const { customer } = await adminPost<{ customer: any }>('/api/admin/customers', {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        dob: form.dob || undefined,
+        gender: form.gender || undefined,
+        address: form.address.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+      });
+      router.push(`/admin/customers/${customer.id}`);
+    } catch (e: any) {
+      setErrors({ name: e.message ?? 'Failed to create customer.' });
+      setSaving(false);
+    }
   };
+
 
   return (
     <div style={{ maxWidth: 640 }}>

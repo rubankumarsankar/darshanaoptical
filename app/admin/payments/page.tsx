@@ -1,134 +1,114 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { getStore, saveStore, generateId } from '@/app/lib/admin/store';
-import { useAuth } from '@/app/lib/admin/auth-context';
-import type { Invoice, PaymentMethod } from '@/app/lib/admin/types';
-import { CheckCircle, X } from 'lucide-react';
+import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { adminPut } from '@/app/lib/admin/api';
+import { CheckCircle } from 'lucide-react';
 
-function fmt(n: number) { return '₹' + n.toLocaleString('en-IN'); }
+function fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN'); }
 
 export default function PaymentsPage() {
-  const { user } = useAuth();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [selected, setSelected] = useState<Invoice | null>(null);
+  const [selected, setSelected] = useState<any | null>(null);
   const [payAmt, setPayAmt] = useState('');
-  const [payMethod, setPayMethod] = useState<PaymentMethod>('cash');
+  const [payMethod, setPayMethod] = useState('cash');
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
 
-  const load = () => { setInvoices(getStore().invoices.filter((i) => i.balance > 0 && i.status !== 'cancelled').slice().reverse()); };
-  useEffect(load, []);
+  const { data, loading, refetch } = useAdminFetch<{ invoices: any[] }>(
+    '/api/admin/invoices', { params: { status: 'pending' } }
+  );
+  const { data: partData, refetch: refetchPart } = useAdminFetch<{ invoices: any[] }>(
+    '/api/admin/invoices', { params: { status: 'partially_paid' } }
+  );
 
-  const total = invoices.reduce((s, i) => s + i.balance, 0);
+  const invoices = [
+    ...(data?.invoices ?? []),
+    ...(partData?.invoices ?? []),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  const totalBalance = invoices.reduce((s, i) => s + Number(i.balance), 0);
 
   const handlePayment = async () => {
-    if (!selected) return;
-    const amount = parseFloat(payAmt);
-    if (!amount || amount <= 0) return;
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
-    const store = getStore();
-    const idx = store.invoices.findIndex((i) => i.id === selected.id);
-    if (idx !== -1) {
-      const inv = store.invoices[idx];
-      inv.payments.push({ id: generateId('pay'), amount, method: payMethod, date: new Date().toISOString(), receivedBy: user?.name ?? '' });
-      inv.paid += amount;
-      inv.balance = Math.max(0, inv.balance - amount);
-      inv.status = inv.balance <= 0 ? 'paid' : 'partially_paid';
-      saveStore(store);
-    }
+    if (!selected || !payAmt || parseFloat(payAmt) <= 0) { setErr('Enter a valid amount.'); return; }
+    setSaving(true); setErr('');
+    try {
+      await adminPut(`/api/admin/invoices/${selected.id}`, {
+        add_payment: parseFloat(payAmt), payment_method: payMethod,
+      });
+      setSelected(null); setPayAmt(''); refetch(); refetchPart();
+    } catch (e: any) { setErr(e.message); }
     setSaving(false);
-    setSelected(null);
-    setPayAmt('');
-    load();
   };
 
   return (
     <div>
       <div className="adm-page-header">
         <div>
-          <div className="adm-page-title">Pending Payments</div>
-          <div className="adm-page-sub">{invoices.length} customers with outstanding balances</div>
+          <div className="adm-page-title">Payments</div>
+          <div className="adm-page-sub">Total Outstanding: <strong style={{ color: '#d97706' }}>{fmt(totalBalance)}</strong></div>
         </div>
       </div>
 
-      {invoices.length === 0 ? (
-        <div className="adm-card">
-          <div className="adm-card-body adm-empty">
-            <div className="adm-empty-icon">✅</div>
-            <div>All payments are cleared!</div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="adm-stat" style={{ marginBottom: 16, display: 'inline-flex', flexDirection: 'column', gap: 4, padding: '16px 24px' }}>
-            <div className="adm-stat-label">Total Outstanding</div>
-            <div className="adm-stat-value" style={{ color: '#d97706' }}>{fmt(total)}</div>
-          </div>
-
-          <div className="adm-table-wrap">
-            <table className="adm-table">
-              <thead><tr><th>Customer</th><th>Invoice</th><th>Total</th><th>Paid</th><th>Balance Due</th><th>Date</th><th>Action</th></tr></thead>
-              <tbody>
-                {invoices.map((inv) => (
-                  <tr key={inv.id}>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{inv.customerName}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>{inv.customerPhone}</div>
-                    </td>
-                    <td><Link href={`/admin/invoices/${inv.id}`} style={{ color: '#fc5a06', fontWeight: 600, textDecoration: 'none' }}>{inv.invoiceNumber}</Link></td>
-                    <td style={{ fontWeight: 600 }}>{fmt(inv.total)}</td>
-                    <td style={{ color: '#16a34a', fontWeight: 600 }}>{fmt(inv.paid)}</td>
-                    <td style={{ color: '#d97706', fontWeight: 700, fontSize: 15 }}>{fmt(inv.balance)}</td>
-                    <td style={{ fontSize: 12.5, color: '#94a3b8' }}>{new Date(inv.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
-                    <td>
-                      <button onClick={() => { setSelected(inv); setPayAmt(String(inv.balance)); }} className="adm-btn adm-btn-primary adm-btn-sm">
-                        <CheckCircle width={12} height={12} /> Collect
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
       {selected && (
-        <div className="adm-overlay" onClick={() => setSelected(null)}>
-          <div className="adm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="adm-modal-header">
-              <span className="adm-modal-title">Collect Payment — {selected.customerName}</span>
-              <button onClick={() => setSelected(null)} className="adm-btn adm-btn-ghost adm-btn-sm"><X width={14} height={14} /></button>
+        <div style={{ background: '#fffbeb', border: '1px solid #fbbf24', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, marginBottom: 10 }}>
+            Record Payment — {selected.invoice_number} ({selected.customer_name})
+          </div>
+          {err && <div style={{ color: '#ef4444', marginBottom: 8 }}>{err}</div>}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>
+                Amount ₹ (balance: {fmt(selected.balance)})
+              </label>
+              <input type="number" className="adm-input" style={{ width: 160 }} value={payAmt} onChange={(e) => setPayAmt(e.target.value)} placeholder={String(selected.balance)} />
             </div>
-            <div className="adm-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ padding: '12px 14px', background: '#fff8e6', borderRadius: 10, fontSize: 14, color: '#92400e' }}>
-                Invoice: <strong>{selected.invoiceNumber}</strong> · Balance: <strong>{fmt(selected.balance)}</strong>
-              </div>
-              <div className="adm-field">
-                <label className="adm-label">Amount (₹)</label>
-                <input className="adm-input" type="number" value={payAmt} onChange={(e) => setPayAmt(e.target.value)} autoFocus />
-              </div>
-              <div className="adm-field">
-                <label className="adm-label">Method</label>
-                <select className="adm-select" value={payMethod} onChange={(e) => setPayMethod(e.target.value as PaymentMethod)}>
-                  <option value="cash">Cash</option>
-                  <option value="upi">UPI</option>
-                  <option value="card">Card</option>
-                  <option value="bank">Bank</option>
-                </select>
-              </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Method</label>
+              <select className="adm-input" value={payMethod} onChange={(e) => setPayMethod(e.target.value)}>
+                {['cash', 'upi', 'card', 'bank'].map((m) => <option key={m} value={m}>{m.toUpperCase()}</option>)}
+              </select>
             </div>
-            <div className="adm-modal-footer">
-              <button onClick={() => setSelected(null)} className="adm-btn adm-btn-secondary">Cancel</button>
-              <button onClick={handlePayment} disabled={saving} className="adm-btn adm-btn-primary">
-                {saving ? 'Saving…' : <><CheckCircle width={13} height={13} /> Record Payment</>}
-              </button>
-            </div>
+            <button className="adm-btn adm-btn-primary" disabled={saving} onClick={handlePayment}>
+              <CheckCircle size={14} /> {saving ? 'Saving…' : 'Record Payment'}
+            </button>
+            <button className="adm-btn adm-btn-ghost" onClick={() => { setSelected(null); setPayAmt(''); setErr(''); }}>Cancel</button>
           </div>
         </div>
       )}
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Loading…</td></tr>
+            : invoices.length === 0 ? <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: '#16a34a' }}>All invoices are fully paid! 🎉</td></tr>
+            : invoices.map((inv) => (
+              <tr key={inv.id} style={{ background: selected?.id === inv.id ? '#fffbeb' : undefined }}>
+                <td><Link href={`/admin/invoices/${inv.id}`} style={{ color: '#fc5a06', fontWeight: 700, textDecoration: 'none' }}>{inv.invoice_number}</Link></td>
+                <td>
+                  <div style={{ fontWeight: 600 }}>{inv.customer_name}</div>
+                  <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{inv.customer_phone}</div>
+                </td>
+                <td>{fmt(inv.total)}</td>
+                <td style={{ color: '#16a34a' }}>{fmt(inv.paid)}</td>
+                <td style={{ color: '#d97706', fontWeight: 700 }}>{fmt(inv.balance)}</td>
+                <td>
+                  <span className={`adm-badge ${inv.status === 'partially_paid' ? 'adm-badge-warning' : 'adm-badge-danger'}`}>
+                    {inv.status === 'partially_paid' ? 'Part Paid' : 'Pending'}
+                  </span>
+                </td>
+                <td style={{ fontSize: 12.5, color: '#94a3b8' }}>{new Date(inv.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                <td>
+                  <button className="adm-btn adm-btn-primary adm-btn-sm" onClick={() => { setSelected(inv); setPayAmt(String(inv.balance)); setErr(''); }}>
+                    <CheckCircle size={12} /> Pay
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

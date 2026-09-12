@@ -1,71 +1,110 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getStore } from '@/app/lib/admin/store';
-import type { Supplier } from '@/app/lib/admin/types';
-import { Search, Phone, Mail } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '@/app/lib/admin/auth-context';
+import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { adminPost, adminPut } from '@/app/lib/admin/api';
+import { Plus, X, Edit2, Save } from 'lucide-react';
 
-function fmt(n: number) { return '₹' + n.toLocaleString('en-IN'); }
+const BLANK = {
+  name: '', contact_person: '', phone: '', email: '', address: '', gst: '', status: 'active',
+};
+
+function fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN'); }
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [query, setQuery] = useState('');
+  const { user } = useAuth();
+  const [showAdd, setShowAdd] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [form, setForm] = useState({ ...BLANK });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
 
-  useEffect(() => { setSuppliers(getStore().suppliers); }, []);
+  const { data, loading, refetch } = useAdminFetch<{ suppliers: any[] }>('/api/admin/suppliers');
+  const suppliers = data?.suppliers ?? [];
 
-  const filtered = suppliers.filter((s) => {
-    const q = query.toLowerCase();
-    return !q || s.name.toLowerCase().includes(q) || s.phone.includes(q);
-  });
+  const handleSave = async () => {
+    setSaving(true); setErr('');
+    try {
+      if (editing) {
+        await adminPut(`/api/admin/suppliers/${editing.id}`, form);
+        setEditing(null);
+      } else {
+        await adminPost('/api/admin/suppliers', form);
+        setShowAdd(false);
+      }
+      setForm({ ...BLANK }); refetch();
+    } catch (e: any) { setErr(e.message); }
+    setSaving(false);
+  };
 
-  const totalOwed = suppliers.reduce((s, sup) => s + sup.balance, 0);
+  const canManage = user?.role === 'admin' || user?.role === 'manager';
 
   return (
     <div>
       <div className="adm-page-header">
         <div>
           <div className="adm-page-title">Suppliers</div>
-          <div className="adm-page-sub">{suppliers.length} suppliers · Total owed: {fmt(totalOwed)}</div>
+          <div className="adm-page-sub">{loading ? '…' : `${suppliers.length} suppliers`}</div>
         </div>
+        {canManage && (
+          <button className="adm-btn adm-btn-primary" onClick={() => { setShowAdd(true); setEditing(null); setForm({ ...BLANK }); }}>
+            <Plus size={14} /> Add Supplier
+          </button>
+        )}
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <div className="adm-search-wrap" style={{ maxWidth: 300 }}>
-          <Search />
-          <input className="adm-input" placeholder="Search suppliers…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-        {filtered.map((sup) => (
-          <div key={sup.id} className="adm-card">
-            <div className="adm-card-body">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>{sup.name}</div>
-                  {sup.contactPerson && <div style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 2 }}>{sup.contactPerson}</div>}
-                </div>
-                <span className={`adm-badge ${sup.status === 'active' ? 'adm-badge-success' : 'adm-badge-gray'}`}>{sup.status}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, fontSize: 13, color: '#475569' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Phone width={13} height={13} style={{ color: '#94a3b8' }} /> {sup.phone}</div>
-                {sup.email && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail width={13} height={13} style={{ color: '#94a3b8' }} /> {sup.email}</div>}
-                {sup.gst && <div style={{ fontSize: 12, color: '#94a3b8' }}>GST: {sup.gst}</div>}
-              </div>
-              {sup.balance > 0 && (
-                <div style={{ marginTop: 14, padding: '10px 12px', background: '#fff8e6', border: '1px solid #fde68a', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 13, color: '#92400e', fontWeight: 600 }}>Outstanding</span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: '#d97706' }}>{fmt(sup.balance)}</span>
-                </div>
-              )}
-              {sup.balance === 0 && (
-                <div style={{ marginTop: 14, padding: '8px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, fontSize: 13, color: '#16a34a', fontWeight: 600, textAlign: 'center' }}>
-                  ✓ All Cleared
-                </div>
-              )}
-            </div>
+      {(showAdd || editing) && (
+        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 20, marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ fontWeight: 700 }}>{editing ? 'Edit Supplier' : 'Add Supplier'}</div>
+            <button className="adm-btn adm-btn-ghost adm-btn-sm" onClick={() => { setShowAdd(false); setEditing(null); }}><X size={14} /></button>
           </div>
-        ))}
+          {err && <div style={{ color: '#ef4444', marginBottom: 10 }}>{err}</div>}
+          <div className="adm-grid-3" style={{ gap: 12, marginBottom: 12 }}>
+            {[
+              { label: 'Supplier Name *', key: 'name' },
+              { label: 'Contact Person', key: 'contact_person' },
+              { label: 'Phone *', key: 'phone' },
+              { label: 'Email', key: 'email' },
+              { label: 'GST', key: 'gst' },
+              { label: 'Address', key: 'address' },
+            ].map(({ label, key }) => (
+              <div key={key}>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>{label}</label>
+                <input className="adm-input" value={(form as any)[key] ?? ''} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
+              </div>
+            ))}
+          </div>
+          <button className="adm-btn adm-btn-primary" disabled={saving} onClick={handleSave}>
+            <Save size={13} /> {saving ? 'Saving…' : editing ? 'Save Changes' : 'Add Supplier'}
+          </button>
+        </div>
+      )}
+
+      <div className="adm-table-wrap">
+        <table className="adm-table">
+          <thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>GST</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Loading…</td></tr>
+            : suppliers.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No suppliers yet.</td></tr>
+            : suppliers.map((s) => (
+              <tr key={s.id}>
+                <td><div style={{ fontWeight: 600 }}>{s.name}</div></td>
+                <td style={{ color: '#64748b' }}>{s.contact_person ?? '—'}</td>
+                <td>{s.phone}</td>
+                <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{s.gst ?? '—'}</td>
+                <td style={{ fontWeight: 700, color: Number(s.balance) > 0 ? '#d97706' : '#16a34a' }}>{fmt(s.balance)}</td>
+                <td><span className={`adm-badge ${s.status === 'active' ? 'adm-badge-success' : 'adm-badge-gray'}`}>{s.status}</span></td>
+                <td>
+                  {canManage && (
+                    <button className="adm-btn adm-btn-ghost adm-btn-sm" onClick={() => { setEditing(s); setForm({ ...s }); setShowAdd(false); }}><Edit2 size={13} /></button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

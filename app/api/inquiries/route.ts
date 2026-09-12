@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
+import { sendInquiryNotification } from "@/app/lib/mailer";
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +26,15 @@ export async function POST(request: Request) {
       [name, phone, email, interest, message]
     );
 
+    // Send email notification to shop (non-blocking — don't await)
+    sendInquiryNotification({
+      name,
+      phone,
+      email,
+      interest,
+      message,
+    }).catch((err) => console.error("[mailer] Inquiry email failed:", err));
+
     return NextResponse.json(
       {
         success: true,
@@ -42,7 +52,12 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const secret = request.headers.get("x-admin-secret");
+  if (!secret || secret !== process.env.ADMIN_API_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const rows = await query("SELECT COUNT(*) as total FROM inquiries");
     return NextResponse.json({ success: true, count: rows });

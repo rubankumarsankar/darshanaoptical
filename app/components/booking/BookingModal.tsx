@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Clock, User, Phone, Check, Send, Sparkles, MapPin, ArrowRight, ArrowLeft } from "lucide-react";
+import { X, Calendar, Clock, User, Phone, Mail, Check, Send, Sparkles, MapPin, ArrowRight, ArrowLeft } from "lucide-react";
 import { useBooking } from "./BookingContext";
 import { EASE_STANDARD } from "../../lib/motion";
 
@@ -11,10 +11,13 @@ export default function BookingModal() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00 AM");
   const [testType, setTestType] = useState("Comprehensive Eye Test");
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const todayStr = new Date().toISOString().split("T")[0];
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +32,7 @@ export default function BookingModal() {
         body: JSON.stringify({
           name,
           phone,
+          email: email || null,
           preferred_date: date || null,
           preferred_time: time,
           test_type: testType,
@@ -39,6 +43,7 @@ export default function BookingModal() {
         `Hello Darshana Optical,\n\nI would like to book an Eye Test appointment.\n\n` +
         `*Name:* ${name}\n` +
         `*Phone:* ${phone}\n` +
+        (email ? `*Email:* ${email}\n` : "") +
         `*Test Type:* ${testType}\n` +
         `*Preferred Date:* ${date || "As soon as possible"}\n` +
         `*Preferred Time:* ${time}\n\n` +
@@ -55,6 +60,7 @@ export default function BookingModal() {
     setStep(1);
     setName("");
     setPhone("");
+    setEmail("");
     setDate("");
     closeBooking();
   };
@@ -174,9 +180,30 @@ export default function BookingModal() {
                             <input
                               type="tel"
                               required
-                              placeholder="e.g. +91 88705 71536"
+                              placeholder="e.g. 88705 71536"
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
+                              pattern="[6-9][0-9]{9}"
+                              minLength={10}
+                              maxLength={10}
+                              title="Enter a valid 10-digit Indian mobile number"
+                              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
+                            />
+                            <p className="mt-1 text-[11px] text-neutral-400">10-digit mobile number (no spaces)</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
+                            Email Address <span className="text-neutral-400 text-[10px] lowercase font-normal">(optional — to receive confirmation)</span>
+                          </label>
+                          <div className="relative">
+                            <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+                            <input
+                              type="email"
+                              placeholder="e.g. yourname@gmail.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
                               className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
                             />
                           </div>
@@ -267,6 +294,7 @@ export default function BookingModal() {
                               <input
                                 type="date"
                                 value={date}
+                                min={todayStr}
                                 onChange={(e) => setDate(e.target.value)}
                                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
                               />

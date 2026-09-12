@@ -1,14 +1,13 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getStore, saveStore, generateId } from '@/app/lib/admin/store';
-import { useAuth } from '@/app/lib/admin/auth-context';
-import type { Invoice, PaymentMethod } from '@/app/lib/admin/types';
+import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { adminPut } from '@/app/lib/admin/api';
 import { ArrowLeft, Printer, Plus, CheckCircle, X } from 'lucide-react';
 
-function fmt(n: number) { return '₹' + n.toLocaleString('en-IN'); }
+function fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN'); }
 function fmtDate(d: string) { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -20,62 +19,56 @@ const STATUS_LABELS: Record<string, string> = {
   new: 'New', lens_ordered: 'Lens Ordered', in_process: 'In Process', ready: 'Ready', delivered: 'Delivered',
 };
 
+type PaymentMethod = 'cash' | 'upi' | 'card' | 'bank';
+
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { user } = useAuth();
   const router = useRouter();
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const { data, loading, error, refetch } = useAdminFetch<{ invoice: any; items: any[]; payments: any[] }>(`/api/admin/invoices/${id}`);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payAmt, setPayAmt] = useState('');
   const [payMethod, setPayMethod] = useState<PaymentMethod>('cash');
   const [payNotes, setPayNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const load = () => {
-    const store = getStore();
-    const inv = store.invoices.find((i) => i.id === id);
-    if (!inv) { router.replace('/admin/invoices'); return; }
-    setInvoice(inv);
-  };
+  if (error) {
+    router.replace('/admin/invoices');
+    return null;
+  }
+  if (loading || !data) return null;
 
-  useEffect(() => { load(); }, [id]);
+  const { invoice, items, payments } = data;
 
   const handlePayment = async () => {
     const amount = parseFloat(payAmt);
     if (!amount || amount <= 0) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
-    const store = getStore();
-    const idx = store.invoices.findIndex((i) => i.id === id);
-    if (idx !== -1) {
-      const inv = store.invoices[idx];
-      const newPay = { id: generateId('pay'), amount, method: payMethod, date: new Date().toISOString(), notes: payNotes || undefined, receivedBy: user?.name ?? '' };
-      inv.payments.push(newPay);
-      inv.paid += amount;
-      inv.balance = Math.max(0, inv.balance - amount);
-      inv.status = inv.balance <= 0 ? 'paid' : 'partially_paid';
-      store.auditLogs.unshift({ id: generateId('al'), action: 'PAYMENT_RECEIVED', entity: 'Payment', entityId: id, details: `Received ${fmt(amount)} via ${payMethod} for ${inv.invoiceNumber}`, performedBy: user?.name ?? '', performedByRole: user?.role ?? 'staff', createdAt: new Date().toISOString() });
-      saveStore(store);
+    try {
+      await adminPut(`/api/admin/invoices/${id}`, {
+        add_payment: amount,
+        payment_method: payMethod,
+        payment_notes: payNotes || undefined,
+      });
+      await refetch();
+      setShowPayModal(false);
+      setPayAmt('');
+      setPayNotes('');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setShowPayModal(false);
-    setPayAmt('');
-    load();
   };
-
-  if (!invoice) return null;
 
   return (
     <div style={{ maxWidth: 720 }}>
       <div className="adm-page-header">
         <Link href="/admin/invoices" className="adm-btn adm-btn-ghost adm-btn-sm"><ArrowLeft width={14} height={14} /> Invoices</Link>
         <div style={{ flex: 1 }}>
-          <div className="adm-page-title">{invoice.invoiceNumber}</div>
-          <div className="adm-page-sub">{invoice.customerName} · {fmtDate(invoice.createdAt)}</div>
+          <div className="adm-page-title">{invoice.invoice_number}</div>
+          <div className="adm-page-sub">{invoice.customer_name} · {fmtDate(invoice.created_at)}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => window.print()} className="adm-btn adm-btn-secondary adm-btn-sm"><Printer width={13} height={13} /> Print</button>
-          {invoice.balance > 0 && invoice.status !== 'cancelled' && (
+          {Number(invoice.balance) > 0 && invoice.status !== 'cancelled' && (
             <button onClick={() => setShowPayModal(true)} className="adm-btn adm-btn-primary adm-btn-sm"><Plus width={13} height={13} /> Receive Payment</button>
           )}
         </div>
@@ -84,8 +77,8 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       {/* Status Row */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
         <span className={`adm-badge ${STATUS_COLORS[invoice.status]}`}>{STATUS_LABELS[invoice.status]}</span>
-        {invoice.orderStatus && <span className={`adm-badge ${STATUS_COLORS[invoice.orderStatus]}`}>Order: {STATUS_LABELS[invoice.orderStatus]}</span>}
-        {invoice.deliveredAt && <span style={{ fontSize: 12, color: '#64748b' }}>Delivered: {new Date(invoice.deliveredAt).toLocaleDateString('en-IN')}</span>}
+        {invoice.order_status && <span className={`adm-badge ${STATUS_COLORS[invoice.order_status]}`}>Order: {STATUS_LABELS[invoice.order_status]}</span>}
+        {invoice.delivered_at && <span style={{ fontSize: 12, color: '#64748b' }}>Delivered: {new Date(invoice.delivered_at).toLocaleDateString('en-IN')}</span>}
       </div>
 
       {/* Invoice Card */}
@@ -93,15 +86,15 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Bill To</div>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>{invoice.customerName}</div>
-            <div style={{ color: '#64748b', fontSize: 13.5 }}>{invoice.customerPhone}</div>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>{invoice.customer_name}</div>
+            <div style={{ color: '#64748b', fontSize: 13.5 }}>{invoice.customer_phone}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>Darshana Optical</div>
             <div style={{ fontSize: 12.5, color: '#94a3b8' }}>Harur, Tamil Nadu · 088705 71536</div>
             <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-              Invoice: <strong>{invoice.invoiceNumber}</strong><br />
-              Date: {new Date(invoice.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              Invoice: <strong>{invoice.invoice_number}</strong><br />
+              Date: {new Date(invoice.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
             </div>
           </div>
         </div>
@@ -110,13 +103,13 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         <table className="adm-table">
           <thead><tr><th>#</th><th>Item</th><th>Code</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
           <tbody>
-            {invoice.items.map((item, i) => (
+            {items.map((item, i) => (
               <tr key={item.id}>
                 <td style={{ color: '#94a3b8', fontSize: 12 }}>{i + 1}</td>
-                <td><div style={{ fontWeight: 600 }}>{item.productName}</div><div style={{ fontSize: 11.5, color: '#94a3b8', textTransform: 'capitalize' }}>{item.category}</div></td>
-                <td style={{ fontFamily: 'monospace', fontSize: 12.5, color: '#64748b' }}>{item.productCode}</td>
+                <td><div style={{ fontWeight: 600 }}>{item.product_name}</div><div style={{ fontSize: 11.5, color: '#94a3b8', textTransform: 'capitalize' }}>{item.category}</div></td>
+                <td style={{ fontFamily: 'monospace', fontSize: 12.5, color: '#64748b' }}>{item.product_code}</td>
                 <td style={{ fontWeight: 600 }}>{item.quantity}</td>
-                <td>{fmt(item.unitPrice)}</td>
+                <td>{fmt(item.unit_price)}</td>
                 <td style={{ fontWeight: 700 }}>{fmt(item.total)}</td>
               </tr>
             ))}
@@ -127,27 +120,27 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end' }}>
           <div style={{ minWidth: 240, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b' }}><span>Subtotal</span><span>{fmt(invoice.subtotal)}</span></div>
-            {invoice.discountAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#dc2626' }}><span>Discount ({invoice.discountPercent.toFixed(1)}%)</span><span>−{fmt(invoice.discountAmount)}</span></div>}
+            {Number(invoice.discount_amount) > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#dc2626' }}><span>Discount ({Number(invoice.discount_percent).toFixed(1)}%)</span><span>−{fmt(invoice.discount_amount)}</span></div>}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, fontWeight: 800, borderTop: '2px solid #f1f5f9', paddingTop: 8 }}><span>Total</span><span>{fmt(invoice.total)}</span></div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#16a34a', fontWeight: 600 }}><span>Paid</span><span>{fmt(invoice.paid)}</span></div>
-            {invoice.balance > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#d97706' }}><span>Balance Due</span><span>{fmt(invoice.balance)}</span></div>}
+            {Number(invoice.balance) > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#d97706' }}><span>Balance Due</span><span>{fmt(invoice.balance)}</span></div>}
           </div>
         </div>
       </div>
 
       {/* Payments */}
-      {invoice.payments.length > 0 && (
+      {payments.length > 0 && (
         <div className="adm-card">
           <div className="adm-card-header"><span className="adm-card-title">Payment History</span></div>
           <table className="adm-table">
             <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Received By</th><th>Notes</th></tr></thead>
             <tbody>
-              {invoice.payments.map((p) => (
+              {payments.map((p) => (
                 <tr key={p.id}>
-                  <td style={{ fontSize: 12.5 }}>{fmtDate(p.date)}</td>
+                  <td style={{ fontSize: 12.5 }}>{fmtDate(p.payment_date)}</td>
                   <td style={{ fontWeight: 700, color: '#16a34a' }}>{fmt(p.amount)}</td>
                   <td style={{ textTransform: 'capitalize', color: '#64748b' }}>{p.method}</td>
-                  <td style={{ color: '#64748b' }}>{p.receivedBy}</td>
+                  <td style={{ color: '#64748b' }}>{p.received_by}</td>
                   <td style={{ color: '#94a3b8', fontSize: 12.5 }}>{p.notes ?? '—'}</td>
                 </tr>
               ))}

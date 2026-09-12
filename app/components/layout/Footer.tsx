@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { FaInstagram, FaFacebookF, FaWhatsapp } from "react-icons/fa6";
+import { FaWhatsapp } from "react-icons/fa6";
 import { useBooking } from "../booking/BookingContext";
 
 export default function Footer() {
@@ -29,31 +29,13 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-2 pt-1">
             <a
-              href="https://instagram.com"
+              href="https://wa.me/918870571536"
               target="_blank"
               rel="noreferrer"
-              aria-label="Instagram"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-brand-orange hover:text-white transition-colors"
+              aria-label="WhatsApp"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-[#25D366] hover:text-white transition-colors"
             >
-              <FaInstagram size={13} />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Twitter"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-brand-orange hover:text-white transition-colors"
-            >
-              <span className="text-[11px] font-bold">X</span>
-            </a>
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Facebook"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-brand-orange hover:text-white transition-colors"
-            >
-              <FaFacebookF size={12} />
+              <FaWhatsapp size={14} />
             </a>
           </div>
         </div>
@@ -130,7 +112,7 @@ export default function Footer() {
 
       <div className="border-t border-neutral-800">
         <div className="container-brand flex flex-col items-center justify-between gap-3 py-4 text-[11px] text-neutral-500 sm:flex-row">
-          <span>© 2024 Darshana Optical. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Darshana Optical. All rights reserved.</span>
           <div className="flex items-center gap-6">
             <Link href="/privacy-policy" className="hover:text-brand-orange">
               Privacy Policy

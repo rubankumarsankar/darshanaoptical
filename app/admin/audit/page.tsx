@@ -1,57 +1,54 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getStore } from '@/app/lib/admin/store';
-import type { AuditLog } from '@/app/lib/admin/types';
-import { Search } from 'lucide-react';
+import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { useState } from 'react';
+
+const ENTITY_COLORS: Record<string, string> = {
+  customer: 'adm-badge-info', product: 'adm-badge-warning', invoice: 'adm-badge-success',
+  eye_test: 'adm-badge-orange', expense: 'adm-badge-danger', purchase: 'adm-badge-gray',
+  supplier: 'adm-badge-info', user: 'adm-badge-danger',
+};
 
 export default function AuditPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [query, setQuery] = useState('');
-
-  useEffect(() => { setLogs(getStore().auditLogs.slice(0, 100)); }, []);
-
-  const filtered = logs.filter((l) => {
-    const q = query.toLowerCase();
-    return !q || l.action.toLowerCase().includes(q) || l.details.toLowerCase().includes(q) || l.performedBy.toLowerCase().includes(q);
-  });
+  const [entity, setEntity] = useState('');
+  const params: Record<string, string> = {};
+  if (entity) params.entity = entity;
+  const { data, loading } = useAdminFetch<{ logs: any[] }>('/api/admin/audit', { params });
+  const logs = data?.logs ?? [];
 
   return (
     <div>
       <div className="adm-page-header">
         <div>
-          <div className="adm-page-title">Audit Logs</div>
-          <div className="adm-page-sub">System activity history (last 100 entries)</div>
+          <div className="adm-page-title">Audit Log</div>
+          <div className="adm-page-sub">{loading ? '…' : `${logs.length} entries`}</div>
         </div>
       </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <div className="adm-search-wrap" style={{ maxWidth: 360 }}>
-          <Search />
-          <input className="adm-input" placeholder="Search logs…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </div>
+      <div className="adm-tabs" style={{ marginBottom: 16 }}>
+        {(['', 'invoice', 'customer', 'product', 'expense', 'purchase', 'user'] as const).map((e) => (
+          <button key={e} className={`adm-tab${entity === e ? ' active' : ''}`} onClick={() => setEntity(e)} style={{ fontSize: 12 }}>
+            {e === '' ? 'All' : e.charAt(0).toUpperCase() + e.slice(1)}
+          </button>
+        ))}
       </div>
-
       <div className="adm-table-wrap">
         <table className="adm-table">
-          <thead><tr><th>Time</th><th>Action</th><th>Details</th><th>Performed By</th><th>Role</th></tr></thead>
+          <thead><tr><th>Time</th><th>Action</th><th>Entity</th><th>Details</th><th>By</th><th>Role</th></tr></thead>
           <tbody>
-            {filtered.map((log) => (
-              <tr key={log.id}>
-                <td style={{ whiteSpace: 'nowrap', fontSize: 12.5, color: '#94a3b8' }}>
-                  {new Date(log.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}<br />
-                  <span style={{ color: '#cbd5e1' }}>{new Date(log.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+            {loading ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Loading…</td></tr>
+            : logs.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No audit entries.</td></tr>
+            : logs.map((l) => (
+              <tr key={l.id}>
+                <td style={{ fontSize: 11.5, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                  {new Date(l.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </td>
-                <td>
-                  <span style={{ fontFamily: 'monospace', fontSize: 11.5, background: '#f1f5f9', padding: '2px 8px', borderRadius: 6, color: '#475569', fontWeight: 600 }}>
-                    {log.action}
-                  </span>
+                <td style={{ fontWeight: 700, fontSize: 12, color: l.action === 'DELETE' || l.action === 'CANCEL' ? '#ef4444' : l.action === 'CREATE' ? '#16a34a' : '#0f172a' }}>
+                  {l.action}
                 </td>
-                <td style={{ fontSize: 13, color: '#475569', maxWidth: 380 }}>
-                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.details}</div>
-                </td>
-                <td style={{ fontWeight: 600, fontSize: 13 }}>{log.performedBy}</td>
-                <td><span className={`adm-badge ${log.performedByRole === 'admin' ? 'adm-badge-danger' : log.performedByRole === 'manager' ? 'adm-badge-warning' : 'adm-badge-info'}`} style={{ textTransform: 'capitalize' }}>{log.performedByRole}</span></td>
+                <td><span className={`adm-badge ${ENTITY_COLORS[l.entity] ?? 'adm-badge-gray'}`}>{l.entity}</span></td>
+                <td style={{ fontSize: 12.5, color: '#334155', maxWidth: 300 }}>{l.details}</td>
+                <td style={{ fontSize: 12.5, fontWeight: 600 }}>{l.performed_by}</td>
+                <td><span className={`adm-badge adm-badge-gray`} style={{ fontSize: 11 }}>{l.performed_by_role}</span></td>
               </tr>
             ))}
           </tbody>

@@ -6,9 +6,9 @@ import { useAuth } from '@/app/lib/admin/auth-context';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 
 const DEMO_ACCOUNTS = [
-  { role: 'Admin', email: 'admin@darshana.com', password: 'admin123', color: '#fc5a06' },
-  { role: 'Manager', email: 'manager@darshana.com', password: 'manager123', color: '#2563eb' },
-  { role: 'Staff', email: 'staff@darshana.com', password: 'staff123', color: '#16a34a' },
+  { role: 'Admin', email: 'admin@darshana.com', password: 'admin@2026', color: '#fc5a06' },
+  { role: 'Manager', email: 'manager@darshana.com', password: 'manager@2026', color: '#2563eb' },
+  { role: 'Staff', email: 'staff@darshana.com', password: 'staff@2026', color: '#16a34a' },
 ];
 
 export default function LoginPage() {
@@ -25,8 +25,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 400));
-    const result = login(email.trim(), password);
+    const result = await login(email.trim(), password);
     setLoading(false);
     if (result.success) {
       router.replace('/admin/dashboard');

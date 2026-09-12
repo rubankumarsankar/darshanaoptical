@@ -3,9 +3,8 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getStore, saveStore, generateId } from '@/app/lib/admin/store';
+import { adminPost } from '@/app/lib/admin/api';
 import { useAuth } from '@/app/lib/admin/auth-context';
-import type { Customer, EyeEntry } from '@/app/lib/admin/types';
 import { ArrowLeft, Save, Search } from 'lucide-react';
 
 function EyeTestForm() {
@@ -15,35 +14,38 @@ function EyeTestForm() {
 
   const preCustomerId = params.get('customerId') ?? '';
   const preCustomerName = params.get('customerName') ?? '';
+  const preCustomerPhone = params.get('customerPhone') ?? '';
 
   const [customerSearch, setCustomerSearch] = useState(preCustomerName);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [searchResults, setSearchResults] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(
+    preCustomerId ? { id: preCustomerId, name: preCustomerName, phone: preCustomerPhone } : null
+  );
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [right, setRight] = useState<EyeEntry>({ sph: '', cyl: '', axis: '', add: '', pd: '' });
-  const [left, setLeft] = useState<EyeEntry>({ sph: '', cyl: '', axis: '', add: '', pd: '' });
+  const [right, setRight] = useState({ sph: '', cyl: '', axis: '', add: '', pd: '' });
+  const [left, setLeft] = useState({ sph: '', cyl: '', axis: '', add: '', pd: '' });
   const [vaRight, setVaRight] = useState('');
   const [vaLeft, setVaLeft] = useState('');
   const [recommendation, setRecommendation] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (preCustomerId) {
-      const store = getStore();
-      const c = store.customers.find((c) => c.id === preCustomerId);
-      if (c) setSelectedCustomer(c);
-    }
-  }, [preCustomerId]);
-
+  // Live customer search via API
   useEffect(() => {
     if (!customerSearch.trim() || selectedCustomer) { setSearchResults([]); return; }
-    const q = customerSearch.toLowerCase();
-    const store = getStore();
-    setSearchResults(store.customers.filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)).slice(0, 5));
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/customers?q=${encodeURIComponent(customerSearch)}&status=active`);
+        const json = await res.json();
+        setSearchResults((json.customers ?? []).slice(0, 6));
+      } catch { setSearchResults([]); }
+    }, 250);
+    return () => clearTimeout(timeout);
   }, [customerSearch, selectedCustomer]);
 
-  const setEye = (side: 'right' | 'left', field: keyof EyeEntry, val: string) => {
+
+  const setEye = (side: 'right' | 'left', field: string, val: string) => {
     if (side === 'right') setRight((r) => ({ ...r, [field]: val }));
     else setLeft((l) => ({ ...l, [field]: val }));
   };
@@ -51,31 +53,27 @@ function EyeTestForm() {
   const handleSave = async () => {
     if (!selectedCustomer) { alert('Please select a customer first.'); return; }
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 300));
-    const store = getStore();
-    const newTest = {
-      id: generateId('et'),
-      customerId: selectedCustomer.id,
-      customerName: selectedCustomer.name,
-      customerPhone: selectedCustomer.phone,
-      date,
-      testedBy: user?.name ?? 'Unknown',
-      rightEye: right,
-      leftEye: left,
-      visualAcuityRight: vaRight || undefined,
-      visualAcuityLeft: vaLeft || undefined,
-      recommendation: recommendation || undefined,
-      notes: notes || undefined,
-      createdAt: new Date().toISOString(),
-    };
-    store.eyeTests.push(newTest);
-    // Update customer last visit
-    const ci = store.customers.findIndex((c) => c.id === selectedCustomer.id);
-    if (ci !== -1) store.customers[ci].lastVisit = new Date().toISOString();
-    saveStore(store);
-    setSaving(false);
-    router.push(`/admin/prescriptions/${newTest.id}`);
+    try {
+      await adminPost<{ eyeTest: any }>('/api/admin/eye-tests', {
+        customer_id: selectedCustomer.id,
+        customer_name: selectedCustomer.name,
+        customer_phone: selectedCustomer.phone,
+        test_date: date,
+        tested_by: user?.name ?? '',
+        re_sph: right.sph, re_cyl: right.cyl, re_axis: right.axis, re_add: right.add, re_pd: right.pd,
+        le_sph: left.sph, le_cyl: left.cyl, le_axis: left.axis, le_add: left.add, le_pd: left.pd,
+        visual_acuity_right: vaRight || null,
+        visual_acuity_left: vaLeft || null,
+        recommendation: recommendation || null,
+        notes: notes || null,
+      });
+      router.push('/admin/eye-tests');
+    } catch (e: any) {
+      alert(e.message ?? 'Failed to save eye test.');
+      setSaving(false);
+    }
   };
+
 
   return (
     <div style={{ maxWidth: 760 }}>
@@ -149,15 +147,21 @@ function EyeTestForm() {
             </div>
             <div className="adm-card-body">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
-                {[['SPH', 'sph'], ['CYL', 'cyl'], ['AXIS', 'axis'], ['ADD', 'add'], ['PD', 'pd']].map(([lbl, field]) => (
+                {([
+                  ['SPH', 'sph'],
+                  ['CYL', 'cyl'],
+                  ['AXIS', 'axis'],
+                  ['ADD', 'add'],
+                  ['PD', 'pd'],
+                ] as const).map(([lbl, field]) => (
                   <div key={field} className="adm-field">
                     <label className="adm-label" style={{ textAlign: 'center' }}>{lbl}</label>
                     <input
                       className="adm-input"
                       style={{ textAlign: 'center' }}
                       placeholder={field === 'axis' ? '0-180' : field === 'pd' ? 'mm' : '0.00'}
-                      value={data[field as keyof EyeEntry] ?? ''}
-                      onChange={(e) => setEye(side, field as keyof EyeEntry, e.target.value)}
+                      value={data[field] ?? ''}
+                      onChange={(e) => setEye(side, field, e.target.value)}
                     />
                   </div>
                 ))}
