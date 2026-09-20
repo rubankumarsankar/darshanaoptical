@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { adminPost } from '@/app/lib/admin/api';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
@@ -9,8 +9,12 @@ import Link from 'next/link';
 export default function NewCustomerPage() {
   const router = useRouter();
 
+  // Pre-filled when arriving from a website booking (/admin/bookings), so staff
+  // don't retype details the customer already gave.
+  const sp = useSearchParams();
   const [form, setForm] = useState({
-    name: '', phone: '', email: '', dob: '', gender: '', address: '', notes: '',
+    name: sp.get('name') ?? '', phone: sp.get('phone') ?? '', email: sp.get('email') ?? '',
+    dob: '', gender: '', address: '', notes: '',
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});

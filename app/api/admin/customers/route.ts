@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withTransaction } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
+import { nextSequence } from '@/app/lib/admin/sequence';
 import { randomUUID } from 'crypto';
 
 // GET /api/admin/customers
 export async function GET(request: Request) {
-  const { session, error } = await requireSession();
+  const { error } = await requireSession();
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
@@ -39,23 +40,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Name and phone are required.' }, { status: 400 });
   }
 
-  // Generate customer_id: DO-YYYY-NNN
-  const [countRow] = await query('SELECT COUNT(*) as cnt FROM customers') as any[];
+  // Generate customer_id: DO-YYYY-NNN.
+  // customer_id is UNIQUE, so the old COUNT(*)+1 approach meant two staff
+  // registering a walk-in at the same moment produced the same id and one
+  // request failed outright. The counter is incremented under a row lock in the
+  // same transaction as the insert.
   const year = new Date().getFullYear();
-  const customer_id = `DO-${year}-${String(countRow.cnt + 1).padStart(3, '0')}`;
-
   const id = randomUUID();
-  await query(
-    `INSERT INTO customers (id, customer_id, name, phone, email, gender, dob, address, notes, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
-    [id, customer_id, name, phone, email || null, gender || null, dob || null, address || null, notes || null]
-  );
+  let customer_id = '';
 
-  await query(
-    `INSERT INTO audit_logs (id, action, entity, entity_id, details, performed_by, performed_by_role)
-     VALUES (?, 'CREATE', 'customer', ?, ?, ?, ?)`,
-    [randomUUID(), id, `Created customer: ${name} (${phone})`, session.name, session.role]
-  );
+  await withTransaction(async (tx) => {
+    customer_id = `DO-${year}-${String(await nextSequence(tx, 'customer')).padStart(3, '0')}`;
+
+    await tx.query(
+      `INSERT INTO customers (id, customer_id, name, phone, email, gender, dob, address, notes, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+      [id, customer_id, name, phone, email || null, gender || null, dob || null, address || null, notes || null]
+    );
+
+    await tx.query(
+      `INSERT INTO audit_logs (id, action, entity, entity_id, details, performed_by, performed_by_role)
+       VALUES (?, 'CREATE', 'customer', ?, ?, ?, ?)`,
+      [randomUUID(), id, `Created customer: ${name} (${phone})`, session.name, session.role]
+    );
+  });
 
   const [newCustomer] = await query('SELECT * FROM customers WHERE id = ?', [id]) as any[];
   return NextResponse.json({ customer: newCustomer }, { status: 201 });

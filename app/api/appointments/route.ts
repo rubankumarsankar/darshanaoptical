@@ -1,67 +1,55 @@
 import { NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
 import { sendAppointmentConfirmation } from "@/app/lib/mailer";
+import { appointmentSchema } from "@/app/lib/public-validation";
+import { clientIp, isSubmissionThrottled } from "@/app/lib/admin/rate-limit";
+import { safeEqual } from "@/app/lib/admin/session-token";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const {
-      name,
-      phone,
-      email = null,
-      preferred_date = null,
-      preferred_time = null,
-      test_type = "Eye Testing",
-      wears_glasses = "No",
-      notes = null,
-    } = body;
-
-    if (!name || !phone) {
+    // Open to the internet with no captcha, so cap how often one address can post.
+    if (await isSubmissionThrottled("appointment", clientIp(request))) {
       return NextResponse.json(
-        { error: "Name and phone number are required." },
+        { error: "Too many requests. Please try again shortly, or call the shop directly." },
+        { status: 429 }
+      );
+    }
+
+    const parsed = appointmentSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues.map((i) => `${i.path.join(".") || "field"}: ${i.message}`).join("; ") },
         { status: 400 }
       );
     }
+    const b = parsed.data;
 
     const result = await query(
       `INSERT INTO appointments (name, phone, email, preferred_date, preferred_time, test_type, wears_glasses, notes, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
-      [
-        name,
-        phone,
-        email,
-        preferred_date,
-        preferred_time,
-        test_type,
-        wears_glasses,
-        notes,
-      ]
+      [b.name, b.phone, b.email, b.preferred_date, b.preferred_time, b.test_type, b.wears_glasses, b.notes]
     );
 
     // Send dual email notifications (shop owner + customer confirmation if email provided)
     sendAppointmentConfirmation({
-      name,
-      phone,
-      email: email || null,
-      testType: test_type,
-      preferredDate: preferred_date,
-      preferredTime: preferred_time,
-      wearsGlasses: wears_glasses,
-      notes,
+      name: b.name,
+      phone: b.phone,
+      email: b.email,
+      testType: b.test_type,
+      preferredDate: b.preferred_date,
+      preferredTime: b.preferred_time,
+      wearsGlasses: b.wears_glasses,
+      notes: b.notes,
     }).catch((err) => console.error("[mailer] Appointment email failed:", err));
 
     return NextResponse.json(
-      {
-        success: true,
-        message: "Appointment request saved successfully.",
-        id: (result as any).insertId,
-      },
+      { success: true, message: "Appointment request saved successfully.", id: (result as any).insertId },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error saving appointment:", error);
     return NextResponse.json(
-      { error: "Failed to save appointment. Please try again or message via WhatsApp." },
+      { error: "Failed to save appointment. Please try again or call us directly." },
       { status: 500 }
     );
   }
@@ -69,14 +57,17 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   const secret = request.headers.get("x-admin-secret");
-  if (!secret || secret !== process.env.ADMIN_API_SECRET) {
+  const expected = process.env.ADMIN_API_SECRET;
+  if (!secret || !expected || !safeEqual(secret, expected)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const rows = await query("SELECT COUNT(*) as total FROM appointments");
     return NextResponse.json({ success: true, count: rows });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    // Never echo the database error back to the caller.
+    console.error("[appointments] count failed:", error);
+    return NextResponse.json({ error: "Server error." }, { status: 500 });
   }
 }

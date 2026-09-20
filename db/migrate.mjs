@@ -3,10 +3,13 @@
 
 import mysql from 'mysql2/promise';
 import { readFileSync } from 'fs';
-import { createHmac } from 'crypto';
+import { randomBytes, scrypt as scryptCb } from 'crypto';
+import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { createInterface } from 'readline';
+
+const scrypt = promisify(scryptCb);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,12 +32,23 @@ function loadEnv() {
   }
 }
 
-// ─── Simple password hash (SHA-256 based) ─────────────────────
-// For production, upgrade to bcrypt. For this internal admin it's sufficient.
-function hashPassword(password) {
-  return createHmac('sha256', process.env.SESSION_SECRET ?? 'darshana-secret')
-    .update(password)
-    .digest('hex');
+// ─── Password hashing (scrypt, salted) ────────────────────────
+// Must stay in step with the format read by app/lib/admin/password.ts.
+const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 64;
+
+async function hashPassword(password) {
+  const salt = randomBytes(16);
+  const key = await scrypt(password.normalize('NFKC'), salt, SCRYPT_KEYLEN, {
+    N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: 64 * 1024 * 1024,
+  });
+  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('base64')}$${key.toString('base64')}`;
+}
+
+// Generates a readable but high-entropy password (~95 bits).
+function generatePassword() {
+  const alphabet = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = randomBytes(16);
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('') + '7a';
 }
 
 // ─── Seed data ────────────────────────────────────────────────
@@ -43,7 +57,12 @@ const SEED_USERS = [
     id: 'usr-001',
     name: 'Darshana Raj',
     email: 'admin@darshana.com',
-    password: 'admin@2026',
+    // Passwords are NOT hard-coded any more — the previous fixed values
+    // (admin@2026 etc.) were committed to the repository, so anyone with the
+    // source could sign in. Each run takes the password from
+    // SEED_ADMIN_PASSWORD / SEED_MANAGER_PASSWORD / SEED_STAFF_PASSWORD, or
+    // generates a random one and prints it once.
+    envVar: 'SEED_ADMIN_PASSWORD',
     role: 'admin',
     phone: '8870571536',
   },
@@ -51,7 +70,7 @@ const SEED_USERS = [
     id: 'usr-002',
     name: 'Arun Kumar',
     email: 'manager@darshana.com',
-    password: 'manager@2026',
+    envVar: 'SEED_MANAGER_PASSWORD',
     role: 'manager',
     phone: '',
   },
@@ -59,7 +78,7 @@ const SEED_USERS = [
     id: 'usr-003',
     name: 'Kumar Muthu',
     email: 'staff@darshana.com',
-    password: 'staff@2026',
+    envVar: 'SEED_STAFF_PASSWORD',
     role: 'staff',
     phone: '',
   },
@@ -87,19 +106,35 @@ async function main() {
 
   // ─── Seed users ───────────────────────────────────────────
   console.log('👤 Seeding admin users…');
+  const issued = [];
   for (const u of SEED_USERS) {
-    const hash = hashPassword(u.password);
+    const [existing] = await conn.execute('SELECT id FROM users WHERE email = ? LIMIT 1', [u.email]);
+    if (existing.length) {
+      console.log(`   • ${u.role}: ${u.email} already exists — password left unchanged`);
+      continue;
+    }
+
+    const password = process.env[u.envVar] || generatePassword();
+    const hash = await hashPassword(password);
     await conn.execute(
-      `INSERT IGNORE INTO users (id, name, email, password_hash, role, phone, status, joined_at)
+      `INSERT INTO users (id, name, email, password_hash, role, phone, status, joined_at)
        VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())`,
       [u.id, u.name, u.email, hash, u.role, u.phone]
     );
-    console.log(`   ✓ ${u.role}: ${u.email} / ${u.password}`);
+    issued.push({ ...u, password, generated: !process.env[u.envVar] });
+    console.log(`   ✓ ${u.role}: ${u.email}`);
   }
 
   await conn.end();
-  console.log('\n🎉 Migration complete! Login credentials printed above.');
-  console.log('   Change passwords after first login via Admin → Staff.\n');
+
+  if (issued.length) {
+    console.log('\n🔐 Sign-in credentials — shown ONCE, store them in a password manager:');
+    for (const u of issued) {
+      console.log(`   ${u.role.padEnd(8)} ${u.email}  ${u.password}${u.generated ? '  (generated)' : ''}`);
+    }
+    console.log('\n   Change these after first sign-in via Admin → Staff Team.');
+  }
+  console.log('\n🎉 Migration complete.\n');
 }
 
 main().catch((err) => {

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { query, withTransaction } from '@/app/lib/db';
-import { requireSession } from '@/app/lib/admin/session';
+import { requireRole } from '@/app/lib/admin/session';
 import { validate, purchaseCreateSchema } from '@/app/lib/admin/validation';
+import { nextSequence } from '@/app/lib/admin/sequence';
 import { randomUUID } from 'crypto';
 
 export async function GET(request: Request) {
-  const { error } = await requireSession();
+  const { error } = await requireRole('admin', 'manager');
   if (error) return error;
   const { searchParams } = new URL(request.url);
   const supplierId = searchParams.get('supplierId');
@@ -23,8 +24,9 @@ export async function GET(request: Request) {
   return NextResponse.json({ purchases });
 }
 
+// Purchases raise stock and supplier balances — management only.
 export async function POST(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
   const parsed = validate(purchaseCreateSchema, await request.json());
   if (parsed.error) return parsed.error;
@@ -35,15 +37,27 @@ export async function POST(request: Request) {
     return s + price * qty;
   }, 0);
   const paid = b.amount_paid ?? b.paid ?? 0;
+
+  // Paying more than the bill would leave a negative balance and credit the
+  // supplier's account by the difference.
+  if (paid > total) {
+    return NextResponse.json(
+      { error: `Amount paid (₹${paid}) cannot exceed the purchase total (₹${total}).` },
+      { status: 400 }
+    );
+  }
+
   const balance = total - paid;
   const status = balance <= 0 ? 'paid' : paid > 0 ? 'partially_paid' : 'pending';
 
-  const [cnt] = await query('SELECT COUNT(*) as c FROM purchases') as any[];
   const year = new Date().getFullYear();
-  const purchase_number = `PO-${year}-${String((cnt?.c ?? 0) + 1).padStart(3, '0')}`;
   const id = randomUUID();
+  let purchase_number = '';
 
   await withTransaction(async (tx) => {
+    // Numbered inside the transaction so concurrent entries cannot collide.
+    purchase_number = `PO-${year}-${String(await nextSequence(tx, 'purchase')).padStart(3, '0')}`;
+
     await tx.query(
       `INSERT INTO purchases (id,purchase_number,supplier_id,supplier_name,supplier_bill_number,total,paid,balance,status,created_by,notes)
        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,

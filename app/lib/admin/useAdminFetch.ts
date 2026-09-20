@@ -22,17 +22,21 @@ export function useAdminFetch<T>(
   const [state, setState] = useState<FetchState<T>>({ data: null, loading: !!url, error: null });
   const abortRef = useRef<AbortController | null>(null);
 
+  // Callers pass `params` as a fresh object literal on every render, so the
+  // dependency has to be its serialised value. Extracted to a variable because
+  // the lint rule requires dependency arrays to hold plain expressions.
+  const skip = options?.skip ?? false;
+  const paramsKey = options?.params ? JSON.stringify(options.params) : '';
+
   const fetchData = useCallback(async () => {
-    if (!url || options?.skip) return;
+    if (!url || skip) return;
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      const fullUrl = options?.params
-        ? `${url}?${new URLSearchParams(options.params).toString()}`
-        : url;
+      const fullUrl = paramsKey ? `${url}?${new URLSearchParams(JSON.parse(paramsKey)).toString()}` : url;
       const res = await fetch(fullUrl, { signal: ctrl.signal });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -44,7 +48,7 @@ export function useAdminFetch<T>(
       if (err.name === 'AbortError') return;
       setState({ data: null, loading: false, error: err.message ?? 'Failed to load data.' });
     }
-  }, [url, options?.skip, JSON.stringify(options?.params)]);
+  }, [url, skip, paramsKey]);
 
   useEffect(() => {
     fetchData();

@@ -1,8 +1,25 @@
 import { NextResponse } from 'next/server';
 import { query, withTransaction } from '@/app/lib/db';
-import { requireSession } from '@/app/lib/admin/session';
+import { requireSession, type Role } from '@/app/lib/admin/session';
 import { validate, invoiceCreateSchema } from '@/app/lib/admin/validation';
+import { nextSequence } from '@/app/lib/admin/sequence';
 import { randomUUID } from 'crypto';
+
+/**
+ * Highest discount percent this role may apply, from shop_settings.
+ * Falls back to the conservative built-in defaults if the row is missing.
+ */
+async function maxDiscountFor(role: Role): Promise<number> {
+  const [s] = (await query(
+    'SELECT max_discount_admin, max_discount_manager, max_discount_staff FROM shop_settings WHERE id=1'
+  )) as any[];
+  const raw =
+    role === 'admin' ? s?.max_discount_admin ?? 100
+    : role === 'manager' ? s?.max_discount_manager ?? 15
+    : s?.max_discount_staff ?? 5;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.min(Math.max(n, 0), 100) : 0;
+}
 
 export async function GET(request: Request) {
   const { error } = await requireSession();
@@ -43,6 +60,26 @@ export async function POST(request: Request) {
   // Calculate totals
   const subtotal = items.reduce((s: number, i: any) => s + (i.unit_price * (i.quantity ?? i.qty ?? 1) - (i.discount ?? 0)), 0);
   const discount_amount = b.discount_amount !== undefined ? b.discount_amount : subtotal * ((discount_percent ?? 0) / 100);
+
+  // A discount must never exceed the bill, or the invoice total goes negative.
+  if (discount_amount < 0 || discount_amount > subtotal) {
+    return NextResponse.json(
+      { error: 'Discount cannot be negative or greater than the subtotal.' },
+      { status: 400 }
+    );
+  }
+
+  // Enforce the per-role discount ceiling from shop settings. Checked against the
+  // effective percentage so a raw `discount_amount` cannot bypass the cap.
+  const effectivePercent = subtotal > 0 ? (discount_amount / subtotal) * 100 : 0;
+  const cap = await maxDiscountFor(session.role);
+  if (effectivePercent > cap + 0.001) {
+    return NextResponse.json(
+      { error: `Discount of ${effectivePercent.toFixed(1)}% exceeds the ${cap}% limit for your role.` },
+      { status: 403 }
+    );
+  }
+
   const total = Math.round((subtotal - discount_amount) * 100) / 100;
   const initialPaid = amount_paid ?? b.advance_paid ?? 0;
   const paid = Math.min(initialPaid, total);
@@ -51,15 +88,15 @@ export async function POST(request: Request) {
     paid >= total ? 'paid' :
     paid > 0      ? 'partially_paid' : 'pending';
 
-  // Generate invoice number
-  const [cnt] = await query('SELECT COUNT(*) as c FROM invoices') as any[];
   const year = new Date().getFullYear();
-  const invoice_number = `DO-${year}-${String(cnt.c + 121).padStart(5, '0')}`;
-
   const id = randomUUID();
+  let invoice_number = '';
 
   try {
     await withTransaction(async (tx) => {
+      // Numbered inside the transaction so concurrent sales cannot collide.
+      invoice_number = `DO-${year}-${String(await nextSequence(tx, 'invoice')).padStart(5, '0')}`;
+
       await tx.query(
         `INSERT INTO invoices
            (id,invoice_number,customer_id,customer_name,customer_phone,eye_test_id,

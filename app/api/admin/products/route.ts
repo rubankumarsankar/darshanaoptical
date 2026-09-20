@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
-import { requireSession } from '@/app/lib/admin/session';
+import { requireRole, requireSession } from '@/app/lib/admin/session';
 import { randomUUID } from 'crypto';
 
 export async function GET(request: Request) {
+  // Any signed-in user may browse the catalogue — the POS needs it.
   const { error } = await requireSession();
   if (error) return error;
   const { searchParams } = new URL(request.url);
@@ -25,8 +26,9 @@ export async function GET(request: Request) {
   return NextResponse.json({ products: rows });
 }
 
+// Creating stock sets purchase and selling prices — management only.
 export async function POST(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
   const b = await request.json();
   if (!b.name || !b.brand || !b.category) {

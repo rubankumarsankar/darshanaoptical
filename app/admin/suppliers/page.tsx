@@ -20,7 +20,9 @@ export default function SuppliersPage() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
-  const { data, loading, refetch } = useAdminFetch<{ suppliers: any[] }>('/api/admin/suppliers');
+  // Suppliers are management-only on the server; don't fire a request that will 403.
+  const canView = user?.role === 'admin' || user?.role === 'manager';
+  const { data, loading, refetch } = useAdminFetch<{ suppliers: any[] }>(canView ? '/api/admin/suppliers' : null);
   const suppliers = data?.suppliers ?? [];
 
   const handleSave = async () => {
@@ -38,7 +40,11 @@ export default function SuppliersPage() {
     setSaving(false);
   };
 
-  const canManage = user?.role === 'admin' || user?.role === 'manager';
+  const canManage = canView;
+
+  if (user && !canView) {
+    return <div style={{ padding: 32, color: '#94a3b8', textAlign: 'center' }}>Manager or admin access required to view suppliers.</div>;
+  }
 
   return (
     <div>

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
-import { requireSession } from '@/app/lib/admin/session';
+import { requireRole } from '@/app/lib/admin/session';
+import { validate, supplierCreateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
 export async function GET(request: Request) {
-  const { error } = await requireSession();
+  const { error } = await requireRole('admin', 'manager');
   if (error) return error;
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') ?? 'all';
@@ -16,10 +17,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
-  const b = await request.json();
-  if (!b.name || !b.phone) return NextResponse.json({ error: 'name and phone required.' }, { status: 400 });
+  const parsed = validate(supplierCreateSchema, await request.json());
+  if (parsed.error) return parsed.error;
+  const b = parsed.data;
   const id = randomUUID();
   await query(
     `INSERT INTO suppliers (id,name,contact_person,phone,email,address,gst,status)

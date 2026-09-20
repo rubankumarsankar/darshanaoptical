@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
-import { requireSession } from '@/app/lib/admin/session';
+import { requireRole, requireSession } from '@/app/lib/admin/session';
+import { validate, productUpdateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -15,14 +16,18 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return NextResponse.json({ product: row, movements });
 }
 
+// Editing a product changes prices and stock levels — management only.
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
   const { id } = await params;
   const [existing] = await query('SELECT * FROM products WHERE id = ?', [id]) as any[];
   if (!existing) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
 
-  const b = await request.json();
+  const parsed = validate(productUpdateSchema, await request.json());
+  if (parsed.error) return parsed.error;
+  const b = parsed.data;
+  // Merge only validated keys over the stored row.
   const p = { ...existing, ...b };
 
   await query(
@@ -33,18 +38,25 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
      p.purchase_price??0, p.selling_price??0, p.mrp??0, p.low_stock_threshold??5,
      p.image_url||null, p.description||null, p.status??'active', id]
   );
-  // Manual stock adjustment
+  // Manual stock adjustment. The movement row records the product's real name and
+  // code from the stored row — the request body need not carry them.
   if (b.stock_adjustment && b.stock_adjustment !== 0) {
+    if (Number(existing.stock) + b.stock_adjustment < 0) {
+      return NextResponse.json(
+        { error: `Adjustment would take stock below zero (current ${existing.stock}).` },
+        { status: 400 }
+      );
+    }
     await query('UPDATE products SET stock = stock + ? WHERE id = ?', [b.stock_adjustment, id]);
     await query(
       `INSERT INTO stock_movements (id,product_id,product_name,product_code,type,quantity,reason,created_by)
        VALUES (?,?,?,?,'adjustment',?,?,?)`,
-      [randomUUID(), id, b.name, b.product_code, b.stock_adjustment, b.adjustment_reason||'Manual adjustment', session.name]
+      [randomUUID(), id, p.name, existing.product_code, b.stock_adjustment, b.adjustment_reason||'Manual adjustment', session.name]
     );
   }
   await query(
     `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
-    [randomUUID(), 'UPDATE', 'product', id, `Updated product: ${b.name}`, session.name, session.role]
+    [randomUUID(), 'UPDATE', 'product', id, `Updated product: ${p.name}`, session.name, session.role]
   );
   const [updated] = await query('SELECT * FROM products WHERE id = ?', [id]) as any[];
   return NextResponse.json({ product: updated });

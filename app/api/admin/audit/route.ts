@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
-import { requireSession } from '@/app/lib/admin/session';
+import { requireRole } from '@/app/lib/admin/session';
 
 export async function GET(request: Request) {
-  const { error } = await requireSession();
+  // The trail records who changed prices, cancelled bills and edited staff —
+  // management only, matching the sidebar which never showed staff this link.
+  const { error } = await requireRole('admin', 'manager');
   if (error) return error;
   const { searchParams } = new URL(request.url);
   const entity = searchParams.get('entity');

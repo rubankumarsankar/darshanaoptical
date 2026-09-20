@@ -1,6 +1,7 @@
 'use client';
 
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
+import { useAuth } from '@/app/lib/admin/auth-context';
 import { useState } from 'react';
 
 const ENTITY_COLORS: Record<string, string> = {
@@ -10,11 +11,19 @@ const ENTITY_COLORS: Record<string, string> = {
 };
 
 export default function AuditPage() {
+  const { user } = useAuth();
   const [entity, setEntity] = useState('');
   const params: Record<string, string> = {};
   if (entity) params.entity = entity;
-  const { data, loading } = useAdminFetch<{ logs: any[] }>('/api/admin/audit', { params });
+  // The API restricts the trail to management; mirror that here so staff who
+  // reach the URL directly get a clear message instead of a failed request.
+  const canView = user?.role === 'admin' || user?.role === 'manager';
+  const { data, loading } = useAdminFetch<{ logs: any[] }>(canView ? '/api/admin/audit' : null, { params });
   const logs = data?.logs ?? [];
+
+  if (user && !canView) {
+    return <div style={{ padding: 32, color: '#94a3b8', textAlign: 'center' }}>Manager or admin access required to view the audit log.</div>;
+  }
 
   return (
     <div>

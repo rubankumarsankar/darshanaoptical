@@ -8,10 +8,12 @@ CREATE TABLE IF NOT EXISTS users (
   id            VARCHAR(36)  PRIMARY KEY,
   name          VARCHAR(255) NOT NULL,
   email         VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,          -- scrypt$N$r$p$salt$key
   role          ENUM('admin','manager','staff') NOT NULL DEFAULT 'staff',
   phone         VARCHAR(20),
   status        ENUM('active','inactive') NOT NULL DEFAULT 'active',
+  -- Bumped on password/role/status change to invalidate that user's cookies.
+  token_version INT NOT NULL DEFAULT 0,
   joined_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_active   DATETIME,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -279,3 +281,57 @@ VALUES
    'Thank you for choosing Darshana Optical!',
    'Goods once sold will not be taken back.',
    100, 15, 5);
+
+-- ─── Login throttle ──────────────────────────────────────────
+-- Brute-force counter, keyed by 'email:<address>' and 'ip:<addr>'.
+-- Kept in the database so the limit survives across app instances.
+CREATE TABLE IF NOT EXISTS login_attempts (
+  identifier     VARCHAR(190) PRIMARY KEY,
+  attempts       INT NOT NULL DEFAULT 0,
+  last_failed_at DATETIME NULL,
+  locked_until   DATETIME NULL,
+  updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ─── Document counters ───────────────────────────────────────
+-- Invoice / purchase numbering. Incremented under a row lock inside the same
+-- transaction as the document itself, so concurrent sales cannot reuse a number.
+CREATE TABLE IF NOT EXISTS counters (
+  name  VARCHAR(64) PRIMARY KEY,
+  value BIGINT NOT NULL DEFAULT 0
+);
+
+-- ─── Appointments (public eye-test booking form) ─────────────
+-- Written by POST /api/appointments from the website booking form.
+CREATE TABLE IF NOT EXISTS appointments (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  name           VARCHAR(255) NOT NULL,
+  phone          VARCHAR(20)  NOT NULL,
+  email          VARCHAR(255),
+  preferred_date DATE,
+  preferred_time VARCHAR(50),
+  test_type      VARCHAR(100) NOT NULL DEFAULT 'Eye Testing',
+  wears_glasses  VARCHAR(10)  NOT NULL DEFAULT 'No',
+  notes          TEXT,
+  status         ENUM('pending','confirmed','completed','cancelled') NOT NULL DEFAULT 'pending',
+  created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status  (status),
+  INDEX idx_created (created_at)
+);
+
+-- ─── Inquiries (public contact form) ─────────────────────────
+-- Written by POST /api/inquiries from the contact page.
+CREATE TABLE IF NOT EXISTS inquiries (
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  name       VARCHAR(255) NOT NULL,
+  phone      VARCHAR(20)  NOT NULL,
+  email      VARCHAR(255),
+  interest   VARCHAR(100) NOT NULL DEFAULT 'General Inquiry',
+  message    TEXT,
+  status     ENUM('new','contacted','closed') NOT NULL DEFAULT 'new',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status  (status),
+  INDEX idx_created (created_at)
+);

@@ -1,92 +1,105 @@
 // app/lib/admin/session.ts
 // Server-only — import from API routes and Server Components only.
 
-import { createHmac } from 'crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { query } from '@/app/lib/db';
+import {
+  SESSION_COOKIE,
+  SESSION_DURATION_SEC,
+  ROLES,
+  createSessionToken,
+  verifySessionToken,
+  buildSessionCookieOptions,
+  buildClearedSessionCookie,
+  safeEqual,
+  type Role,
+  type SessionData,
+} from './session-token';
 
-export const SESSION_COOKIE = 'darshana_session';
-const SESSION_DURATION_SEC = 60 * 60 * 24 * 7; // 7 days
+export {
+  SESSION_COOKIE,
+  SESSION_DURATION_SEC,
+  ROLES,
+  createSessionToken,
+  verifySessionToken,
+  buildSessionCookieOptions,
+  buildClearedSessionCookie,
+  safeEqual,
+};
+export type { Role, SessionData };
 
-function secret(): string {
-  const s = process.env.SESSION_SECRET;
-  if (!s) throw new Error('[session] SESSION_SECRET env variable is not set.');
-  return s;
-}
-
-export interface SessionData {
-  userId: string;
-  role: 'admin' | 'manager' | 'staff';
-  name: string;
-  email: string;
-  exp: number;
-}
-
-// ─── Sign / Verify ────────────────────────────────────────────
-
-function sign(payload: SessionData): string {
-  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const sig = createHmac('sha256', secret()).update(data).digest('base64url');
-  return `${data}.${sig}`;
-}
-
-function verify(token: string): SessionData | null {
-  try {
-    const dot = token.lastIndexOf('.');
-    if (dot === -1) return null;
-    const data = token.slice(0, dot);
-    const sig = token.slice(dot + 1);
-    const expected = createHmac('sha256', secret()).update(data).digest('base64url');
-    if (sig !== expected) return null;
-    const payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8')) as SessionData;
-    if (payload.exp < Date.now() / 1000) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-// ─── Public helpers ───────────────────────────────────────────
-
-export function createSessionToken(data: Omit<SessionData, 'exp'>): string {
-  return sign({ ...data, exp: Math.floor(Date.now() / 1000) + SESSION_DURATION_SEC });
-}
-
-export function hashPassword(password: string): string {
-  return createHmac('sha256', secret()).update(password).digest('hex');
-}
-
-/** Read and verify the session cookie from the incoming request. */
-export async function getSession(): Promise<SessionData | null> {
+/**
+ * Reads and verifies the session cookie signature only.
+ *
+ * Prefer `requireSession()` in API routes: this does NOT confirm the user still
+ * exists, is still active, or still holds the role baked into the cookie.
+ */
+export async function getSessionFromCookie(): Promise<SessionData | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-  return verify(token);
+  return verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
 }
 
-/** Use in API routes to require auth. Returns 401 response if not authenticated. */
-export async function requireSession(): Promise<
-  { session: SessionData; error: null } | { session: null; error: NextResponse }
-> {
-  const session = await getSession();
-  if (!session) {
-    return {
-      session: null,
-      error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }),
-    };
+function unauthorized(message = 'Unauthorized') {
+  return NextResponse.json({ error: message }, { status: 401 });
+}
+
+function forbidden(message = 'Permission denied.') {
+  return NextResponse.json({ error: message }, { status: 403 });
+}
+
+export type SessionResult =
+  | { session: SessionData; error: null }
+  | { session: null; error: NextResponse };
+
+/**
+ * Requires an authenticated, still-active user.
+ *
+ * The cookie is only the claim — the user row is re-read on every call so that
+ * deactivating a user, changing their role, or bumping their token_version
+ * takes effect immediately instead of waiting out the 7-day cookie. The
+ * returned session always carries the role from the database, never the cookie.
+ */
+export async function requireSession(): Promise<SessionResult> {
+  const claim = await getSessionFromCookie();
+  if (!claim) return { session: null, error: unauthorized() };
+
+  const rows = (await query(
+    'SELECT id, name, email, role, status, token_version FROM users WHERE id = ? LIMIT 1',
+    [claim.userId]
+  )) as any[];
+
+  const user = rows[0];
+  if (!user) return { session: null, error: unauthorized('Session no longer valid.') };
+  if (user.status !== 'active') return { session: null, error: forbidden('Account is inactive.') };
+  if (Number(user.token_version ?? 0) !== claim.ver) {
+    return { session: null, error: unauthorized('Session expired. Please sign in again.') };
   }
-  return { session, error: null };
+
+  return {
+    session: {
+      userId: user.id,
+      role: user.role as Role,
+      name: user.name,
+      email: user.email,
+      ver: Number(user.token_version ?? 0),
+      exp: claim.exp,
+    },
+    error: null,
+  };
 }
 
-/** Build the Set-Cookie string for the session cookie. */
-export function buildSessionCookieOptions(token: string) {
-  return {
-    name: SESSION_COOKIE,
-    value: token,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAge: SESSION_DURATION_SEC,
-  };
+/**
+ * Requires an authenticated user holding one of `roles`.
+ *
+ * @example const { session, error } = await requireRole('admin', 'manager');
+ *          if (error) return error;
+ */
+export async function requireRole(...roles: Role[]): Promise<SessionResult> {
+  const result = await requireSession();
+  if (result.error) return result;
+  if (!roles.includes(result.session.role)) {
+    return { session: null, error: forbidden(`Requires ${roles.join(' or ')} access.`) };
+  }
+  return result;
 }

@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
-import { requireSession } from '@/app/lib/admin/session';
+import { requireRole } from '@/app/lib/admin/session';
 import { randomUUID } from 'crypto';
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { session, error } = await requireSession();
+  const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
-  if (session.role === 'staff') return NextResponse.json({ error: 'Insufficient permission.' }, { status: 403 });
   const { id } = await params;
   const [e] = await query('SELECT * FROM expenses WHERE id = ?', [id]) as any[];
   if (!e) return NextResponse.json({ error: 'Not found.' }, { status: 404 });

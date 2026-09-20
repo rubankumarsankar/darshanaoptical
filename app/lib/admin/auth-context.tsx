@@ -23,16 +23,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetch('/api/admin/auth/me')
       .then(async (res) => {
-        if (!res.ok) return;
+        if (!res.ok) {
+          // The cookie signature is still valid but the server rejected the
+          // session — the account was deactivated, its role changed, or the
+          // user was deleted. Drop the cookie, otherwise proxy.ts keeps seeing
+          // a "valid" session and bounces /admin/login back to the dashboard
+          // while this provider bounces it the other way.
+          await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
+          return;
+        }
         const { user: u } = await res.json();
+        // /auth/me now returns the real profile fields; these used to be
+        // hard-coded placeholders on the client.
         setUser({
-          id: u.userId,
+          id: u.id ?? u.userId,
           name: u.name,
           email: u.email,
           role: u.role,
-          status: 'active',
-          joinedAt: '',
-          phone: '',
+          status: u.status ?? 'active',
+          joinedAt: u.joinedAt ?? '',
+          lastActive: u.lastActive ?? undefined,
+          phone: u.phone ?? '',
         });
       })
       .catch(() => {})

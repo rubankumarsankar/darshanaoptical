@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import Link from 'next/link';
+import { useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/app/lib/admin/auth-context';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
 import { adminPost, adminPut } from '@/app/lib/admin/api';
-import { Search, Plus, Edit2, X, Save, Upload, Image as ImageIcon, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit2, X, Save, Upload, Trash2, Loader2, Search, Image as ImageIcon } from 'lucide-react';
 
 function fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN'); }
 
@@ -24,7 +24,13 @@ export default function ProductsPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [query, setQuery] = useState('');
-  const [catFilter, setCatFilter] = useState('all');
+  // /admin/products/frames|lenses|sunglasses redirect here with ?cat=, so honour
+  // it as the initial filter — previously the parameter was silently ignored.
+  const searchParams = useSearchParams();
+  const [catFilter, setCatFilter] = useState(() => {
+    const c = searchParams.get('cat');
+    return c && CAT_LABELS[c] ? c : 'all';
+  });
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ ...BLANK_PRODUCT });

@@ -26,14 +26,28 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const [current] = await query('SELECT * FROM invoices WHERE id = ?', [id]) as any[];
   if (!current) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
 
+  // A cancelled invoice is closed: no further payments, no order progress.
+  if (current.status === 'cancelled' && (b.add_payment || b.order_status !== undefined)) {
+    return NextResponse.json({ error: 'This invoice is cancelled and can no longer be modified.' }, { status: 400 });
+  }
+
   // Handle additional payment
   if (b.add_payment) {
     try {
       await withTransaction(async (tx) => {
         // Lock the invoice row so two concurrent payments can't both read the same
         // stale `paid`/`total` and overwrite each other's update (lost update).
-        const [locked] = await tx.query('SELECT paid, total, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [id]) as any[];
+        const [locked] = await tx.query('SELECT paid, total, status, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [id]) as any[];
         if (!locked) throw new Error('Not found.');
+        if (locked.status === 'cancelled') throw new Error('This invoice is cancelled and can no longer be modified.');
+
+        // Reject overpayment rather than silently clamping the invoice while the
+        // payments table still records the full amount — that inflated the
+        // collected totals on the reports screen.
+        const outstanding = Math.round((parseFloat(locked.total) - parseFloat(locked.paid)) * 100) / 100;
+        if (b.add_payment! > outstanding) {
+          throw new Error(`Payment of ₹${b.add_payment} exceeds the outstanding balance of ₹${outstanding}.`);
+        }
 
         const newPaid = parseFloat(locked.paid) + b.add_payment!;
         const newBalance = Math.max(0, parseFloat(locked.total) - newPaid);
@@ -83,11 +97,25 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       await withTransaction(async (tx) => {
         // Lock + re-check status so two concurrent cancel requests can't both
         // pass and double-restore stock.
-        const [locked] = await tx.query('SELECT status, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [id]) as any[];
+        const [locked] = await tx.query('SELECT status, paid, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [id]) as any[];
         if (!locked) throw new Error('Not found.');
         if (locked.status === 'cancelled') return; // already cancelled — no-op
 
-        await tx.query("UPDATE invoices SET status='cancelled', order_status='cancelled', updated_at=NOW() WHERE id=?", [id]);
+        // Reverse any money already taken by writing an offsetting refund row, so
+        // SUM(payments.amount) for this invoice nets to zero and the payment
+        // reports stop counting a cancelled sale as collected.
+        const alreadyPaid = parseFloat(locked.paid ?? 0);
+        if (alreadyPaid > 0) {
+          await tx.query(
+            `INSERT INTO payments (id,invoice_id,amount,method,payment_date,notes,received_by) VALUES (?,?,?,?,NOW(),?,?)`,
+            [randomUUID(), id, -alreadyPaid, 'cash', `Refund — invoice ${locked.invoice_number} cancelled`, session.name]
+          );
+        }
+
+        await tx.query(
+          "UPDATE invoices SET status='cancelled', order_status='cancelled', paid=0, balance=0, updated_at=NOW() WHERE id=?",
+          [id]
+        );
         // Restore stock
         const items = await tx.query('SELECT * FROM invoice_items WHERE invoice_id = ?', [id]) as any[];
         for (const item of items) {

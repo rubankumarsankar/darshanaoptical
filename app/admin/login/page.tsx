@@ -5,11 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/lib/admin/auth-context';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 
-const DEMO_ACCOUNTS = [
-  { role: 'Admin', email: 'admin@darshana.com', password: 'admin@2026', color: '#fc5a06' },
-  { role: 'Manager', email: 'manager@darshana.com', password: 'manager@2026', color: '#2563eb' },
-  { role: 'Staff', email: 'staff@darshana.com', password: 'staff@2026', color: '#16a34a' },
-];
+// The "quick demo login" buttons that used to live here printed the seeded
+// admin, manager and staff passwords directly on the public sign-in page and
+// filled them in on click. Anyone who reached /admin/login could read working
+// credentials, so the block has been removed.
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -32,12 +31,6 @@ export default function LoginPage() {
     } else {
       setError(result.error ?? 'Login failed.');
     }
-  };
-
-  const fillDemo = (acc: (typeof DEMO_ACCOUNTS)[0]) => {
-    setEmail(acc.email);
-    setPassword(acc.password);
-    setError('');
   };
 
   return (
@@ -69,49 +62,6 @@ export default function LoginPage() {
           <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.45)', margin: '6px 0 0' }}>
             Admin Panel — Sign in to continue
           </p>
-        </div>
-
-        {/* Demo Accounts */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
-            Quick Demo Login (Click role to auto-fill)
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-            {DEMO_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.role}
-                type="button"
-                onClick={() => fillDemo(acc)}
-                style={{
-                  padding: '10px 6px',
-                  background: email === acc.email ? 'rgba(252, 90, 6, 0.15)' : '#0f172a',
-                  border: `1.5px solid ${email === acc.email ? acc.color : '#334155'}`,
-                  borderRadius: 10,
-                  color: 'white',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  fontFamily: 'inherit',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 4,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: acc.color, display: 'inline-block', boxShadow: `0 0 8px ${acc.color}` }} />
-                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>{acc.role}</span>
-                </div>
-                <span style={{ fontSize: 10.5, color: '#94a3b8', fontFamily: 'monospace' }}>{acc.password}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
-          <span style={{ fontSize: 11.5, color: '#94a3b8', fontWeight: 500 }}>or enter credentials</span>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
         </div>
 
         {/* Form */}

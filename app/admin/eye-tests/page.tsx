@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/app/lib/admin/auth-context';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
 import { adminPost } from '@/app/lib/admin/api';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, Plus, X, FileText } from 'lucide-react';
 
 const BLANK = {
   customer_id: '', customer_name: '', customer_phone: '',
@@ -32,7 +34,9 @@ function EyeRow({ label, prefix, form, setForm }: any) {
 export default function EyeTestsPage() {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
-  const [showAdd, setShowAdd] = useState(false);
+  // /admin/eye-tests/new redirects here with ?new=1, so open the form directly.
+  const sp = useSearchParams();
+  const [showAdd, setShowAdd] = useState(sp.get('new') === '1');
   const [form, setForm] = useState({ ...BLANK, tested_by: user?.name ?? '' });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
@@ -126,10 +130,10 @@ export default function EyeTestsPage() {
 
       <div className="adm-table-wrap">
         <table className="adm-table">
-          <thead><tr><th>Patient</th><th>Date</th><th>RE (SPH/CYL/AXIS)</th><th>LE (SPH/CYL/AXIS)</th><th>Tested By</th><th>Recommendation</th></tr></thead>
+          <thead><tr><th>Patient</th><th>Date</th><th>RE (SPH/CYL/AXIS)</th><th>LE (SPH/CYL/AXIS)</th><th>Tested By</th><th>Recommendation</th><th></th></tr></thead>
           <tbody>
-            {loading ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Loading…</td></tr>
-            : eyeTests.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No eye tests found.</td></tr>
+            {loading ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>Loading…</td></tr>
+            : eyeTests.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No eye tests found.</td></tr>
             : eyeTests.map((t) => (
               <tr key={t.id}>
                 <td>
@@ -141,6 +145,12 @@ export default function EyeTestsPage() {
                 <td style={{ fontFamily: 'monospace', fontSize: 12.5 }}>{[t.le_sph, t.le_cyl, t.le_axis].filter(Boolean).join(' / ') || '—'}</td>
                 <td style={{ fontSize: 12.5, color: '#64748b' }}>{t.tested_by}</td>
                 <td style={{ fontSize: 12.5, color: '#64748b' }}>{t.recommendation ?? '—'}</td>
+                <td>
+                  {/* The printable prescription page existed but nothing linked to it. */}
+                  <Link href={`/admin/prescriptions/${t.id}`} className="adm-btn adm-btn-ghost adm-btn-sm" title="Open printable prescription">
+                    <FileText size={13} style={{ marginRight: 4 }} /> Prescription
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
