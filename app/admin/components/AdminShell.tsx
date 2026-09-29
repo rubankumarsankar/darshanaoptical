@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/app/lib/admin/auth-context';
 import Sidebar from './Sidebar';
@@ -12,6 +12,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
@@ -68,9 +69,17 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   // Authenticated — show sidebar + content
   return (
     <div className="admin-root">
-      <Sidebar />
+      <Sidebar isOpen={isNavOpen} onClose={() => setIsNavOpen(false)} />
+      <button
+        type="button"
+        className={`adm-sidebar-backdrop${isNavOpen ? ' is-open' : ''}`}
+        aria-label="Close navigation"
+        aria-hidden={!isNavOpen}
+        tabIndex={isNavOpen ? 0 : -1}
+        onClick={() => setIsNavOpen(false)}
+      />
       <div className="adm-main">
-        <TopBar />
+        <TopBar onOpenNav={() => setIsNavOpen(true)} />
         <main className="adm-content">{children}</main>
       </div>
     </div>

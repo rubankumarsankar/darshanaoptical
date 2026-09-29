@@ -63,6 +63,17 @@ describe('public booking form', () => {
     expect((await post(appointments, booking({ phone: '' }), '198.51.100.2')).status).toBe(400);
   });
 
+  it.each(['123', 'not-a-phone', '+91 (90000) 00000'])('rejects invalid phone number %s', async (phone) => {
+    expect((await post(appointments, booking({ phone }))).status).toBe(400);
+  });
+
+  it.each(['9000000000', '+91 90000 00000', '020-7946-0958'])(
+    'accepts valid phone number %s',
+    async (phone) => {
+      expect((await post(appointments, booking({ phone }))).status).toBe(201);
+    }
+  );
+
   it('rejects a malformed email', async () => {
     expect((await post(appointments, booking({ email: 'not-an-email' }))).status).toBe(400);
   });
@@ -91,6 +102,10 @@ describe('public contact form', () => {
 
   it('requires a name and phone', async () => {
     expect((await post(inquiries, enquiry({ name: '' }))).status).toBe(400);
+  });
+
+  it('rejects an invalid phone number', async () => {
+    expect((await post(inquiries, enquiry({ phone: '123' }))).status).toBe(400);
   });
 
   it('caps the message length', async () => {

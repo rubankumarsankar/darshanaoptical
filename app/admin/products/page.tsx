@@ -167,7 +167,6 @@ export default function ProductsPage() {
                 position: 'relative',
               }}>
                 {form.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={form.image_url}
                     alt="Product preview"
@@ -325,7 +324,6 @@ export default function ProductsPage() {
                     overflow: 'hidden',
                   }}>
                     {p.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={p.image_url}
                         alt={p.name}

@@ -281,6 +281,44 @@
   gap: 8px;
 }
 
+.adm-topbar-date {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--adm-text-muted);
+  margin-top: 1px;
+}
+
+.adm-topbar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--adm-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.adm-mobile-menu,
+.adm-sidebar-backdrop {
+  display: none;
+}
+
+.adm-stepper {
+  display: flex;
+  gap: 8px;
+}
+
+.adm-payment-methods {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
 /* ─── Content ──────────────────────────────────────────────────────────────── */
 
 .adm-content {
@@ -803,6 +841,221 @@
 .adm-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
 
 @media (max-width: 768px) {
+  .admin-root {
+    --adm-sidebar-width: min(84vw, 300px);
+  }
+
+  .adm-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    height: 100dvh;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    box-shadow: var(--adm-shadow-lg);
+    z-index: 120;
+  }
+
+  .adm-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .adm-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    border: 0;
+    padding: 0;
+    background: rgba(15, 23, 42, 0.58);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    backdrop-filter: blur(2px);
+  }
+
+  .adm-sidebar-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .adm-mobile-menu {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--adm-border);
+    border-radius: 10px;
+    background: white;
+    color: var(--adm-text-primary);
+  }
+
+  .adm-main {
+    width: 100%;
+  }
+
+  .adm-topbar {
+    height: auto;
+    min-height: 64px;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .adm-topbar-title {
+    min-width: 0;
+    font-size: 15px;
+    line-height: 1.25;
+  }
+
+  .adm-topbar-date {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 34vw;
+    font-size: 10.5px;
+  }
+
+  .adm-topbar-actions {
+    gap: 4px;
+  }
+
+  .adm-topbar-actions .adm-btn {
+    width: 40px;
+    min-width: 40px;
+    height: 40px !important;
+    padding: 0;
+  }
+
+  .adm-action-label,
+  .adm-topbar-actions > .adm-btn-ghost,
+  .adm-topbar-avatar {
+    display: none;
+  }
+
+  .adm-content {
+    padding: 16px 12px calc(24px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+  }
+
+  .adm-page-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .adm-page-header > :first-child {
+    min-width: min(100%, 220px);
+  }
+
+  .adm-page-title {
+    font-size: 20px;
+  }
+
+  .adm-page-header > .adm-btn {
+    min-height: 42px;
+  }
+
+  .adm-stepper {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 3px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .adm-stepper > * {
+    flex: 0 0 auto;
+  }
+
+  .adm-card-header,
+  .adm-card-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .adm-stat {
+    padding: 16px;
+  }
+
+  .adm-stat-value {
+    font-size: 24px;
+  }
+
+  .adm-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .adm-table {
+    min-width: 680px;
+  }
+
+  .adm-table thead th,
+  .adm-table tbody td {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .adm-input,
+  .adm-select,
+  .adm-textarea {
+    font-size: 16px;
+  }
+
+  .adm-input,
+  .adm-select {
+    min-height: 44px;
+  }
+
+  .adm-btn {
+    min-height: 42px;
+  }
+
+  .adm-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .adm-tab {
+    min-height: 40px;
+    flex: 0 0 auto;
+  }
+
+  .adm-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .adm-modal {
+    max-width: none;
+    max-height: min(92dvh, 760px);
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .adm-modal-header,
+  .adm-modal-body,
+  .adm-modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .adm-modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    flex-wrap: wrap;
+  }
+
+  .adm-modal-footer .adm-btn {
+    flex: 1 1 120px;
+  }
+
   .adm-grid-2,
   .adm-grid-3,
   .adm-grid-4 { grid-template-columns: 1fr 1fr; }
@@ -814,7 +1067,33 @@
   .adm-grid-4 { grid-template-columns: 1fr; }
 
   .admin-root {
-    --adm-sidebar-width: 240px;
+    --adm-sidebar-width: min(88vw, 300px);
+  }
+
+  .adm-content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .adm-card {
+    border-radius: 10px;
+  }
+
+  .adm-table {
+    min-width: 620px;
+  }
+
+  .adm-payment-methods {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adm-login-root {
+    padding: 16px;
+  }
+
+  .adm-login-card {
+    padding: 28px 20px;
+    border-radius: 16px;
   }
 }
 

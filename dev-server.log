@@ -1,0 +1,18 @@
+
+> darshanaoptical@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.8:3000
+- Environments: .env.local
+✓ Ready in 4.6s
+✓ Running next.config.ts took 145ms
+
+ GET / 200 in 4.3s (next.js: 2.8s, application-code: 1559ms)
+ GET /privacy-policy 200 in 317ms (next.js: 56ms, application-code: 261ms)
+ GET /book-eye-test 200 in 300ms (next.js: 70ms, application-code: 230ms)
+ POST /api/appointments 400 in 2.2s (next.js: 517ms, application-code: 1700ms)
+ POST /api/appointments 400 in 96ms (next.js: 4ms, application-code: 93ms)
+ POST /api/appointments 400 in 99ms (next.js: 4ms, application-code: 95ms)
+ POST /api/inquiries 400 in 170ms (next.js: 68ms, application-code: 102ms)

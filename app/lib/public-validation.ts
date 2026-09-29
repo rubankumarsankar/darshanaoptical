@@ -10,10 +10,16 @@ import { z } from 'zod';
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const optionalText = (max: number) =>
   z.preprocess((v) => (v === '' || v === undefined ? null : v), z.string().trim().max(max).nullable());
+const phone = z
+  .string()
+  .trim()
+  .min(1)
+  .max(20)
+  .regex(/^(?=(?:\D*\d){7,15}\D*$)\+?[\d -]+$/, 'a valid phone number is required');
 
 export const appointmentSchema = z.object({
   name: shortText(120),
-  phone: shortText(20),
+  phone,
   email: z.preprocess(
     (v) => (v === '' || v === undefined ? null : v),
     z.string().trim().email('a valid email is required').max(200).nullable()
@@ -27,7 +33,7 @@ export const appointmentSchema = z.object({
 
 export const inquirySchema = z.object({
   name: shortText(120),
-  phone: shortText(20),
+  phone,
   email: z.preprocess(
     (v) => (v === '' || v === undefined ? null : v),
     z.string().trim().email('a valid email is required').max(200).nullable()

@@ -53,7 +53,12 @@ const NAV: NavSection[] = [
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
@@ -72,9 +77,9 @@ export default function Sidebar() {
   };
 
   return (
-    <nav className="adm-sidebar">
+    <nav id="admin-navigation" className={`adm-sidebar${isOpen ? ' is-open' : ''}`} aria-label="Admin navigation">
       {/* Logo */}
-      <Link href="/admin/dashboard" className="adm-sidebar-logo" style={{ textDecoration: 'none' }}>
+      <Link href="/admin/dashboard" className="adm-sidebar-logo" style={{ textDecoration: 'none' }} onClick={onClose}>
         <div className="adm-sidebar-logo-icon">D</div>
         <div className="adm-sidebar-logo-text">
           <span className="adm-sidebar-logo-name">Darshana Optical</span>
@@ -95,6 +100,7 @@ export default function Sidebar() {
                   key={item.href}
                   href={item.href}
                   className={`adm-nav-item${isActive(item.href) ? ' active' : ''}`}
+                  onClick={onClose}
                 >
                   {item.icon}
                   {item.label}

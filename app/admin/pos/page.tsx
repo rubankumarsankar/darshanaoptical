@@ -151,7 +151,7 @@ function POSContent() {
     <div>
       <div className="adm-page-header">
         <div className="adm-page-title">Point of Sale</div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="adm-stepper">
           {(['customer', 'products', 'payment'] as const).map((s, i) => (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               {i > 0 && <div style={{ width: 20, height: 1, background: '#e2e8f0' }} />}
@@ -224,7 +224,6 @@ function POSContent() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {p.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={p.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <span style={{ fontSize: 12 }}>👓</span>
@@ -311,7 +310,7 @@ function POSContent() {
             <div style={{ fontWeight: 700, marginBottom: 14 }}>Payment Details</div>
             <div style={{ marginBottom: 12 }}>
               <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Payment Method</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+              <div className="adm-payment-methods">
                 {['cash', 'upi', 'card', 'bank'].map((m) => (
                   <button key={m} style={{
                     padding: '8px', borderRadius: 8, border: `2px solid ${paymentMethod === m ? '#fc5a06' : '#e2e8f0'}`,

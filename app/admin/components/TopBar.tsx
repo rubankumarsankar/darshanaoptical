@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/app/lib/admin/auth-context';
-import { Bell, Plus, Search, Zap } from 'lucide-react';
+import { Bell, Menu, Plus, Zap } from 'lucide-react';
 
 const PAGE_TITLES: Record<string, string> = {
   '/admin/counter': 'Express Walk-in Counter',
@@ -44,7 +44,7 @@ function getTitle(pathname: string) {
   return 'Admin';
 }
 
-export default function TopBar() {
+export default function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
   const { user } = useAuth();
   const pathname = usePathname();
 
@@ -56,9 +56,18 @@ export default function TopBar() {
 
   return (
     <header className="adm-topbar">
+      <button
+        type="button"
+        className="adm-mobile-menu"
+        onClick={onOpenNav}
+        aria-label="Open navigation"
+        aria-controls="admin-navigation"
+      >
+        <Menu width={20} height={20} />
+      </button>
       <div className="adm-topbar-title">
         {title}
-        <div style={{ fontSize: 11.5, fontWeight: 400, color: '#94a3b8', marginTop: 1 }}>{today}</div>
+        <div className="adm-topbar-date">{today}</div>
       </div>
 
       <div className="adm-topbar-actions">
@@ -68,14 +77,14 @@ export default function TopBar() {
             className="adm-btn adm-btn-secondary"
             style={{ height: 36, fontSize: 12.5, fontWeight: 700, borderColor: '#fc5a06', color: '#fc5a06' }}
           >
-            <Zap width={14} height={14} /> Express Counter
+            <Zap width={14} height={14} /> <span className="adm-action-label">Express Counter</span>
           </Link>
         )}
 
         {action && (
           <Link href={action.href} className="adm-btn adm-btn-primary" style={{ height: 36, fontSize: 13 }}>
             <Plus width={14} height={14} />
-            {action.label}
+            <span className="adm-action-label">{action.label}</span>
           </Link>
         )}
 
@@ -83,21 +92,7 @@ export default function TopBar() {
           <Bell width={16} height={16} />
         </button>
 
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: '50%',
-            background: '#fc5a06',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: 700,
-            fontSize: 12.5,
-            cursor: 'pointer',
-          }}
-        >
+        <div className="adm-topbar-avatar">
           {user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
         </div>
       </div>
