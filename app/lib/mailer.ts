@@ -33,7 +33,7 @@ const STORE_INFO = {
   phoneRaw: "918870571536",
   email: "darshanaoptical31@gmail.com",
   address: "Tvk Nagar, Salem Bypass Road, opposite Vasanth & Co, Harur, Tamil Nadu – 636 903",
-  mapsUrl: "https://maps.google.com/?q=Darshana+Optical+Harur",
+  mapsUrl: "https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9",
   websiteUrl: "https://darshanaoptical.com",
 };
 

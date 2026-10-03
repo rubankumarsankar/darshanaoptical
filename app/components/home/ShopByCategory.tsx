@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { EASE_STANDARD } from "../../lib/motion";
@@ -23,7 +24,7 @@ const CATEGORIES = [
     image: "/images/cat-premium.jpg",
   },
   {
-    label: "Office & Computer",
+    label: "Computer Use",
     image: "/images/cat-office.jpg",
   },
   {
@@ -38,14 +39,14 @@ export default function ShopByCategory() {
       <div className="container-brand space-y-8">
         {/* Section Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight">
-            Shop By Category
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight [text-wrap:balance]">
+            Find glasses for everyone
           </h2>
           <Link
             href="/frames"
             className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-brand-orange hover:underline"
           >
-            <span>View All Collections</span>
+            <span>See all frames</span>
             <ArrowRight
               size={14}
               className="transition-transform duration-200 group-hover:translate-x-1"
@@ -84,12 +85,13 @@ export default function ShopByCategory() {
                 className="group relative block overflow-hidden rounded-2xl border border-neutral-200/80 bg-neutral-100 shadow-2xs transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 hover:border-brand-orange/40"
               >
                 <div className="relative aspect-3/4 w-full overflow-hidden bg-neutral-100">
-                  <img
+                  <Image
                     src={cat.image}
                     alt={cat.label}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                    quality={85}
+                    className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
                 <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent opacity-85 transition-opacity duration-300 group-hover:opacity-95" />
@@ -98,7 +100,7 @@ export default function ShopByCategory() {
                     {cat.label}
                   </p>
                   <span className="mt-1 flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-white/90">
-                    <span>Explore</span>
+                    <span>View frames</span>
                     <ArrowRight
                       size={12}
                       className="transition-transform duration-200 group-hover:translate-x-1 text-brand-orange"

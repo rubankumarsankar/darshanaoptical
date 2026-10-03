@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { CalendarCheck, ArrowRight, Cpu, UserCheck, ShieldCheck, HeartHandshake, Users } from "lucide-react";
 
 interface EyeTestingHeroProps {
@@ -90,11 +91,15 @@ export default function EyeTestingHero({ onBookClick }: EyeTestingHeroProps) {
           >
             <div className="relative w-full max-w-lg">
               {/* Main Doctor Patient Image */}
-              <div className="relative overflow-hidden rounded-2xl bg-neutral-100 shadow-xl">
-                <img
-                  src="/images/eyetest-hero-main.png"
-                  alt="Doctor performing eye test on patient"
-                  className="w-full h-auto object-cover"
+              <div className="relative aspect-4/3 sm:aspect-16/11 overflow-hidden rounded-2xl bg-neutral-100 shadow-xl border border-neutral-200/80">
+                <Image
+                  src="/images/cta-consultation.jpg"
+                  alt="Doctor performing professional eye consultation and vision testing on patient"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 540px"
+                  quality={90}
+                  priority
+                  className="object-cover"
                 />
               </div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, X, Camera, ZoomIn } from "lucide-react";
+import { Sparkles, X, Camera, ZoomIn, ArrowRight } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
@@ -16,21 +16,26 @@ interface GalleryImage {
 }
 
 const GALLERY_IMAGES: GalleryImage[] = [
-  { id: "1", title: "Darshana Optical Store Exterior", category: "Store", src: "/images/store-1.jpg" },
-  { id: "2", title: "Optical Lounge & Consultation", category: "Store", src: "/images/store-2.jpg" },
-  { id: "3", title: "Precision Eye Testing Clinic", category: "Eye Testing", src: "/images/store-3.jpg" },
-  { id: "4", title: "Premium Frame Showcase", category: "Store", src: "/images/store-4.jpg" },
-  { id: "5", title: "Designer Eyewear Collection", category: "Frames", src: "/images/frame-1.jpg" },
-  { id: "6", title: "Matte Aviator & Metal Frames", category: "Frames", src: "/images/frame-2.jpg" },
-  { id: "7", title: "Bold Tortoise Acetate Frames", category: "Frames", src: "/images/frame-3.jpg" },
-  { id: "8", title: "TR90 Featherlight Series", category: "Frames", src: "/images/frame-4.jpg" },
-  { id: "9", title: "Executive Wayfarer Collection", category: "Frames", src: "/images/frame-5.jpg" },
-  { id: "10", title: "Rose Gold Elegance Eyewear", category: "Frames", src: "/images/frame-6.jpg" },
-  { id: "11", title: "Men's Styling & Precision Fit", category: "Customers", src: "/images/avatar-1.jpg" },
-  { id: "12", title: "Women's Designer Prescription", category: "Customers", src: "/images/avatar-2.jpg" },
-  { id: "13", title: "Senior Progressive Lens Fit", category: "Customers", src: "/images/avatar-3.jpg" },
-  { id: "14", title: "Computer Glasses Satisfaction", category: "Customers", src: "/images/avatar-4.jpg" },
-  { id: "15", title: "Multi-Zone Progressive Optics", category: "Behind the Scenes", src: "/images/lens-progressive.jpg" },
+  { id: "1", title: "Darshana Optical Storefront & Entrance", category: "Store", src: "/images/store-entrance.jpg" },
+  { id: "2", title: "ZEISS Progressive & ClearView Showcase", category: "Store", src: "/images/store-zeiss.jpg" },
+  { id: "3", title: "Essilor® Official Eyewear Display", category: "Store", src: "/images/store-essilor.jpg" },
+  { id: "4", title: "Crizal® Branded Spectacle Showcase", category: "Store", src: "/images/store-crizal.jpg" },
+  { id: "5", title: "Varilux® XR Series™ Progressive & Sunglasses", category: "Store", src: "/images/store-varilux.jpg" },
+  { id: "6", title: "Blue Cut Digital Screen Eyewear Display", category: "Store", src: "/images/store-bluecut.jpg" },
+  { id: "7", title: "Kodak® Lenses & Swiss Lens Showcase", category: "Store", src: "/images/store-kodak-swiss.jpg" },
+  { id: "8", title: "AR-810A Digital Auto Refractometer", category: "Eye Testing", src: "/images/store-refractometer.jpg" },
+  { id: "9", title: "Two M Examination Chair & Precision Trial Unit", category: "Eye Testing", src: "/images/store-testing-chair.jpg" },
+  { id: "10", title: "Designer Eyewear Collection", category: "Frames", src: "/images/frame-1.jpg" },
+  { id: "11", title: "Matte Aviator & Metal Frames", category: "Frames", src: "/images/frame-2.jpg" },
+  { id: "12", title: "Bold Tortoise Acetate Frames", category: "Frames", src: "/images/frame-3.jpg" },
+  { id: "13", title: "TR90 Featherlight Series", category: "Frames", src: "/images/frame-4.jpg" },
+  { id: "14", title: "Executive Wayfarer Collection", category: "Frames", src: "/images/frame-5.jpg" },
+  { id: "15", title: "Rose Gold Elegance Eyewear", category: "Frames", src: "/images/frame-6.jpg" },
+  { id: "16", title: "Men's Styling & Precision Fit", category: "Customers", src: "/images/avatar-1.jpg" },
+  { id: "17", title: "Women's Designer Prescription", category: "Customers", src: "/images/avatar-2.jpg" },
+  { id: "18", title: "Senior Progressive Lens Fit", category: "Customers", src: "/images/avatar-3.jpg" },
+  { id: "19", title: "Computer Glasses Satisfaction", category: "Customers", src: "/images/avatar-4.jpg" },
+  { id: "20", title: "Multi-Zone Progressive Optics", category: "Behind the Scenes", src: "/images/lens-progressive.jpg" },
 ];
 
 const FILTERS = ["All", "Store", "Frames", "Eye Testing", "Customers", "Behind the Scenes"];
@@ -121,14 +126,30 @@ export default function GalleryPage() {
 
         {/* Instagram Section */}
         <section className="py-16 bg-surface-warm border-t border-neutral-200/80">
-          <div className="container-brand text-center space-y-8 max-w-3xl">
-            <div className="inline-flex items-center gap-2 text-brand-orange text-xs font-bold uppercase tracking-wider bg-brand-orange-soft px-3.5 py-1.5 rounded-full">
-              <Camera size={16} /> @darshanaoptical
-            </div>
-            <h2 className="text-3xl font-extrabold text-neutral-950 tracking-tight">See What&apos;s New</h2>
-            <p className="text-sm text-neutral-600 font-medium">
-              Follow our daily updates for new frame arrivals, eye care tips, and customer stories.
+          <div className="container-brand text-center space-y-6 max-w-3xl">
+            <a
+              href="https://www.instagram.com/darshanaoptical3108/"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-brand-orange text-xs font-bold uppercase tracking-wider bg-brand-orange-soft px-4 py-2 rounded-full hover:bg-brand-orange hover:text-white transition-colors cursor-pointer shadow-2xs"
+            >
+              <Camera size={16} /> @darshanaoptical3108
+            </a>
+            <h2 className="text-3xl font-extrabold text-neutral-950 tracking-tight">See What&apos;s New on Instagram</h2>
+            <p className="text-sm text-neutral-600 font-medium max-w-lg mx-auto">
+              Follow our official Instagram profile for new frame arrivals, eye care tips, styling guides, and patient stories.
             </p>
+            <div className="pt-2">
+              <a
+                href="https://www.instagram.com/darshanaoptical3108/"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary inline-flex items-center gap-2 text-xs font-bold"
+              >
+                <span>Follow @darshanaoptical3108</span>
+                <ArrowRight size={14} />
+              </a>
+            </div>
           </div>
         </section>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Star, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -9,31 +10,31 @@ const REVIEWS = [
     name: "Priya S.",
     avatar: "/images/review-avatar-priya.png",
     rating: 5,
-    text: "Excellent eye testing and very professional staff. Loved the collection and services!",
+    text: "The eye test was clear and the staff explained everything simply. I also found a frame I liked.",
   },
   {
     name: "Karthik R.",
     avatar: "/images/avatar-1.jpg",
     rating: 5,
-    text: "Very advanced equipment and accurate testing. Highly recommend Darshana Optical for frames and lenses.",
+    text: "Good eye test and plenty of frame choices. The team helped me choose the right lenses.",
   },
   {
     name: "Anitha M.",
     avatar: "/images/avatar-2.jpg",
     rating: 5,
-    text: "Friendly staff and thorough check-up. Got my perfect progressive prescription. Very satisfied!",
+    text: "The staff were patient during my check-up. My new progressive glasses are comfortable for reading and distance.",
   },
   {
     name: "Suresh K.",
     avatar: "/images/avatar-3.jpg",
     rating: 5,
-    text: "Great selection of computer glasses. My eye strain has completely reduced. Super fast delivery.",
+    text: "I got computer glasses for office work. They feel comfortable during long screen hours.",
   },
   {
     name: "Divya N.",
     avatar: "/images/avatar-4.jpg",
     rating: 5,
-    text: "Best optical store in Harur! Courteous guidance and great discounts on branded frames.",
+    text: "A good optical store in Harur. Friendly guidance, nice frames and fair prices.",
   },
 ];
 
@@ -55,16 +56,16 @@ export default function Testimonials() {
       <div className="container-brand space-y-8">
         {/* Section Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight">
-            What Our Customers Say
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight text-balance">
+            What customers say
           </h2>
           <a
-            href="https://maps.google.com/?q=Darshana+Optical+Harur"
+            href="https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-brand-orange hover:underline"
           >
-            View All Reviews <ArrowRight size={14} />
+            See Google reviews <ArrowRight size={14} />
           </a>
         </div>
 
@@ -83,12 +84,13 @@ export default function Testimonials() {
               >
                 {/* Customer Avatar */}
                 <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-full border-2 border-brand-orange/30 shadow-xs bg-white">
-                  <img
+                  <Image
                     src={currentReview.avatar}
                     alt={currentReview.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="80px"
+                    quality={90}
+                    className="object-cover"
                   />
                 </div>
 
@@ -120,23 +122,25 @@ export default function Testimonials() {
           {/* Right: Avatar Selectors + Pagination + Nav Arrows */}
           <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center space-y-4">
             {/* Avatars Row */}
-            <div className="flex items-center gap-3">
-              {REVIEWS.slice(0, 4).map((r, idx) => (
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              {REVIEWS.map((r, idx) => (
                 <button
                   key={r.name}
                   onClick={() => setCurrentIndex(idx)}
-                  className={`relative h-12 w-12 sm:h-14 sm:w-14 overflow-hidden rounded-full border-2 transition-all cursor-pointer ${
+                  aria-label={`View review from ${r.name}`}
+                  className={`relative h-11 w-11 sm:h-13 sm:w-13 overflow-hidden rounded-full border-2 transition-all cursor-pointer ${
                     currentIndex === idx
                       ? "border-brand-orange scale-105 shadow-md ring-2 ring-brand-orange/20"
                       : "border-neutral-200 opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <img
+                  <Image
                     src={r.avatar}
                     alt={r.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="52px"
+                    quality={85}
+                    className="object-cover"
                   />
                 </button>
               ))}

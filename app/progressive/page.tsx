@@ -310,7 +310,7 @@ export default function ProgressivePage() {
                   <span>WhatsApp Us</span>
                 </div>
                 <a
-                  href="https://maps.google.com/?q=Darshana+Optical+Harur"
+                  href="https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9"
                   target="_blank"
                   rel="noreferrer"
                   className="btn-primary gap-2 text-xs font-bold w-full justify-center mt-2"

@@ -309,7 +309,7 @@ export default function DedicatedBookPage() {
                   </button>
 
                   <a
-                    href="https://maps.google.com/?q=Darshana+Optical+Harur"
+                    href="https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9"
                     target="_blank"
                     rel="noreferrer"
                     className="btn-secondary gap-2 text-xs font-bold cursor-pointer"

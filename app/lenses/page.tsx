@@ -27,74 +27,100 @@ import {
   CircleCheck,
   Sparkle
 } from "lucide-react";
+import Image from "next/image";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
 import LensCursor from "../components/motion/LensCursor";
 import { useBooking } from "../components/booking/BookingContext";
 
-// 6 Top Categories Data
+// 6 Top Categories Data with World-Leading Brands
 const LENS_CATEGORIES = [
   {
     id: "single-vision",
     title: "Single Vision",
-    desc: "Single focus correction for distance or reading.",
+    brandTag: "ZEISS ClearView™ & Essilor",
+    desc: "Single focus correction for distance or reading with expanded peripheral clarity.",
     icon: Eye,
   },
   {
     id: "blue-protect",
     title: "Blue Protect",
-    desc: "Filters blue light from phones & screens.",
+    brandTag: "Blue Cut Digital & Crizal® Rock",
+    desc: "Smart blue-violet light filtration with extreme scratch resistance.",
     icon: Laptop,
   },
   {
     id: "photochromic",
     title: "Photochromic",
-    desc: "Transitions dark in sunlight, clear indoors.",
+    brandTag: "Transitions® Gen S™",
+    desc: "Ultra-fast dynamic darkening in bright sunlight, pure clarity indoors.",
     icon: Sun,
   },
   {
     id: "thin-light",
     title: "Thin & Light",
-    desc: "High-index lenses for high prescription power.",
+    brandTag: "Swiss Lens® & Hoya 1.74",
+    desc: "Ultra-high index compression eliminating edge thickness for high prescriptions.",
     icon: Feather,
   },
   {
     id: "night-drive",
     title: "Night Drive",
-    desc: "Cuts headlight glare for safe driving at night.",
+    brandTag: "Zeiss DriveSafe™",
+    desc: "Cuts harsh oncoming LED and Xenon headlight dazzle for relaxed night driving.",
     icon: Moon,
   },
   {
     id: "progressive",
     title: "Progressive",
-    desc: "Multi-focus without lines for 40+ presbyopia.",
+    brandTag: "Varilux® XR Series™ by Essilor",
+    desc: "Seamless near, intermediate and far vision without unsightly bifocal lines.",
     icon: Layers,
   },
 ];
 
-// 4 Lifestyle Photo Cards
+// 4 Lifestyle Photo Cards with Verified Lens Brands
 const LIFESTYLE_CARDS = [
   {
     title: "Digital & Screen Time",
-    desc: "Blue-cut lenses to reduce eye strain from computer screens, smartphones and tablets.",
-    img: "/images/cat-office.jpg",
+    brand: "Essilor® Crizal® Prevencia",
+    badge: "Smart Blue Filter",
+    desc: "Filters harmful blue-violet light from phones and computers while easing digital eye strain.",
+    img: "/images/lens-blue-protect.jpg",
   },
   {
-    title: "Outdoors & Sunlight",
-    desc: "Photochromic & polarized lenses that automatically adapt to bright sunlight.",
-    img: "/images/cat-women.jpg",
+    title: "Outdoors & Dynamic Light",
+    brand: "Transitions® Signature Gen S™",
+    badge: "Light-Intelligent",
+    desc: "Fastest photochromic response. Crystal clear indoors, deep sunglasses tint outdoors in seconds.",
+    img: "/images/lens-photochromic.jpg",
   },
   {
-    title: "Night Driving",
-    desc: "Anti-glare coatings that reduce oncoming headlight glare for safer driving at night.",
-    img: "/images/cat-men.jpg",
+    title: "Night & Highway Driving",
+    brand: "Zeiss® DriveSafe & DuraVision®",
+    badge: "Anti-Glare Optics",
+    desc: "Reduces oncoming car headlight glare up to 64% with Luminance Design® for sharper night navigation.",
+    img: "/images/lens-night-drive.jpg",
   },
   {
-    title: "High Power Needs",
-    desc: "Ultra-thin high-index lenses that keep glasses lightweight and cosmetically sleek.",
-    img: "/images/cat-premium.jpg",
+    title: "High Power & Thin Profile",
+    brand: "Hoya® Nulux Ultra 1.74",
+    badge: "Knife-Thin Edges",
+    desc: "Up to 50% thinner and lighter than standard lenses, keeping high-power glasses featherweight.",
+    img: "/images/lens-thin-light.jpg",
   },
+];
+
+const GLOBAL_LENS_BRANDS = [
+  { name: "Carl Zeiss®", tag: "ClearView & Progressive", origin: "Germany" },
+  { name: "Essilor®", tag: "Authorized Vision Center", origin: "France" },
+  { name: "Crizal®", tag: "Rock & Prevencia Clarity", origin: "Essilor" },
+  { name: "Varilux® XR™", tag: "Most Advanced Progressive", origin: "Essilor" },
+  { name: "Kodak® Lenses", tag: "Superior Clarity HD", origin: "Kodak" },
+  { name: "Swiss Lens®", tag: "Precision Swiss Optics", origin: "Switzerland" },
+  { name: "Blue Cut Digital", tag: "Anti-Fatigue Screen Lenses", origin: "Specialty" },
+  { name: "Transitions®", tag: "Signature Gen S™", origin: "USA" },
 ];
 
 // 4 Advanced Protection Coatings
@@ -233,17 +259,22 @@ export default function LensesPage() {
               </div>
             </div>
 
-            {/* Hero Right Visual: Generated Macro Lens Photography */}
+            {/* Hero Right Visual: Macro Lens Photography */}
             <div className="lg:col-span-6 flex justify-center">
-              <div className="relative w-full max-w-lg aspect-4/3 rounded-3xl overflow-hidden shadow-2xl border border-stone-200 bg-white group">
-                <img
+              <div className="relative w-full max-w-lg aspect-4/3 rounded-3xl overflow-hidden shadow-2xl border border-stone-200 bg-neutral-900 group">
+                <Image
                   src="/images/model-lens-macro.jpg"
                   alt="Precision Optical Lens with Anti-Reflective Coating"
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 520px"
+                  quality={90}
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6">
+                <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent flex items-end p-6 z-10 pointer-events-none">
                   <div className="text-white space-y-1">
-                    <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Advanced HD Multi-Coat Optics</span>
+                    <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                      Advanced HD Multi-Coat Optics
+                    </span>
                     <h3 className="text-lg font-bold">100% Precision Digital Freeform Cut</h3>
                   </div>
                 </div>
@@ -270,17 +301,24 @@ export default function LensesPage() {
                 return (
                   <div
                     key={cat.id}
-                    className="group relative overflow-hidden rounded-2xl bg-neutral-50/80 p-6 border border-neutral-200/80 shadow-2xs hover:border-brand-orange hover:bg-white hover:shadow-lg transition-all duration-300"
+                    className="group relative overflow-hidden rounded-2xl bg-neutral-50/80 p-6 border border-neutral-200/80 shadow-2xs hover:border-brand-orange hover:bg-white hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-brand-orange shadow-xs mb-4 border border-neutral-100 group-hover:bg-brand-orange group-hover:text-white transition-all">
-                      <IconComponent size={22} />
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-brand-orange shadow-xs border border-neutral-100 group-hover:bg-brand-orange group-hover:text-white transition-all">
+                          <IconComponent size={22} />
+                        </div>
+                        <span className="text-[11px] font-bold text-brand-orange bg-orange-50 px-2.5 py-1 rounded-full border border-brand-orange/20">
+                          {cat.brandTag}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-bold text-neutral-950 mb-1.5 group-hover:text-brand-orange transition-colors">
+                        {cat.title}
+                      </h3>
+                      <p className="text-xs leading-relaxed text-neutral-600 font-medium">
+                        {cat.desc}
+                      </p>
                     </div>
-                    <h3 className="text-base font-bold text-neutral-950 mb-1.5 group-hover:text-brand-orange transition-colors">
-                      {cat.title}
-                    </h3>
-                    <p className="text-xs leading-relaxed text-neutral-600 font-medium">
-                      {cat.desc}
-                    </p>
                   </div>
                 );
               })}
@@ -288,15 +326,15 @@ export default function LensesPage() {
           </div>
         </section>
 
-        {/* 3. 4 LIFESTYLE PHOTO CARDS */}
+        {/* 3. 4 LIFESTYLE PHOTO CARDS WITH VERIFIED BRANDED LENSES */}
         <section className="py-16 bg-surface-warm border-b border-neutral-200/80">
           <div className="container-brand space-y-10">
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950">
-                Lenses for Your Daily Life
+                Branded Lenses for Your Daily Life
               </h2>
               <p className="text-xs sm:text-sm text-neutral-600 font-medium">
-                Every routine demands specific visual performance.
+                Every routine demands specific visual performance powered by world-class lens coatings.
               </p>
             </div>
 
@@ -304,25 +342,67 @@ export default function LensesPage() {
               {LIFESTYLE_CARDS.map((card) => (
                 <div
                   key={card.title}
-                  className="group overflow-hidden rounded-2xl bg-white border border-neutral-200/80 shadow-2xs hover:border-brand-orange hover:shadow-lg transition-all"
+                  className="group overflow-hidden rounded-2xl bg-white border border-neutral-200/80 shadow-2xs hover:border-brand-orange hover:shadow-xl transition-all flex flex-col justify-between"
                 >
-                  <div className="aspect-4/3 overflow-hidden bg-neutral-100">
-                    <img
-                      src={card.img}
-                      alt={card.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-5 space-y-1.5">
-                    <h3 className="text-sm font-bold text-neutral-950 group-hover:text-brand-orange transition-colors">
-                      {card.title}
-                    </h3>
-                    <p className="text-xs leading-relaxed text-neutral-600 font-medium">
-                      {card.desc}
-                    </p>
+                  <div>
+                    <div className="relative aspect-4/3 overflow-hidden bg-neutral-100">
+                      <Image
+                        src={card.img}
+                        alt={`${card.brand} - ${card.title}`}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        quality={90}
+                        className="object-cover transition-transform duration-500 group-hover:scale-106"
+                      />
+                      <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20 z-10">
+                        {card.badge}
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-1.5">
+                      <div className="text-[11px] font-extrabold text-brand-orange tracking-tight uppercase">
+                        {card.brand}
+                      </div>
+                      <h3 className="text-sm font-bold text-neutral-950 group-hover:text-brand-orange transition-colors">
+                        {card.title}
+                      </h3>
+                      <p className="text-xs leading-relaxed text-neutral-600 font-medium">
+                        {card.desc}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Global Lens Brand Partners Strip */}
+            <div className="rounded-2xl bg-white p-6 border border-neutral-200/80 shadow-2xs mt-8">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left pb-4 border-b border-neutral-100">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">
+                    Authorized Lens Technology Dispensary
+                  </h4>
+                  <p className="text-sm font-extrabold text-neutral-900">
+                    Precision Lenses Sourced Directly from Global Optical Laboratories
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-brand-orange">
+                  <Award size={16} />
+                  <span>100% Genuine Warranty Cards Included</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-4">
+                {GLOBAL_LENS_BRANDS.map((lb) => (
+                  <div
+                    key={lb.name}
+                    className="flex flex-col items-center justify-center p-3 rounded-xl bg-neutral-50 border border-neutral-200/60 text-center hover:border-brand-orange/40 transition-colors"
+                  >
+                    <span className="text-xs font-bold text-neutral-900">{lb.name}</span>
+                    <span className="text-[10px] text-brand-orange font-semibold mt-0.5">{lb.tag}</span>
+                    <span className="text-[9px] text-neutral-400 mt-0.5">{lb.origin}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -436,10 +516,13 @@ export default function LensesPage() {
                 <div className="lg:col-span-5 flex justify-center">
                   <div className="relative w-full max-w-sm aspect-4/3 rounded-2xl overflow-hidden shadow-xl border border-white/20">
                     <img
-                      src="/images/lens-progressive.jpg"
-                      alt="Progressive Focal Zones"
+                      src="/images/store-varilux.jpg"
+                      alt="Varilux XR Series Official Showcase at Darshana Optical"
                       className="h-full w-full object-cover"
                     />
+                    <div className="absolute bottom-2 left-2 right-2 rounded-lg bg-black/80 backdrop-blur-xs px-2.5 py-1 text-[10px] font-semibold text-orange-200 text-center border border-white/10">
+                      ★ Official Varilux® XR Series™ Showcase In-Store
+                    </div>
                   </div>
                 </div>
               </div>

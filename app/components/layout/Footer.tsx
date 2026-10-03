@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa6";
+import { FaWhatsapp, FaInstagram } from "react-icons/fa6";
 import { useBooking } from "../booking/BookingContext";
 
 export default function Footer() {
@@ -36,6 +36,15 @@ export default function Footer() {
               className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-[#25D366] hover:text-white transition-colors"
             >
               <FaWhatsapp size={14} />
+            </a>
+            <a
+              href="https://www.instagram.com/darshanaoptical3108/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram @darshanaoptical3108"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 hover:bg-linear-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white transition-colors"
+            >
+              <FaInstagram size={14} />
             </a>
           </div>
         </div>

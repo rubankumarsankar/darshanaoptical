@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { CalendarCheck, PhoneCall, ShieldCheck, Clock, Award, Sparkles } from "lucide-react";
 
 interface EyeTestingCTAProps {
@@ -13,13 +14,18 @@ export default function EyeTestingCTA({ onBookClick }: EyeTestingCTAProps) {
       <div className="container-brand">
         <div className="relative overflow-hidden rounded-2xl bg-brand-orange text-white shadow-lg">
           <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
-            {/* Left Column: Woman Visual */}
-            <div className="hidden lg:flex lg:col-span-3 items-end self-end justify-center h-full">
-              <img
-                src="/images/cta-banner-woman.png"
-                alt="Darshana Optical Patient"
-                className="max-h-56 w-auto object-contain object-bottom"
-              />
+            {/* Left Column: Customer Visual */}
+            <div className="hidden lg:flex lg:col-span-3 items-center justify-center p-6">
+              <div className="relative h-44 w-44 rounded-2xl overflow-hidden shadow-md border-2 border-white/30">
+                <Image
+                  src="/images/avatar-priya.jpg"
+                  alt="Happy Customer at Darshana Optical"
+                  fill
+                  sizes="180px"
+                  quality={90}
+                  className="object-cover"
+                />
+              </div>
             </div>
 
             {/* Middle Column: Copy & Badges */}

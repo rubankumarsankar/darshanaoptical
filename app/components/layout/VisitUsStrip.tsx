@@ -66,7 +66,7 @@ export default function VisitUsStrip() {
             {/* Right Action */}
             <div className="md:col-span-2 flex justify-start md:justify-end">
               <a
-                href="https://maps.google.com/?q=Darshana+Optical+Harur"
+                href="https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand-orange bg-white px-4 py-2.5 text-xs font-bold text-brand-orange hover:bg-orange-50 transition-colors shadow-xs"

@@ -5,10 +5,10 @@ import { motion } from "framer-motion";
 import { EASE_STANDARD } from "../../lib/motion";
 
 const ITEMS = [
-  { icon: Eye, label: "EYE TESTING" },
-  { icon: Glasses, label: "PREMIUM FRAMES" },
-  { icon: Layers, label: "PROGRESSIVE LENSES" },
-  { icon: ShieldCheck, label: "BLUE PROTECT" },
+  { icon: Eye, label: "EYE TEST" },
+  { icon: Glasses, label: "QUALITY FRAMES" },
+  { icon: Layers, label: "ONE PAIR, ALL DISTANCES" },
+  { icon: ShieldCheck, label: "SCREEN GLASSES" },
   { icon: Sun, label: "SUNGLASSES" },
 ];
 

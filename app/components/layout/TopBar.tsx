@@ -21,7 +21,13 @@ export default function TopBar() {
             Mon - Sat : 9:30 AM - 8:30 PM
           </span>
           <div className="flex items-center gap-3">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors">
+            <a
+              href="https://www.instagram.com/darshanaoptical3108/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Darshana Optical on Instagram"
+              className="hover:text-brand-orange transition-colors"
+            >
               <FaInstagram size={13} />
             </a>
             <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-brand-orange transition-colors">

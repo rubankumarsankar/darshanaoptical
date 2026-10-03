@@ -36,6 +36,7 @@ import { useBooking } from "../components/booking/BookingContext";
 // Detailed Product Interface
 interface FrameProduct {
   id: string;
+  brand: string;
   name: string;
   category: "Men" | "Women" | "Kids" | "Unisex";
   type: "Full Rim" | "Half Rim" | "Rimless" | "Aviator" | "Wayfarer" | "Round" | "Square" | "Cat-Eye" | "Geometric";
@@ -49,45 +50,63 @@ interface FrameProduct {
 }
 
 const PRODUCTS_DATA: FrameProduct[] = [
-  { id: "DO-101", name: "Classic Full Rim Black", category: "Men", type: "Full Rim", material: "Acetate", color: "Black", colorHex: "#1a1a1a", price: 1499, specs: "Full Rim | Black", image: "/images/frame-1.jpg" },
-  { id: "DO-301", name: "Bold Tortoise Square", category: "Women", type: "Square", material: "Acetate", color: "Tortoise", colorHex: "#6e4726", price: 2199, specs: "Square | Tortoise", image: "/images/frame-3.jpg" },
-  { id: "DO-404", name: "Metallic Round Silver", category: "Unisex", type: "Round", material: "Metal", color: "Silver", colorHex: "#c0c0c0", price: 1699, specs: "Round | Silver", image: "/images/frame-2.jpg" },
-  { id: "DO-505", name: "Executive Wayfarer Black", category: "Men", type: "Wayfarer", material: "TR90", color: "Black", colorHex: "#111111", price: 1799, specs: "Wayfarer | Black", image: "/images/frame-5.jpg" },
-  { id: "DO-205", name: "Classic Aviator Gunmetal", category: "Men", type: "Aviator", material: "Metal", color: "Gunmetal", colorHex: "#4a4a4a", price: 1899, specs: "Aviator | Gunmetal", image: "/images/frame-2.jpg" },
-  { id: "DO-601", name: "Feminine Cat-Eye Rose Gold", category: "Women", type: "Cat-Eye", material: "Metal", color: "Rose Gold", colorHex: "#b76e79", price: 2399, specs: "Cat-Eye | Rose Gold", image: "/images/frame-6.jpg" },
-  { id: "DO-302", name: "Modern Square Blue", category: "Men", type: "Square", material: "TR90", color: "Blue", colorHex: "#1e3a8a", price: 1599, specs: "Square | Blue", image: "/images/frame-4.jpg" },
-  { id: "DO-606", name: "Crystal Transparent Clear", category: "Unisex", type: "Full Rim", material: "Acetate", color: "Clear", colorHex: "#e2e8f0", price: 1299, specs: "Transparent | Clear", image: "/images/frame-finder.jpg" },
-  { id: "DO-707", name: "Eco Round Forest Green", category: "Women", type: "Round", material: "Acetate", color: "Green", colorHex: "#14532d", price: 1699, specs: "Round | Green", image: "/images/frame-1.jpg" },
-  { id: "DO-808", name: "Ultra-Light Half Rim", category: "Men", type: "Half Rim", material: "Titanium", color: "Black", colorHex: "#262626", price: 1499, specs: "Half Rim | Black", image: "/images/frame-finder.jpg" },
-  { id: "DO-909", name: "Slim Rectangle Brown", category: "Men", type: "Full Rim", material: "Wood", color: "Brown", colorHex: "#78350f", price: 1399, specs: "Rectangle | Brown", image: "/images/frame-5.jpg" },
-  { id: "DO-910", name: "Polarized Sunglasses Black", category: "Unisex", type: "Wayfarer", material: "Acetate", color: "Black", colorHex: "#000000", price: 1999, specs: "Sunglasses | Black", image: "/images/cat-sunglasses.jpg" },
-  { id: "DO-111", name: "Geometric Hex Blue", category: "Women", type: "Geometric", material: "Metal", color: "Blue", colorHex: "#2563eb", price: 2299, specs: "Geometric | Blue", image: "/images/frame-4.jpg" },
-  { id: "DO-212", name: "Air Rimless Silver", category: "Unisex", type: "Rimless", material: "Titanium", color: "Silver", colorHex: "#d1d5db", price: 1699, specs: "Rimless | Silver", image: "/images/frame-2.jpg" },
-  { id: "DO-313", name: "Handcrafted Round Wood", category: "Men", type: "Round", material: "Wood", color: "Brown", colorHex: "#92400e", price: 2499, specs: "Round | Wood", image: "/images/frame-3.jpg" },
-  { id: "DO-520", name: "Gradient Sunglasses Brown", category: "Women", type: "Cat-Eye", material: "Acetate", color: "Brown", colorHex: "#b45309", price: 2199, specs: "Sunglasses | Brown", image: "/images/cat-premium.jpg" }
+  { id: "DO-101", brand: "Titan Signature", name: "Titan Signature Full Rim Acetate", category: "Men", type: "Full Rim", material: "Acetate", color: "Black", colorHex: "#1a1a1a", price: 1499, specs: "Full Rim | Black", image: "/images/frame-1.jpg" },
+  { id: "DO-205", brand: "Ray-Ban", name: "Ray-Ban Aviator Gunmetal Classic", category: "Men", type: "Aviator", material: "Metal", color: "Gunmetal", colorHex: "#4a4a4a", price: 1899, specs: "Aviator | Gunmetal", image: "/images/frame-2.jpg" },
+  { id: "DO-301", brand: "Tommy Hilfiger", name: "Tommy Hilfiger Amber Tortoise Square", category: "Women", type: "Square", material: "Acetate", color: "Tortoise", colorHex: "#6e4726", price: 2199, specs: "Square | Tortoise", image: "/images/frame-3.jpg" },
+  { id: "DO-404", brand: "Oakley", name: "Oakley Titanium Round Silver", category: "Unisex", type: "Round", material: "Metal", color: "Silver", colorHex: "#c0c0c0", price: 1699, specs: "Round | Silver", image: "/images/frame-4.jpg" },
+  { id: "DO-505", brand: "Fastrack", name: "Fastrack Urban Wayfarer Espresso", category: "Men", type: "Wayfarer", material: "TR90", color: "Brown", colorHex: "#78350f", price: 1799, specs: "Wayfarer | Brown", image: "/images/frame-5.jpg" },
+  { id: "DO-601", brand: "Vogue Eyewear", name: "Vogue Eyewear Cat-Eye Rose Gold", category: "Women", type: "Cat-Eye", material: "Metal", color: "Rose Gold", colorHex: "#b76e79", price: 2399, specs: "Cat-Eye | Rose Gold", image: "/images/frame-6.jpg" },
+  { id: "DO-606", brand: "Darshana Signature", name: "Darshana Crystal Clear Acetate", category: "Unisex", type: "Full Rim", material: "Acetate", color: "Clear", colorHex: "#e2e8f0", price: 1299, specs: "Transparent | Clear", image: "/images/frame-6.jpg" },
+  { id: "DO-302", brand: "Carrera", name: "Carrera Sport Square Matte Blue", category: "Men", type: "Square", material: "TR90", color: "Blue", colorHex: "#1e3a8a", price: 1599, specs: "Square | Blue", image: "/images/frame-4.jpg" },
+  { id: "DO-707", brand: "Vogue Eyewear", name: "Vogue Round Forest Emerald", category: "Women", type: "Round", material: "Acetate", color: "Green", colorHex: "#14532d", price: 1699, specs: "Round | Green", image: "/images/frame-1.jpg" },
+  { id: "DO-808", brand: "Titan Air", name: "Titan Air Half-Rim Titanium", category: "Men", type: "Half Rim", material: "Titanium", color: "Black", colorHex: "#262626", price: 1499, specs: "Half Rim | Black", image: "/images/frame-2.jpg" },
+  { id: "DO-909", brand: "Police", name: "Police Heritage Rectangle Timber", category: "Men", type: "Full Rim", material: "Wood", color: "Brown", colorHex: "#78350f", price: 1399, specs: "Rectangle | Brown", image: "/images/frame-5.jpg" },
+  { id: "DO-910", brand: "Ray-Ban", name: "Ray-Ban Polarized Wayfarer", category: "Unisex", type: "Wayfarer", material: "Acetate", color: "Black", colorHex: "#000000", price: 1999, specs: "Sunglasses | Black", image: "/images/cat-sunglasses.jpg" },
+  { id: "DO-111", brand: "Fastrack", name: "Fastrack Hexagon Geometric Blue", category: "Women", type: "Geometric", material: "Metal", color: "Blue", colorHex: "#2563eb", price: 2299, specs: "Geometric | Blue", image: "/images/frame-4.jpg" },
+  { id: "DO-212", brand: "Silhouette", name: "Silhouette Style Rimless Silver", category: "Unisex", type: "Rimless", material: "Titanium", color: "Silver", colorHex: "#d1d5db", price: 1699, specs: "Rimless | Silver", image: "/images/frame-2.jpg" },
+  { id: "DO-313", brand: "Oakley", name: "Oakley Round Woodcraft Walnut", category: "Men", type: "Round", material: "Wood", color: "Brown", colorHex: "#92400e", price: 2499, specs: "Round | Wood", image: "/images/frame-3.jpg" },
+  { id: "DO-520", brand: "Prada Eyewear", name: "Prada Gradient Cat-Eye Tortoise", category: "Women", type: "Cat-Eye", material: "Acetate", color: "Brown", colorHex: "#b45309", price: 2199, specs: "Sunglasses | Brown", image: "/images/cat-premium.jpg" }
 ];
 
 const NEW_ARRIVALS: FrameProduct[] = [
-  { id: "DO-120", name: "Full Rim Titanium Black", category: "Men", type: "Full Rim", material: "Titanium", color: "Black", colorHex: "#111", price: 1599, specs: "Full Rim | Black", image: "/images/frame-1.jpg" },
-  { id: "DO-221", name: "Aviator Mirror Silver", category: "Men", type: "Aviator", material: "Metal", color: "Silver", colorHex: "#c0c0c0", price: 1899, specs: "Aviator | Silver", image: "/images/frame-2.jpg" },
-  { id: "DO-320", name: "Square Amber Tortoise", category: "Women", type: "Square", material: "Acetate", color: "Tortoise", colorHex: "#6e4726", price: 2199, specs: "Square | Tortoise", image: "/images/frame-3.jpg" },
-  { id: "DO-421", name: "Minimal Round Gold", category: "Women", type: "Round", material: "Metal", color: "Gold", colorHex: "#eab308", price: 1699, specs: "Round | Gold", image: "/images/frame-6.jpg" },
-  { id: "DO-522", name: "Classic Wayfarer Brown", category: "Men", type: "Wayfarer", material: "TR90", color: "Brown", colorHex: "#78350f", price: 1799, specs: "Wayfarer | Brown", image: "/images/frame-5.jpg" },
-  { id: "DO-620", name: "Transparent Smoked Grey", category: "Unisex", type: "Full Rim", material: "Acetate", color: "Clear", colorHex: "#94a3b8", price: 1299, specs: "Transparent | Grey", image: "/images/frame-4.jpg" }
+  { id: "DO-120", brand: "Ray-Ban", name: "Ray-Ban Titanium Stealth Black", category: "Men", type: "Full Rim", material: "Titanium", color: "Black", colorHex: "#111", price: 1599, specs: "Full Rim | Black", image: "/images/frame-1.jpg" },
+  { id: "DO-221", brand: "Carrera", name: "Carrera Aviator Mirror Silver", category: "Men", type: "Aviator", material: "Metal", color: "Silver", colorHex: "#c0c0c0", price: 1899, specs: "Aviator | Silver", image: "/images/frame-2.jpg" },
+  { id: "DO-320", brand: "Tommy Hilfiger", name: "Tommy Hilfiger Amber Tortoise", category: "Women", type: "Square", material: "Acetate", color: "Tortoise", colorHex: "#6e4726", price: 2199, specs: "Square | Tortoise", image: "/images/frame-3.jpg" },
+  { id: "DO-421", brand: "Vogue Eyewear", name: "Vogue Minimalist Round Gold", category: "Women", type: "Round", material: "Metal", color: "Gold", colorHex: "#eab308", price: 1699, specs: "Round | Gold", image: "/images/frame-6.jpg" },
+  { id: "DO-522", brand: "Fastrack", name: "Fastrack Casual Wayfarer Brown", category: "Men", type: "Wayfarer", material: "TR90", color: "Brown", colorHex: "#78350f", price: 1799, specs: "Wayfarer | Brown", image: "/images/frame-5.jpg" },
+  { id: "DO-620", brand: "Titan", name: "Titan Smoked Translucent Grey", category: "Unisex", type: "Full Rim", material: "Acetate", color: "Clear", colorHex: "#94a3b8", price: 1299, specs: "Transparent | Grey", image: "/images/frame-4.jpg" }
+];
+
+const BRAND_SPOTLIGHT = [
+  "ZEISS Eyewear",
+  "Essilor® Frames",
+  "Crizal® Optical",
+  "Varilux® XR Series™",
+  "Blue Cut Digital",
+  "Kodak® Lenses",
+  "Swiss Lens®",
+  "Ray-Ban",
+  "Oakley",
+  "Titan",
+  "Fastrack",
+  "Vogue Eyewear",
+  "Carrera",
+  "Tommy Hilfiger",
+  "Darshana Signature"
 ];
 
 const CATEGORIES_NAV = [
   { title: "Men", img: "/images/model-man-glasses.jpg" },
-  { title: "Women", img: "/images/cat-women.jpg" },
+  { title: "Women", img: "/images/avatar-priya.jpg" },
   { title: "Kids", img: "/images/cat-kids.jpg" },
-  { title: "Premium", img: "/images/cat-premium.jpg" },
-  { title: "Office & Computer", img: "/images/cat-office.jpg" },
+  { title: "Premium", img: "/images/model-glasses-display.jpg" },
+  { title: "Office & Computer", img: "/images/frame-4.jpg" },
   { title: "Sunglasses", img: "/images/cat-sunglasses.jpg" }
 ];
 
 const FACE_SHAPES_DATA = [
   { name: "Round Face", tip: "Angular frames add definition", avatar: "/images/avatar-1.jpg" },
-  { name: "Oval Face", tip: "Most frame shapes suit you", avatar: "/images/avatar-2.jpg" },
+  { name: "Oval Face", tip: "Most frame shapes suit you", avatar: "/images/avatar-priya.jpg" },
   { name: "Square Face", tip: "Round or oval frames balance angles", avatar: "/images/avatar-3.jpg" },
   { name: "Heart Face", tip: "Light frames suit your features", avatar: "/images/avatar-4.jpg" },
   { name: "Diamond Face", tip: "Oval or rimless look great", avatar: "/images/avatar-5.jpg" }
@@ -244,6 +263,23 @@ export default function FramesPage() {
                     {cat.title}
                   </span>
                 </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* BRAND SPOTLIGHT MARQUEE STRIP */}
+        <section className="py-4 bg-neutral-900 text-white overflow-hidden border-y border-neutral-800">
+          <div className="container-brand flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-brand-orange shrink-0">
+              Authorized Eyewear Brands:
+            </span>
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-bold text-neutral-300">
+              {BRAND_SPOTLIGHT.map((b, i) => (
+                <span key={b} className="flex items-center gap-2">
+                  <span className="hover:text-white transition-colors cursor-pointer">{b}</span>
+                  {i < BRAND_SPOTLIGHT.length - 1 && <span className="text-neutral-700">•</span>}
+                </span>
               ))}
             </div>
           </div>
@@ -502,9 +538,17 @@ export default function FramesPage() {
 
                         {/* Details */}
                         <div className="flex-1 space-y-1">
-                          <div className="text-[11px] font-bold text-neutral-900">{product.id}</div>
-                          <div className="text-xs text-neutral-500 font-medium">{product.specs}</div>
-                          <div className="text-base font-extrabold text-neutral-950 pt-1">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-extrabold uppercase tracking-wider text-brand-orange">
+                              {product.brand}
+                            </span>
+                            <span className="font-semibold text-neutral-400">{product.id}</span>
+                          </div>
+                          <h4 className="text-xs sm:text-sm font-bold text-neutral-950 line-clamp-1 group-hover:text-brand-orange transition-colors">
+                            {product.name}
+                          </h4>
+                          <div className="text-[11px] text-neutral-500 font-medium">{product.specs}</div>
+                          <div className="text-sm sm:text-base font-extrabold text-neutral-950 pt-1">
                             ₹{product.price.toLocaleString()}
                           </div>
                         </div>
@@ -570,8 +614,8 @@ export default function FramesPage() {
                 <div className="lg:col-span-3 flex justify-center">
                   <div className="relative w-44 aspect-4/3 rounded-2xl overflow-hidden shadow-lg border border-white/20">
                     <img
-                      src="/images/frame-finder.jpg"
-                      alt="Smart Frame Finder"
+                      src="/images/model-glasses-display.jpg"
+                      alt="Smart Frame Finder & Designer Eyewear Showcase"
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -615,22 +659,27 @@ export default function FramesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {NEW_ARRIVALS.map((product) => (
                 <div
                   key={product.id}
-                  className="group relative overflow-hidden rounded-2xl bg-white p-4 border border-neutral-200/80 shadow-2xs hover:border-brand-orange transition-all"
+                  className="group relative overflow-hidden rounded-2xl bg-white p-3 sm:p-3.5 border border-neutral-200/80 shadow-2xs hover:border-brand-orange hover:shadow-md transition-all"
                 >
-                  <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-neutral-50 mb-3 flex items-center justify-center p-2">
+                  <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-100 mb-2.5 flex items-center justify-center">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-108"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-106"
                     />
                   </div>
-                  <div className="text-[11px] font-bold text-neutral-900">{product.id}</div>
+                  <div className="text-[10px] font-extrabold uppercase tracking-wider text-brand-orange">
+                    {product.brand}
+                  </div>
+                  <div className="text-xs font-bold text-neutral-950 line-clamp-1 mt-0.5">
+                    {product.name}
+                  </div>
                   <div className="text-[11px] text-neutral-500 font-medium">{product.specs}</div>
-                  <div className="text-sm font-extrabold text-neutral-950 pt-1">
+                  <div className="text-xs sm:text-sm font-extrabold text-neutral-950 pt-1">
                     ₹{product.price.toLocaleString()}
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "./components/motion/SmoothScroll";
+import PageLoadProgress from "./components/motion/PageLoadProgress";
 import { BookingProvider } from "./components/booking/BookingContext";
 import BookingModal from "./components/booking/BookingModal";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -97,11 +98,13 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${manrope.variable} h-full antialiased scroll-smooth`}
+      data-scroll-behavior="smooth"
     >
       <head>
         <LocalBusinessSchema />
       </head>
       <body className="min-h-full flex flex-col">
+        <PageLoadProgress />
         <SmoothScroll />
         <BookingProvider>
           {children}

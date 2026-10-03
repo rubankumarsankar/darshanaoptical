@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { CalendarCheck, Check, ArrowRight } from "lucide-react";
 import { useBooking } from "../booking/BookingContext";
 import FrameFinderQuiz from "./FrameFinderQuiz";
@@ -9,9 +10,9 @@ import { EASE_STANDARD } from "../../lib/motion";
 
 const EYE_CARE_POINTS = [
   "Computerised Eye Testing",
-  "Refraction & Prescription",
-  "Vision Analysis",
-  "Expert Consultation",
+  "Correct Eye Power Check",
+  "Near & Distance Vision Check",
+  "Simple, Friendly Guidance",
 ];
 
 export default function EyeTestingFeature() {
@@ -31,11 +32,14 @@ export default function EyeTestingFeature() {
             className="flex flex-col sm:flex-row overflow-hidden rounded-2xl bg-neutral-50/80 border border-neutral-200/80 shadow-xs hover:shadow-lg transition-all duration-300 group"
           >
             {/* Image on left */}
-            <div className="relative sm:w-1/2 min-h-[220px] sm:min-h-full overflow-hidden bg-neutral-100">
-              <img
+            <div className="relative sm:w-1/2 min-h-55 sm:min-h-full overflow-hidden bg-neutral-100">
+              <Image
                 src="/images/eye-test.jpg"
                 alt="Advanced Eye Examination"
-                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-108"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+                quality={85}
+                className="object-cover object-center transition-transform duration-700 group-hover:scale-108"
               />
             </div>
 
@@ -43,13 +47,13 @@ export default function EyeTestingFeature() {
             <div className="p-6 sm:p-7 sm:w-1/2 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-brand-orange">
-                  PROFESSIONAL EYE CARE
+                  COMPLETE EYE CHECK
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-neutral-950 leading-tight">
-                  Advanced Eye Testing for Clearer Vision
+                  Know your correct eye power
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-600 font-normal leading-relaxed">
-                  Our comprehensive eye tests ensure accurate prescription and better eye health.
+                  We check your vision carefully and help you choose the right power for comfortable daily use.
                 </p>
 
                 {/* 4 checklist points */}
@@ -96,13 +100,13 @@ export default function EyeTestingFeature() {
             <div className="p-6 sm:p-7 sm:w-7/12 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-brand-orange">
-                  NEW FEATURE
+                  NEED HELP CHOOSING?
                 </span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
-                  Find Your Perfect Frame In 60 Seconds
+                  Find frames that suit your face
                 </h3>
                 <p className="text-xs sm:text-sm text-neutral-400 font-normal leading-relaxed">
-                  Answer a few simple questions about your style, face shape and budget. We&apos;ll suggest the perfect frames for you.
+                  Answer a few easy questions about your face, style and budget. We&apos;ll show you suitable options.
                 </p>
               </div>
 
@@ -113,20 +117,21 @@ export default function EyeTestingFeature() {
                   whileTap={{ scale: 0.97 }}
                   className="inline-flex items-center gap-2 rounded-lg bg-brand-orange px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-orange/20 hover:bg-brand-orange-hover transition-colors cursor-pointer"
                 >
-                  <span>{showQuiz ? "Close Quiz" : "Start Frame Finder"}</span>
+                  <span>{showQuiz ? "Close" : "Find My Frame"}</span>
                   <ArrowRight size={14} />
                 </motion.button>
               </div>
             </div>
 
             {/* Image on right */}
-            <div className="relative sm:w-5/12 min-h-[180px] sm:min-h-full overflow-hidden bg-neutral-900">
-              <img
+            <div className="relative sm:w-5/12 min-h-45 sm:min-h-full overflow-hidden bg-neutral-900">
+              <Image
                 src="/images/frame-finder.jpg"
                 alt="Frame Finder Selection"
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 40vw, 300px"
+                quality={85}
+                className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
               />
             </div>
           </motion.div>

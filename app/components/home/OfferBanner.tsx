@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Sparkles, Laptop, ShieldCheck, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { EASE_STANDARD } from "../../lib/motion";
@@ -27,20 +28,20 @@ export default function OfferBanner() {
                 className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-widest text-white backdrop-blur-xs shadow-xs"
               >
                 <Tag size={13} />
-                <span>SPECIAL IN-STORE OFFER</span>
+                <span>STORE OFFER</span>
               </motion.span>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight [text-wrap:balance]">
                 Computer Glasses <br />
-                Starting From ₹1499*
+                Starting From <span className="tabular-nums">₹1,499*</span>
               </h2>
 
               <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm font-semibold text-white/95 pt-1">
                 <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg">
-                  <Laptop size={15} /> Frame Included
+                  <Laptop size={15} /> Frame included
                 </span>
                 <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-lg">
-                  <ShieldCheck size={15} /> Blue Protect Lens
+                  <ShieldCheck size={15} /> Screen-use lenses
                 </span>
               </div>
 
@@ -50,7 +51,7 @@ export default function OfferBanner() {
                     href="/offers"
                     className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-neutral-900 transition-colors"
                   >
-                    <span>Shop Offer Now</span>
+                    <span>View offer</span>
                     <ArrowRight size={16} />
                   </Link>
                 </motion.div>
@@ -58,14 +59,17 @@ export default function OfferBanner() {
             </div>
 
             {/* Right Product Image */}
-            <div className="md:col-span-5 relative h-64 md:h-full min-h-[260px] overflow-hidden flex items-center justify-center p-4">
-              <img
-                src="/images/offer-glasses.jpg"
-                alt="Computer Glasses Special Offer"
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover rounded-2xl md:rounded-l-2xl md:rounded-r-none transition-transform duration-700 group-hover:scale-105"
-              />
+            <div className="md:col-span-5 relative h-64 md:h-full min-h-65 overflow-hidden flex items-center justify-center p-4">
+              <div className="relative w-full h-full min-h-55 overflow-hidden rounded-2xl md:rounded-l-2xl md:rounded-r-none">
+                <Image
+                  src="/images/offer-glasses.jpg"
+                  alt="Computer Glasses Special Offer"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 45vw"
+                  quality={85}
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
             </div>
           </div>
         </motion.div>

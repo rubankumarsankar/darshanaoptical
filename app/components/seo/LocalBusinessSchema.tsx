@@ -52,12 +52,12 @@ export default function LocalBusinessSchema() {
         closes: "14:00",
       },
     ],
-    hasMap: "https://maps.google.com/?q=Darshana+Optical+Harur",
+    hasMap: "https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9",
     currenciesAccepted: "INR",
     paymentAccepted: "Cash, UPI, Card",
     areaServed: ["Harur", "Dharmapuri", "Tamil Nadu"],
     sameAs: [
-      "https://instagram.com",
+      "https://www.instagram.com/darshanaoptical3108/",
       "https://facebook.com",
     ],
   };

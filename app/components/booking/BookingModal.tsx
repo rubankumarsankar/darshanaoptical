@@ -379,7 +379,7 @@ export default function BookingModal() {
                   className="pt-4 flex flex-col sm:flex-row justify-center gap-3"
                 >
                   <a
-                    href="https://maps.google.com/?q=Darshana+Optical+Harur"
+                    href="https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 px-5 py-2.5 text-xs font-bold text-neutral-800 hover:bg-neutral-50"

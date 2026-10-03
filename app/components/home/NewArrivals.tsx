@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Heart, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EASE_STANDARD } from "../../lib/motion";
@@ -57,14 +58,14 @@ export default function NewArrivals() {
       <div className="container-brand space-y-8">
         {/* Section Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight">
-            New Arrivals
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight text-balance">
+            Latest frames
           </h2>
           <a
             href="/frames"
-            className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-brand-orange hover:underline"
+            className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-orange hover:underline"
           >
-            <span>View All Frames</span>
+            <span>See all frames</span>
             <ArrowRight
               size={14}
               className="transition-transform duration-200 group-hover:translate-x-1"
@@ -73,10 +74,10 @@ export default function NewArrivals() {
         </div>
 
         {/* 6 Products Grid with Carousel Navigation */}
-        <div className="relative flex items-center gap-3">
+        <div className="relative flex items-center gap-2 sm:gap-3">
           <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
             aria-label="Previous frames"
             className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-xs hover:border-brand-orange hover:text-brand-orange transition-colors cursor-pointer"
           >
@@ -108,21 +109,22 @@ export default function NewArrivals() {
                   },
                 }}
                 whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-3.5 border border-neutral-200/80 shadow-xs transition-all hover:shadow-lg hover:border-brand-orange/30 cursor-pointer"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-3 sm:p-3.5 border border-neutral-200/80 shadow-xs transition-all hover:shadow-lg hover:border-brand-orange/30 cursor-pointer"
               >
                 <div>
-                  {/* Frame Image */}
-                  <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-neutral-50 mb-3 flex items-center justify-center p-2">
-                    <img
+                  {/* Frame Image on Studio Pedestal */}
+                  <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-100 mb-3 flex items-center justify-center">
+                    <Image
                       src={p.image}
                       alt={p.code}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-108"
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                      quality={90}
+                      className="object-cover transition-transform duration-500 group-hover:scale-106"
                     />
                   </div>
 
-                  <h3 className="text-xs sm:text-sm font-bold text-neutral-950">
+                  <h3 className="text-xs sm:text-sm font-bold text-neutral-950 group-hover:text-brand-orange transition-colors">
                     {p.code}
                   </h3>
                   <p className="text-[11px] text-neutral-500 mt-0.5">
@@ -132,7 +134,7 @@ export default function NewArrivals() {
 
                 {/* Price and Favorite Heart with Pop Animation */}
                 <div className="mt-3 pt-2 border-t border-neutral-100 flex items-center justify-between">
-                  <span className="text-xs sm:text-sm font-extrabold text-neutral-950">
+                  <span className="text-xs sm:text-sm font-extrabold text-neutral-950 tabular-nums">
                     {p.price}
                   </span>
                   <motion.button

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   CalendarCheck,
   Settings,
@@ -14,10 +15,10 @@ import { useBooking } from "../booking/BookingContext";
 import { EASE_STANDARD } from "../../lib/motion";
 
 const FEATURES = [
-  { icon: Settings, label: "Professional\nEye Testing" },
-  { icon: Glasses, label: "500+\nFrame Styles" },
-  { icon: Search, label: "Advanced\nLens Technology" },
-  { icon: User, label: "Personalised\nGuidance" },
+  { icon: Settings, label: "Accurate\nEye Test" },
+  { icon: Glasses, label: "500+\nFrame Choices" },
+  { icon: Search, label: "Lenses for\nDaily Needs" },
+  { icon: User, label: "Friendly\nHelp" },
 ];
 
 export default function Hero() {
@@ -50,12 +51,23 @@ export default function Hero() {
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-8">
           {/* Left Column */}
           <div className="lg:col-span-6 space-y-6">
+            {/* Trusted Location Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: EASE_STANDARD }}
+              className="inline-flex items-center gap-2 rounded-lg border border-neutral-200/80 bg-white px-3 py-1 text-xs font-semibold text-neutral-700 shadow-2xs"
+            >
+              <span className="flex h-2 w-2 rounded-full bg-brand-orange animate-pulse" />
+              <span>Harur&apos;s trusted optical store</span>
+            </motion.div>
+
             {/* Headline */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: EASE_STANDARD }}
-              className="text-4xl font-extrabold tracking-tight text-neutral-950 sm:text-5xl lg:text-[54px] leading-[1.12]"
+              className="text-4xl font-extrabold tracking-[-0.04em] text-neutral-950 sm:text-5xl lg:text-[54px] leading-[1.1] [text-wrap:balance]"
             >
               <motion.span
                 initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
@@ -63,7 +75,7 @@ export default function Hero() {
                 transition={{ duration: 0.6, delay: 0.1, ease: EASE_STANDARD }}
                 className="block"
               >
-                See Better.
+                Clear vision.
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
@@ -71,7 +83,7 @@ export default function Hero() {
                 transition={{ duration: 0.6, delay: 0.24, ease: EASE_STANDARD }}
                 className="block text-brand-orange"
               >
-                Look Better.
+                Confident you.
               </motion.span>
             </motion.h1>
 
@@ -80,10 +92,10 @@ export default function Hero() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.35, ease: EASE_STANDARD }}
-              className="max-w-xl text-base text-neutral-600 leading-relaxed font-normal sm:text-lg"
+              className="max-w-xl text-base text-neutral-600 leading-relaxed font-normal sm:text-lg [text-wrap:pretty]"
             >
-              Professional eye care, stylish frames and advanced lens
-              solutions – personalised for your vision and lifestyle.
+              Get your eyes tested and choose comfortable glasses that suit
+              your face, daily work and budget.
             </motion.p>
 
             {/* CTAs */}
@@ -91,29 +103,26 @@ export default function Hero() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.45, ease: EASE_STANDARD }}
-              className="flex flex-wrap items-center gap-4 pt-1"
+              className="flex flex-wrap items-center gap-3.5 pt-1"
             >
-              <motion.button
+              <button
                 onClick={openBooking}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center justify-center gap-2.5 rounded-lg bg-brand-orange px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-brand-orange/20 hover:bg-brand-orange-hover cursor-pointer transition-colors"
+                className="btn-primary gap-2.5 cursor-pointer"
               >
                 <CalendarCheck size={18} />
-                Book Eye Test
-              </motion.button>
+                <span>Book Eye Test</span>
+              </button>
 
-              <motion.a
+              <a
                 href="/frames"
-                whileHover={{ x: 3 }}
-                className="group inline-flex items-center gap-2 text-sm font-bold text-neutral-800 hover:text-brand-orange transition-colors"
+                className="btn-secondary group gap-2.5"
               >
-                <span>Explore Frames</span>
+                <span>See Frames</span>
                 <ArrowRight
                   size={16}
                   className="transition-transform duration-200 group-hover:translate-x-1"
                 />
-              </motion.a>
+              </a>
             </motion.div>
 
             {/* Feature Pills Strip */}
@@ -182,15 +191,14 @@ export default function Hero() {
                 }}
                 className="relative aspect-4/3 sm:aspect-square overflow-hidden rounded-3xl bg-neutral-100 shadow-xl"
               >
-                <img
+                <Image
                   src="/images/hero-woman.jpg"
                   alt="Darshana Optical - Stylish Eyewear"
-                  width={600}
-                  height={600}
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 500px"
+                  quality={90}
+                  className="object-cover object-center transition-transform duration-700 hover:scale-105"
                 />
               </motion.div>
 
@@ -225,7 +233,7 @@ export default function Hero() {
                   500+
                 </div>
                 <div className="text-[10px] font-semibold text-neutral-500 mt-1">
-                  Frame Styles
+                  Frames to Choose
                 </div>
               </motion.div>
             </div>

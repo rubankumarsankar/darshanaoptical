@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { MapPin, Phone, MessageCircle, Clock, Mail, Send, CalendarCheck, Sparkles, CheckCircle2 } from "lucide-react";
+import { FaInstagram } from "react-icons/fa6";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import WhatsAppButton from "../components/motion/WhatsAppButton";
@@ -197,13 +198,28 @@ export default function ContactPage() {
                     <div className="text-neutral-600 text-xs">Sunday: 10:00 AM – 2:00 PM</div>
                   </div>
                 </div>
+
+                <div className="flex items-start gap-3 pt-3 border-t border-neutral-200/60">
+                  <FaInstagram size={20} className="text-brand-orange mt-0.5 shrink-0" />
+                  <div>
+                    <div className="font-bold text-neutral-950">Follow on Instagram</div>
+                    <a
+                      href="https://www.instagram.com/darshanaoptical3108/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-brand-orange hover:underline text-xs font-semibold"
+                    >
+                      @darshanaoptical3108
+                    </a>
+                  </div>
+                </div>
               </div>
 
               {/* Embedded Google Map */}
               <div className="relative aspect-16/10 overflow-hidden rounded-2xl border border-neutral-200 shadow-md">
                 <iframe
                   title="Darshana Optical Google Map Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3899.7123!2d78.4908!3d12.0621!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bac457891234567%3A0x987654321fedcba!2sHarur%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3899.886!2d78.47462!3d12.0559335!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bac65dd021a596d%3A0xf21d8bcfdefaeddb!2sDarshana%20Optical!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
                   className="h-full w-full border-0"
                   allowFullScreen
                   loading="lazy"
@@ -212,7 +228,7 @@ export default function ContactPage() {
 
               <div>
                 <a
-                  href="https://maps.google.com/?q=Darshana+Optical+Harur"
+                  href="https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9"
                   target="_blank"
                   rel="noreferrer"
                   className="btn-primary gap-2 w-full justify-center font-bold"
