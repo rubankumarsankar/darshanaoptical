@@ -4,14 +4,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://darshanaoptical.com";
 
   const routes = [
-    { url: "", priority: 1.0, changeFrequency: "daily" as const },
+    { url: "", priority: 1.0, changeFrequency: "weekly" as const },
     { url: "/eye-testing", priority: 0.9, changeFrequency: "weekly" as const },
     { url: "/frames", priority: 0.9, changeFrequency: "weekly" as const },
     { url: "/lenses", priority: 0.9, changeFrequency: "weekly" as const },
     { url: "/progressive-lenses", priority: 0.9, changeFrequency: "weekly" as const },
-    { url: "/progressive", priority: 0.8, changeFrequency: "weekly" as const },
     { url: "/book-eye-test", priority: 0.9, changeFrequency: "weekly" as const },
-    { url: "/book", priority: 0.8, changeFrequency: "weekly" as const },
     { url: "/frame-finder", priority: 0.8, changeFrequency: "monthly" as const },
     { url: "/lens-finder", priority: 0.8, changeFrequency: "monthly" as const },
     { url: "/offers", priority: 0.8, changeFrequency: "weekly" as const },
@@ -23,7 +21,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return routes.map(({ url, priority, changeFrequency }) => ({
     url: `${base}${url}`,
-    lastModified: new Date(),
     changeFrequency,
     priority,
   }));

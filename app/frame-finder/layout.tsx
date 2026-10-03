@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Find Your Perfect Frame | Darshana Optical",
+  title: "Find Frames for Your Face",
   description:
-    "Try our interactive Smart Frame Finder to discover the best spectacle frames tailored to your face shape, lifestyle, and preferences in Harur.",
+    "Answer a few easy questions to find spectacle frames that suit your face, daily use, style and budget at Darshana Optical in Harur.",
   keywords: [
     "Darshana Optical",
     "Darshana Opticals",

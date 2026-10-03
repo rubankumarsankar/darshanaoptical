@@ -17,7 +17,7 @@ export default function LocalBusinessSchema() {
     email: "darshanado@gmail.com",
     priceRange: "₹₹",
     description:
-      "Darshana Optical in Harur offers computerized eye testing, prescription glasses, stylish frames, progressive lenses, and sunglasses.",
+      "Optical shop in Harur offering computerised eye tests, prescription glasses, spectacle frames, progressive lenses and sunglasses.",
     address: {
       "@type": "PostalAddress",
       streetAddress: "Tvk nagar, salem bypass road, Vasanth & co opposite",
@@ -55,10 +55,16 @@ export default function LocalBusinessSchema() {
     hasMap: "https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9",
     currenciesAccepted: "INR",
     paymentAccepted: "Cash, UPI, Card",
+    availableLanguage: ["English", "Tamil"],
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+918870571536",
+      contactType: "customer service",
+      availableLanguage: ["English", "Tamil"],
+    },
     areaServed: ["Harur", "Dharmapuri", "Tamil Nadu"],
     sameAs: [
       "https://www.instagram.com/darshanaoptical3108/",
-      "https://facebook.com",
     ],
   };
 

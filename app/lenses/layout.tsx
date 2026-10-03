@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Eyeglass Lenses | Darshana Optical Harur",
+  title: "Eyeglass Lenses in Harur",
   description:
-    "Premium eyeglass lenses in Harur. Blue cut digital protection, anti-reflective coatings, photochromic, and high-index progressive lenses at Darshana Optical.",
+    "Find prescription, anti-glare, screen-use, photochromic, thin and progressive lenses at Darshana Optical in Harur, with help choosing the right option.",
   keywords: [
     "Darshana Optical",
     "Darshana Opticals",

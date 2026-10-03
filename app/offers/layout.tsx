@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Eyewear Offers | Darshana Optical Harur",
+  title: "Eyewear Offers in Harur",
   description:
     "Check out the latest eyewear packages, frame discounts, and seasonal offers at Darshana Optical in Harur.",
   keywords: [

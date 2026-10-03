@@ -21,11 +21,11 @@ const BASE_URL = "https://darshanaoptical.com";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Darshana Optical Harur | Eye Testing, Frames & Lenses",
+    default: "Optical Shop in Harur | Darshana Optical",
     template: "%s | Darshana Optical",
   },
   description:
-    "Visit Darshana Optical in Harur for eye testing, prescription glasses, stylish frames, progressive lenses and sunglasses. Call 088705 71536.",
+    "Eye tests, prescription glasses, frames, progressive lenses and sunglasses at Darshana Optical, Salem Bypass Road, Harur. Call +91 88705 71536.",
   keywords: [
     "Darshana Optical",
     "Darshana Opticals",
@@ -59,9 +59,9 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
   openGraph: {
-    title: "Darshana Optical Harur | Eye Testing, Frames & Lenses",
+    title: "Optical Shop in Harur | Darshana Optical",
     description:
-      "Visit Darshana Optical in Harur for eye testing, prescription glasses, stylish frames, progressive lenses and sunglasses.",
+      "Visit Darshana Optical in Harur for eye tests, prescription glasses, frames, progressive lenses and sunglasses.",
     url: BASE_URL,
     siteName: "Darshana Optical",
     images: [
@@ -77,9 +77,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Darshana Optical Harur | Eye Testing, Frames & Lenses",
+    title: "Optical Shop in Harur | Darshana Optical",
     description:
-      "Visit Darshana Optical in Harur for eye testing, prescription glasses, stylish frames, progressive lenses and sunglasses.",
+      "Visit Darshana Optical in Harur for eye tests, prescription glasses, frames, progressive lenses and sunglasses.",
     images: ["/images/og-darshana-optical.jpg"],
   },
   icons: {

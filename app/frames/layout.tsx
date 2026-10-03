@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Eyeglass Frames in Harur | Darshana Optical",
+  title: "Eyeglass Frames in Harur",
   description:
-    "Explore our collection of lightweight, durable, and stylish spectacle frames for men, women, and kids at Darshana Optical in Harur. Visit us on Salem Bypass Road.",
+    "Shop spectacle frames for men, women and kids at Darshana Optical in Harur. Choose lightweight, durable and stylish glasses for every budget.",
   keywords: [
     "Darshana Optical",
     "Darshana Opticals",

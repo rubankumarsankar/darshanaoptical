@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Find the Right Lens | Darshana Optical",
+  title: "Find the Right Lens for Your Glasses",
   description:
-    "Interactive Smart Lens Finder to help you choose the ideal lens type, coatings, and protection suited for your vision and daily work routine.",
+    "Use our simple lens finder to choose lenses for reading, distance, computer work, driving or all distances. Visit Darshana Optical in Harur.",
   keywords: [
     "Darshana Optical",
     "Darshana Opticals",

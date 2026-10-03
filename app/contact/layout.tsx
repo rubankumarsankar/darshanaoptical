@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact Darshana Optical | Harur",
+  title: "Contact & Directions",
   description:
     "Visit Darshana Optical at TVK Nagar, Salem Bypass Road, opposite Vasanth & Co, Harur - 636903. Call 088705 71536 or WhatsApp us. Open all 7 days.",
   keywords: [

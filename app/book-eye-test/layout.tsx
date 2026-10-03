@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Book an Eye Test | Darshana Optical",
+  title: "Book an Eye Test in Harur",
   description:
-    "Schedule your comprehensive computerized eye testing appointment online with our expert optometrists at Darshana Optical in Harur.",
+    "Book a computerised eye test at Darshana Optical in Harur. Choose your preferred date and time or call +91 88705 71536.",
   keywords: [
     "Darshana Optical",
     "Darshana Opticals",
