@@ -178,7 +178,7 @@ M app/admin/products/page.tsx          (-2)      removed obsolete inline image-r
 
 ```bash
 npm install                  # dependencies
-cp .env.example .env.local   # fill DATABASE_URL, SESSION_SECRET, ADMIN_API_SECRET, SMTP_*, R2_*
+cp .env.example .env         # fill DATABASE_URL, SESSION_SECRET, ADMIN_API_SECRET, SMTP_*, R2_*
 node db/migrate.mjs          # first-time only: creates 18 tables + seeds users
 node db/migrate_security.mjs # idempotent: token_version, login_attempts, counters backfill
 # older existing DBs only: node db/migrate_public_forms.mjs (appointments/inquiries)

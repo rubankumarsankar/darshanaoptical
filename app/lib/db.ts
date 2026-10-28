@@ -9,7 +9,7 @@ export function getDbPool(): Pool {
     if (!databaseUrl) {
       throw new Error(
         "[db] DATABASE_URL environment variable is not set. " +
-        "Add it to .env.local (see .env.example)."
+        "Add it to .env (see .env.example)."
       );
     }
 

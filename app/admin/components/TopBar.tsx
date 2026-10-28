@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/app/lib/admin/auth-context';
-import { Bell, Menu, Plus, Zap } from 'lucide-react';
+import { Menu, Plus, Zap } from 'lucide-react';
 
 const PAGE_TITLES: Record<string, string> = {
   '/admin/counter': 'Express Walk-in Counter',
@@ -74,26 +74,22 @@ export default function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
         {pathname !== '/admin/counter' && (
           <Link
             href="/admin/counter"
-            className="adm-btn adm-btn-secondary"
-            style={{ height: 36, fontSize: 12.5, fontWeight: 700, borderColor: '#fc5a06', color: '#fc5a06' }}
+            className="adm-btn adm-btn-counter"
           >
             <Zap width={14} height={14} /> <span className="adm-action-label">Express Counter</span>
           </Link>
         )}
 
         {action && (
-          <Link href={action.href} className="adm-btn adm-btn-primary" style={{ height: 36, fontSize: 13 }}>
+          <Link href={action.href} className="adm-btn adm-btn-primary adm-topbar-primary">
             <Plus width={14} height={14} />
             <span className="adm-action-label">{action.label}</span>
           </Link>
         )}
 
-        <button className="adm-btn adm-btn-ghost" style={{ width: 36, height: 36, padding: 0, borderRadius: 8 }}>
-          <Bell width={16} height={16} />
-        </button>
-
-        <div className="adm-topbar-avatar">
-          {user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
+        <div className="adm-topbar-user">
+          <div className="adm-topbar-avatar">{user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}</div>
+          <div className="adm-topbar-user-copy"><strong>{user.name}</strong><span>{user.role}</span></div>
         </div>
       </div>
     </header>

@@ -17,12 +17,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function loadDbUrl() {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
-  const raw = readFileSync(join(__dirname, '..', '.env.local'), 'utf8');
+  const raw = readFileSync(join(__dirname, '..', '.env'), 'utf8');
   for (const line of raw.split('\n')) {
     const t = line.trim();
     if (t.startsWith('DATABASE_URL=')) return t.slice('DATABASE_URL='.length).replace(/^["']|["']$/g, '');
   }
-  throw new Error('DATABASE_URL not found in environment or .env.local');
+  throw new Error('DATABASE_URL not found in environment or .env');
 }
 
 const c = await mysql.createConnection({

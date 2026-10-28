@@ -196,7 +196,7 @@ Node.js 20+, a **TiDB Cloud / MySQL** database, a **Gmail account with an App Pa
 ### 8.2 Steps
 ```bash
 npm install                   # 1. install dependencies
-cp .env.example .env.local    # 2. create the environment file, then edit it (see below)
+cp .env.example .env          # 2. create the environment file, then edit it (see below)
 node db/migrate.mjs           # 3. create all tables + seed users (FIRST TIME ONLY)
 node db/migrate_security.mjs  # 4. idempotent security migration (safe to re-run)
 npm run dev                   # 5. development server at http://localhost:3000
@@ -206,7 +206,7 @@ npm run build && npm start    # production mode
 > **Updating an older existing database?** Two extra one-off scripts exist:
 > `node db/migrate_public_forms.mjs` adds the `appointments` and `inquiries` tables (needed for website bookings/inquiries), and `node db/add_image_column.mjs` adds the product photo column. Both are safe to re-run — on a fresh database, step 3 already includes them.
 
-### 8.3 Environment variables (`.env.local`)
+### 8.3 Environment variables (`.env`)
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | TiDB/MySQL connection string (`mysql://user:pass@host:4000/dbname`) |
@@ -238,10 +238,10 @@ If `db/schema.sql` changed, check `db/` for a new migration script and run it �
 | **Redirected to login even after signing in** | Your session was revoked (password/role changed) — sign in again. |
 | **"Discount exceeds the limit for your role"** | Intentional. Ask a manager/admin to apply the larger discount. |
 | **Product missing in POS** | Stock is 0 or status inactive — restock via **Stock In** or fix in **Products**. |
-| **Emails not arriving** | Check `SMTP_FROM`/`SMTP_PASS` in `.env.local`; the Gmail App Password must be current (16 chars). The booking still saves even if email fails. |
+| **Emails not arriving** | Check `SMTP_FROM`/`SMTP_PASS` in `.env`; the Gmail App Password must be current (16 chars). The booking still saves even if email fails. |
 | **Invoice number looks skipped** | Numbers come from a collision-safe counter; cancelled invoices still consume a number. Normal. |
 | **Product photo won't upload** | Only images (JPG/PNG/WebP) are allowed — SVG is rejected for security; check R2 settings. |
-| **`DATABASE_URL` error on start** | `.env.local` missing or incomplete — compare with `.env.example`. |
+| **`DATABASE_URL` error on start** | `.env` missing or incomplete — compare with `.env.example`. |
 | **Forgot admin password** | Another admin resets it in **Staff Team**; or set `SEED_ADMIN_PASSWORD` and re-run `node db/migrate.mjs` (does not delete data). |
 
 ---

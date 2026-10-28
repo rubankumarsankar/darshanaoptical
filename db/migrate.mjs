@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ─── Load env manually (no dotenv needed) ─────────────────────
 function loadEnv() {
   try {
-    const envPath = join(__dirname, '..', '.env.local');
+    const envPath = join(__dirname, '..', '.env');
     const raw = readFileSync(envPath, 'utf8');
     for (const line of raw.split('\n')) {
       const trimmed = line.trim();
@@ -28,7 +28,7 @@ function loadEnv() {
       if (key && !process.env[key]) process.env[key] = val;
     }
   } catch {
-    console.warn('⚠  Could not read .env.local — using process environment');
+    console.warn('⚠  Could not read .env — using process environment');
   }
 }
 
@@ -88,7 +88,7 @@ async function main() {
   loadEnv();
 
   const db = process.env.DATABASE_URL;
-  if (!db) throw new Error('DATABASE_URL not set in .env.local');
+  if (!db) throw new Error('DATABASE_URL not set in .env');
 
   console.log('📡 Connecting to TiDB…');
   const conn = await mysql.createConnection({ uri: db, ssl: { minVersion: 'TLSv1.2' } });
