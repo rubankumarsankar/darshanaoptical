@@ -1,48 +1,43 @@
-import mysql, { Pool, PoolConnection } from "mysql2/promise";
+import mysql, { Connection, ConnectionOptions } from 'mysql2/promise';
 
-let pool: Pool;
+function getConnectionOptions(): ConnectionOptions {
+  const databaseUrl = process.env.DATABASE_URL;
 
-export function getDbPool(): Pool {
-  if (!pool) {
-    const databaseUrl = process.env.DATABASE_URL;
-
-    if (!databaseUrl) {
-      throw new Error(
-        "[db] DATABASE_URL environment variable is not set. " +
-        "Add it to .env.local (see .env.example)."
-      );
-    }
-
-    pool = mysql.createPool({
-      uri: databaseUrl,
-      // Cloudflare Workers disallow runtime code generation. mysql2's static
-      // packet parser keeps the driver compatible with the Workers runtime.
-      disableEval: true,
-      waitForConnections: true,
-      connectionLimit: 10,
-      // Keep maxIdle below connectionLimit so mysql2 actually starts its idle
-      // connection reaper. With both values set to 10 the cleanup timer is not
-      // created, leaving TiDB sockets in the pool after the gateway closes them;
-      // the next API request then fails once with ECONNRESET.
-      maxIdle: 2,
-      idleTimeout: 30000,
-      queueLimit: 0,
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
-      ssl: {
-        minVersion: "TLSv1.2",
-        rejectUnauthorized: true,
-      },
-    });
+  if (!databaseUrl) {
+    throw new Error(
+      '[db] DATABASE_URL environment variable is not set. ' +
+      'Add it to the Cloudflare Worker secrets or a local environment file.'
+    );
   }
 
-  return pool;
+  return {
+    uri: databaseUrl,
+    // Workers prohibit runtime code generation. Static packet parsing is
+    // required by mysql2 in the Cloudflare runtime.
+    disableEval: true,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+    ssl: {
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: true,
+    },
+  };
+}
+
+async function createDbConnection(): Promise<Connection> {
+  return mysql.createConnection(getConnectionOptions());
 }
 
 export async function query<T = any>(sql: string, params?: any[]): Promise<T> {
-  const db = getDbPool();
-  const [results] = await db.execute(sql, params);
-  return results as T;
+  // A Worker isolate can serve unrelated requests. Reusing a global Node pool
+  // can carry an I/O object across request contexts, which Cloudflare rejects.
+  const connection = await createDbConnection();
+  try {
+    const [results] = await connection.execute(sql, params);
+    return results as T;
+  } finally {
+    await connection.end();
+  }
 }
 
 export interface TxQuery {
@@ -50,27 +45,26 @@ export interface TxQuery {
 }
 
 /**
- * Runs `fn` inside a single DB transaction on a dedicated connection,
+ * Runs `fn` inside one transaction and one request-scoped connection,
  * committing on success and rolling back if `fn` throws.
  */
 export async function withTransaction<T>(fn: (tx: TxQuery) => Promise<T>): Promise<T> {
-  const db = getDbPool();
-  const conn: PoolConnection = await db.getConnection();
+  const connection = await createDbConnection();
   try {
-    await conn.beginTransaction();
+    await connection.beginTransaction();
     const tx: TxQuery = {
       query: async (sql, params) => {
-        const [results] = await conn.execute(sql, params);
+        const [results] = await connection.execute(sql, params);
         return results as any;
       },
     };
     const result = await fn(tx);
-    await conn.commit();
+    await connection.commit();
     return result;
-  } catch (err) {
-    await conn.rollback();
-    throw err;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
   } finally {
-    conn.release();
+    await connection.end();
   }
 }
