@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
@@ -9,7 +10,7 @@ import AdminLoader from '../../components/AdminLoader';
 import TablePagination from '../../components/TablePagination';
 import { ArrowLeft, Printer, Plus, CheckCircle, X, FileText, ClipboardList } from 'lucide-react';
 
-function fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN'); }
+function fmt(n: number) { return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtDate(d: string) { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -116,59 +117,67 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         {invoice.delivered_at && <span style={{ fontSize: 12, color: '#64748b' }}>Delivered: {new Date(invoice.delivered_at).toLocaleDateString('en-IN')}</span>}
       </div>
 
-      {/* Invoice Card */}
-      <div className="adm-card adm-print-sheet print-section print-invoice" style={{ marginBottom: 16 }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Bill To</div>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>{invoice.customer_name}</div>
-            <div style={{ color: '#64748b', fontSize: 13.5 }}>{invoice.customer_phone}</div>
+      <article className="adm-card adm-print-sheet print-section print-invoice adm-bill-sheet">
+        <header className="adm-bill-letterhead">
+          <div className="adm-bill-brand">
+            <div className="adm-bill-logo"><Image src="/logo.png" alt="Darshana Optical logo" width={64} height={64} priority /></div>
+            <div><h1>{settings?.shop_name || 'Darshana Optical'}</h1><p>{settings?.tagline || 'Quality eye care for a better life'}</p></div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{settings?.shop_name || 'Darshana Optical'}</div>
-            {settings?.gst && <div style={{ fontSize: 12, color: '#64748b' }}>GSTIN: {settings.gst}</div>}
-            <div style={{ fontSize: 12.5, color: '#94a3b8' }}>Harur, Tamil Nadu · 088705 71536</div>
-            <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
-              Invoice: <strong>{invoice.invoice_number}</strong><br />
-              Date: {new Date(invoice.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </div>
+          <div className="adm-bill-shop">
+            <strong>{settings?.address || 'TVK Nagar, Salem Bypass Road'}</strong>
+            <span>{[settings?.city || 'Harur', settings?.state || 'Tamil Nadu', settings?.pincode || '636903'].filter(Boolean).join(', ')}</span>
+            <span>{settings?.phone || '88705 71536'} | {settings?.email || 'darshanaoptical31@gmail.com'}</span>
+            {settings?.gst && <span>GSTIN: {settings.gst}</span>}
           </div>
+        </header>
+
+        <div className="adm-bill-title-row">
+          <div><span className="adm-bill-kicker">Sales document</span><h2>Tax Invoice</h2></div>
+          <div className="adm-bill-reference"><span>Invoice number</span><strong>{invoice.invoice_number}</strong><small>{fmtDate(invoice.created_at)}</small></div>
         </div>
 
-        {/* Items */}
-        <table className="adm-table">
-          <thead><tr><th>#</th><th>Item</th><th>Code</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-          <tbody>
-            {items.map((item, i) => (
+        <section className="adm-bill-customer">
+          <div><span>Bill to</span><strong>{invoice.customer_name}</strong><small>{invoice.customer_phone}</small></div>
+          <div><span>Payment status</span><strong>{STATUS_LABELS[invoice.status] || invoice.status}</strong><small>{invoice.order_status ? `Order: ${STATUS_LABELS[invoice.order_status] || invoice.order_status}` : 'Retail sale'}</small></div>
+          <div><span>Created by</span><strong>{invoice.created_by || 'Darshana Optical'}</strong><small>{invoice.delivered_at ? `Delivered ${new Date(invoice.delivered_at).toLocaleDateString('en-IN')}` : 'Store billing desk'}</small></div>
+        </section>
+
+        <div className="adm-bill-items">
+          <table>
+            <thead><tr><th>#</th><th>Description</th><th>Code</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+            <tbody>{items.map((item, index) => (
               <tr key={item.id}>
-                <td style={{ color: '#94a3b8', fontSize: 12 }}>{i + 1}</td>
-                <td><div style={{ fontWeight: 600 }}>{item.product_name}</div><div style={{ fontSize: 11.5, color: '#94a3b8', textTransform: 'capitalize' }}>{item.category}</div></td>
-                <td style={{ fontFamily: 'monospace', fontSize: 12.5, color: '#64748b' }}>{item.product_code}</td>
-                <td style={{ fontWeight: 600 }}>{item.quantity}</td>
+                <td>{index + 1}</td>
+                <td><strong>{item.product_name}</strong><span>{item.category || 'Optical product'}</span></td>
+                <td>{item.product_code || 'Not listed'}</td>
+                <td>{item.quantity}</td>
                 <td>{fmt(item.unit_price)}</td>
-                <td style={{ fontWeight: 700 }}>{fmt(item.total)}</td>
+                <td>{fmt(item.total)}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Totals */}
-        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ minWidth: 240, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b' }}><span>Subtotal</span><span>{fmt(invoice.subtotal)}</span></div>
-            {Number(invoice.discount_amount) > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#dc2626' }}><span>Discount ({Number(invoice.discount_percent).toFixed(1)}%)</span><span>−{fmt(invoice.discount_amount)}</span></div>}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, fontWeight: 800, borderTop: '2px solid #f1f5f9', paddingTop: 8 }}><span>Total</span><span>{fmt(invoice.total)}</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#16a34a', fontWeight: 600 }}><span>Paid</span><span>{fmt(invoice.paid)}</span></div>
-            {Number(invoice.balance) > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#d97706' }}><span>Balance Due</span><span>{fmt(invoice.balance)}</span></div>}
-          </div>
+            ))}</tbody>
+          </table>
         </div>
-        {(settings?.invoice_terms || settings?.invoice_footer) && (
-          <div className="adm-print-footer">
-            {settings.invoice_terms && <div><strong>Terms:</strong> {settings.invoice_terms}</div>}
-            {settings.invoice_footer && <div>{settings.invoice_footer}</div>}
+
+        <section className="adm-bill-settlement">
+          <div className="adm-bill-payment-note">
+            <span>Payment summary</span>
+            <p>{Number(invoice.balance) > 0 ? `An outstanding balance of ${fmt(invoice.balance)} remains on this invoice.` : 'Payment received in full. Thank you for your purchase.'}</p>
           </div>
-        )}
-      </div>
+          <div className="adm-bill-totals">
+            <div><span>Subtotal</span><strong>{fmt(invoice.subtotal)}</strong></div>
+            {Number(invoice.discount_amount) > 0 && <div className="is-discount"><span>Discount ({Number(invoice.discount_percent).toFixed(1)}%)</span><strong>-{fmt(invoice.discount_amount)}</strong></div>}
+            <div className="is-total"><span>Total</span><strong>{fmt(invoice.total)}</strong></div>
+            <div><span>Amount paid</span><strong>{fmt(invoice.paid)}</strong></div>
+            <div className={Number(invoice.balance) > 0 ? 'is-balance' : ''}><span>Balance due</span><strong>{fmt(invoice.balance)}</strong></div>
+          </div>
+        </section>
+
+        <footer className="adm-bill-footer">
+          <div className="adm-bill-terms"><strong>Terms and notes</strong><p>{settings?.invoice_terms || 'Goods once sold will not be taken back.'}</p><p>{invoice.notes || 'Please retain this invoice for service and warranty reference.'}</p></div>
+          <div className="adm-bill-signature"><span>Authorised signature</span></div>
+        </footer>
+        <div className="adm-bill-thanks">{settings?.invoice_footer || 'Thank you for choosing Darshana Optical.'}</div>
+      </article>
 
       {eyeTest && (
         <section className="adm-card adm-print-sheet print-section print-only print-prescription">

@@ -1091,6 +1091,109 @@
 .adm-prescription-va span { color: var(--adm-text-muted); font-size: 12px; font-weight: 600; }
 .adm-prescription-footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 28px; padding-top: 16px; border-top: 1px solid #f1f5f9; color: var(--adm-text-muted); font-size: 12.5px; }
 
+/* Print-first optical prescription */
+.adm-document-error { padding: 32px; color: var(--adm-danger); }
+.adm-prescription-screen-title { flex: 1; }
+.adm-rx-sheet { overflow: hidden; border: 1px solid #d8d7d1; border-radius: 12px; background: #fff; color: #242521; }
+.adm-rx-letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; padding: 28px 30px 24px; border-bottom: 3px solid var(--adm-orange); }
+.adm-rx-brand { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.adm-rx-logo { width: 58px; height: 58px; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border: 1px solid #e5e4de; border-radius: 10px; background: #fff; }
+.adm-rx-logo img { width: 50px; height: 50px; object-fit: contain; }
+.adm-rx-brand h1 { margin: 0; color: #20211e; font-size: 23px; line-height: 1.05; letter-spacing: -.035em; }
+.adm-rx-brand p { margin: 5px 0 0; color: #777870; font-size: 11px; }
+.adm-rx-contact { max-width: 285px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; color: #666760; font-size: 10.5px; line-height: 1.4; text-align: right; }
+.adm-rx-contact strong { color: #353630; font-size: 11px; }
+.adm-rx-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 25px 30px 20px; }
+.adm-rx-kicker { display: block; margin-bottom: 5px; color: var(--adm-orange); font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.adm-rx-title-row h2 { margin: 0; color: #20211e; font-size: 25px; line-height: 1; letter-spacing: -.04em; }
+.adm-rx-reference { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.adm-rx-reference span { color: #85867f; font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; }
+.adm-rx-reference strong { font: 700 11px ui-monospace, monospace; color: #454641; }
+.adm-rx-patient { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; margin: 0 30px 24px; border: 1px solid #deddd6; border-radius: 8px; background: #faf9f6; }
+.adm-rx-patient > div { min-width: 0; padding: 13px 14px; border-right: 1px solid #deddd6; }
+.adm-rx-patient > div:last-child { border-right: 0; }
+.adm-rx-patient span,.adm-rx-guidance span { display: block; margin-bottom: 5px; color: #85867f; font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.adm-rx-patient strong { display: block; overflow: hidden; color: #30312d; font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+.adm-rx-measurements { padding: 0 30px; }
+.adm-rx-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; margin-bottom: 10px; }
+.adm-rx-section-heading h3,.adm-rx-acuity h3 { margin: 0; color: #343530; font-size: 12px; }
+.adm-rx-section-heading span { color: #92938c; font-size: 9.5px; }
+.adm-rx-sheet .adm-prescription-grid { margin-bottom: 24px; border: 1px solid #d8d7d1; }
+.adm-rx-sheet .adm-prescription-grid th { padding: 10px 8px !important; border: 1px solid #deddd6; background: #f1f0eb; color: #666760; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.adm-rx-sheet .adm-prescription-grid td { height: 54px; padding: 10px 8px !important; border: 1px solid #deddd6; color: #20211e; font: 700 15px ui-monospace, monospace; }
+.adm-rx-sheet .adm-prescription-grid td:first-child { font-family: inherit; }
+.adm-rx-sheet .adm-prescription-grid td:first-child strong { display: block; color: #30312d; font-size: 11.5px; }
+.adm-rx-sheet .adm-prescription-grid td:first-child span { display: block; margin-top: 3px; color: var(--adm-orange); font-size: 9px; font-weight: 800; }
+.adm-rx-secondary { display: grid; grid-template-columns: .72fr 1.28fr; gap: 22px; padding: 0 30px; }
+.adm-rx-acuity { padding: 16px; border: 1px solid #deddd6; border-radius: 8px; background: #faf9f6; }
+.adm-rx-acuity h3 { margin-bottom: 12px; }
+.adm-rx-acuity > div { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid #e5e4de; }
+.adm-rx-acuity span { color: #73746d; font-size: 10.5px; }
+.adm-rx-acuity strong { color: #282925; font: 750 14px ui-monospace, monospace; }
+.adm-rx-guidance { display: grid; gap: 10px; }
+.adm-rx-guidance > div { min-height: 69px; padding: 13px 15px; border: 1px solid #deddd6; border-radius: 8px; }
+.adm-rx-guidance p { margin: 0; color: #454641; font-size: 11px; line-height: 1.5; white-space: pre-wrap; }
+.adm-rx-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin: 34px 30px 0; padding: 24px 0 28px; border-top: 1px solid #deddd6; }
+.adm-rx-signature { width: 220px; padding-top: 38px; border-bottom: 1px solid #71726c; }
+.adm-rx-signature span { display: block; padding: 0 0 5px; color: #777870; font-size: 9px; }
+.adm-rx-footer-copy { max-width: 300px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; color: #85867f; font-size: 9.5px; line-height: 1.35; text-align: right; }
+.adm-rx-footer-copy strong { color: #41423d; font-size: 10.5px; }
+
+/* Print-first retail invoice */
+.adm-bill-sheet { overflow: hidden; margin-bottom: 16px; border: 1px solid #d8d7d1; border-radius: 12px; background: #fff; color: #242521; }
+.adm-bill-letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; padding: 27px 30px 23px; border-bottom: 3px solid var(--adm-orange); }
+.adm-bill-brand { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.adm-bill-logo { width: 58px; height: 58px; display: grid; place-items: center; flex: 0 0 auto; overflow: hidden; border: 1px solid #e5e4de; border-radius: 10px; }
+.adm-bill-logo img { width: 50px; height: 50px; object-fit: contain; }
+.adm-bill-brand h1 { margin: 0; color: #20211e; font-size: 23px; line-height: 1.05; letter-spacing: -.035em; }
+.adm-bill-brand p { margin: 5px 0 0; color: #777870; font-size: 11px; }
+.adm-bill-shop { max-width: 310px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; color: #6d6e67; font-size: 10px; line-height: 1.4; text-align: right; }
+.adm-bill-shop strong { color: #3d3e39; font-size: 10.5px; }
+.adm-bill-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 24px 30px 19px; }
+.adm-bill-kicker { display: block; margin-bottom: 5px; color: var(--adm-orange); font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.adm-bill-title-row h2 { margin: 0; color: #20211e; font-size: 25px; line-height: 1; letter-spacing: -.04em; }
+.adm-bill-reference { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.adm-bill-reference span { color: #85867f; font-size: 9px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.adm-bill-reference strong { color: #373833; font: 750 12px ui-monospace, monospace; }
+.adm-bill-reference small { color: #777870; font-size: 9.5px; }
+.adm-bill-customer { display: grid; grid-template-columns: 1.25fr 1fr 1fr; margin: 0 30px 24px; border: 1px solid #deddd6; border-radius: 8px; background: #faf9f6; }
+.adm-bill-customer > div { min-width: 0; padding: 13px 14px; border-right: 1px solid #deddd6; }
+.adm-bill-customer > div:last-child { border-right: 0; }
+.adm-bill-customer span,.adm-bill-payment-note > span { display: block; margin-bottom: 5px; color: #85867f; font-size: 9px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.adm-bill-customer strong,.adm-bill-customer small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-bill-customer strong { color: #30312d; font-size: 11.5px; }
+.adm-bill-customer small { margin-top: 3px; color: #777870; font-size: 9.5px; }
+.adm-bill-items { margin: 0 30px; overflow: hidden; border: 1px solid #d8d7d1; border-radius: 8px; }
+.adm-bill-items table { width: 100%; border-collapse: collapse; }
+.adm-bill-items th { padding: 10px 9px; border-bottom: 1px solid #d8d7d1; background: #f1f0eb; color: #666760; font-size: 9px; letter-spacing: .07em; text-align: right; text-transform: uppercase; }
+.adm-bill-items th:first-child,.adm-bill-items th:nth-child(2),.adm-bill-items th:nth-child(3) { text-align: left; }
+.adm-bill-items td { padding: 12px 9px; border-bottom: 1px solid #e8e7e1; color: #454641; font-size: 10.5px; text-align: right; vertical-align: top; }
+.adm-bill-items tr:last-child td { border-bottom: 0; }
+.adm-bill-items td:first-child,.adm-bill-items td:nth-child(2),.adm-bill-items td:nth-child(3) { text-align: left; }
+.adm-bill-items td:first-child { color: #92938c; }
+.adm-bill-items td:nth-child(3) { font-family: ui-monospace, monospace; }
+.adm-bill-items td:last-child { color: #242521; font-weight: 800; }
+.adm-bill-items td strong { display: block; color: #30312d; font-size: 11px; }
+.adm-bill-items td span { display: block; margin-top: 3px; color: #92938c; font-size: 9px; text-transform: capitalize; }
+.adm-bill-settlement { display: grid; grid-template-columns: 1fr 275px; gap: 28px; padding: 22px 30px 0; }
+.adm-bill-payment-note { align-self: start; padding: 14px 15px; border-left: 3px solid var(--adm-orange); background: #faf9f6; }
+.adm-bill-payment-note p { margin: 0; color: #5f605a; font-size: 10px; line-height: 1.5; }
+.adm-bill-totals { display: grid; gap: 8px; }
+.adm-bill-totals > div { display: flex; justify-content: space-between; gap: 20px; color: #666760; font-size: 10.5px; }
+.adm-bill-totals strong { color: #343530; font-variant-numeric: tabular-nums; }
+.adm-bill-totals .is-discount strong { color: #a04434; }
+.adm-bill-totals .is-total { margin-top: 2px; padding: 10px 0; border-top: 2px solid #c9c8c1; border-bottom: 1px solid #deddd6; color: #20211e; font-size: 15px; font-weight: 800; }
+.adm-bill-totals .is-total strong { font-size: 16px; }
+.adm-bill-totals .is-balance { color: #963b14; font-weight: 800; }
+.adm-bill-totals .is-balance strong { color: #963b14; }
+.adm-bill-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 36px; margin: 30px 30px 0; padding: 20px 0 24px; border-top: 1px solid #deddd6; }
+.adm-bill-terms { max-width: 420px; color: #777870; font-size: 9px; line-height: 1.45; }
+.adm-bill-terms strong { display: block; margin-bottom: 5px; color: #4d4e48; font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; }
+.adm-bill-terms p { margin: 2px 0; }
+.adm-bill-signature { width: 190px; padding-top: 38px; border-bottom: 1px solid #71726c; }
+.adm-bill-signature span { display: block; padding-bottom: 5px; color: #777870; font-size: 9px; }
+.adm-bill-thanks { padding: 11px 30px; background: #252621; color: #fff; font-size: 10px; font-weight: 700; text-align: center; }
+
 .adm-job-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; padding: 1px; background: var(--adm-border); }
 .adm-job-grid > div { display: flex; flex-direction: column; gap: 5px; padding: 16px 20px; background: white; }
 .adm-job-grid span { color: var(--adm-text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
@@ -1130,6 +1233,13 @@
   .adm-print-sheet .adm-table { min-width: 0 !important; font-size: 11px; }
   .adm-print-sheet .adm-table th,
   .adm-print-sheet .adm-table td { padding: 7px 8px !important; }
+  .adm-rx-sheet { width: 100%; min-height: 267mm; }
+  .adm-rx-letterhead { padding-top: 20px; }
+  .adm-rx-sheet,
+  .adm-rx-sheet * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .adm-bill-sheet { width: 100%; min-height: 267mm; }
+  .adm-bill-sheet,
+  .adm-bill-sheet * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .adm-print-footer { border-color: #d1d5db; color: #4b5563; }
   a { color: inherit !important; text-decoration: none !important; }
 }
@@ -1452,6 +1562,30 @@
   .adm-prescription-grid td:first-child { font-size: 11.5px !important; line-height: 1.25; }
   .adm-prescription-va { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
   .adm-prescription-footer { flex-direction: column; gap: 6px; margin-top: 20px; }
+  .adm-rx-letterhead { flex-direction: column; gap: 14px; padding: 20px 18px; }
+  .adm-rx-contact { max-width: none; align-items: flex-start; text-align: left; }
+  .adm-rx-title-row { padding: 20px 18px 16px; }
+  .adm-rx-patient { grid-template-columns: 1fr 1fr; margin: 0 18px 20px; }
+  .adm-rx-patient > div { border-right: 1px solid #deddd6; border-bottom: 1px solid #deddd6; }
+  .adm-rx-patient > div:nth-child(2n) { border-right: 0; }
+  .adm-rx-patient > div:nth-last-child(-n+2) { border-bottom: 0; }
+  .adm-rx-measurements { padding: 0 18px; }
+  .adm-rx-section-heading { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .adm-rx-secondary { grid-template-columns: 1fr; padding: 0 18px; }
+  .adm-rx-footer { align-items: stretch; flex-direction: column; margin: 28px 18px 0; }
+  .adm-rx-signature { width: 100%; }
+  .adm-rx-footer-copy { max-width: none; align-items: flex-start; text-align: left; }
+  .adm-bill-letterhead { flex-direction: column; gap: 14px; padding: 20px 18px; }
+  .adm-bill-shop { max-width: none; align-items: flex-start; text-align: left; }
+  .adm-bill-title-row { padding: 20px 18px 16px; }
+  .adm-bill-customer { grid-template-columns: 1fr; margin: 0 18px 20px; }
+  .adm-bill-customer > div { border-right: 0; border-bottom: 1px solid #deddd6; }
+  .adm-bill-customer > div:last-child { border-bottom: 0; }
+  .adm-bill-items { margin: 0 18px; overflow-x: auto; }
+  .adm-bill-items table { min-width: 620px; }
+  .adm-bill-settlement { grid-template-columns: 1fr; padding: 20px 18px 0; }
+  .adm-bill-footer { align-items: stretch; flex-direction: column; margin: 28px 18px 0; }
+  .adm-bill-signature { width: 100%; }
 
   .adm-login-root {
     padding: 16px;
