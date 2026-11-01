@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import nodemailer from 'nodemailer';
 import { escapeHtml } from '@/app/lib/mailer';
 
 export interface InvoiceEmailData {
   customerEmail: string;
-  invoice: Record<string, any>;
-  items: Record<string, any>[];
-  settings: Record<string, any>;
+  invoice: Record<string, unknown>;
+  items: Record<string, unknown>[];
+  settings: Record<string, unknown>;
 }
 
 const money = (value: unknown) => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -16,7 +15,7 @@ export function renderInvoiceEmail({ invoice, items, settings }: Omit<InvoiceEma
   const shopName = settings.shop_name || 'Darshana Optical';
   const address = [settings.address, settings.city, settings.state, settings.pincode].filter(Boolean).join(', ');
   const status = String(invoice.status || 'pending').replaceAll('_', ' ');
-  const invoiceDate = new Date(invoice.created_at).toLocaleDateString('en-IN', {
+  const invoiceDate = new Date(invoice.created_at as string | number | Date).toLocaleDateString('en-IN', {
     timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric',
   });
   const itemRows = items.map((item) => `<tr>
