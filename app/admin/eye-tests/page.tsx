@@ -43,12 +43,22 @@ export default function EyeTestsPage() {
   const [err, setErr] = useState('');
 
   const { data, loading, refetch } = useAdminFetch<{ eyeTests: any[] }>('/api/admin/eye-tests');
+  const { data: customerData, loading: customersLoading } = useAdminFetch<{ customers: any[] }>('/api/admin/customers?status=active');
+  const customers = customerData?.customers ?? [];
   const eyeTests = (data?.eyeTests ?? []).filter((t) => {
     const q = query.toLowerCase();
     return !q || t.customer_name?.toLowerCase().includes(q) || t.customer_phone?.includes(q);
   });
 
   const handleAdd = async () => {
+    if (!form.customer_id) {
+      setErr('Select a customer before saving the eye test.');
+      return;
+    }
+    if (!form.test_date) {
+      setErr('Test date is required.');
+      return;
+    }
     setSaving(true); setErr('');
     try {
       await adminPost('/api/admin/eye-tests', form);
@@ -76,10 +86,37 @@ export default function EyeTestsPage() {
             <button className="adm-btn adm-btn-ghost adm-btn-sm" onClick={() => setShowAdd(false)}><X size={14} /></button>
           </div>
           {err && <div style={{ color: '#ef4444', marginBottom: 10 }}>{err}</div>}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 4 }}>Customer *</label>
+            <select
+              className="adm-select"
+              value={form.customer_id}
+              disabled={customersLoading}
+              onChange={(e) => {
+                const customer = customers.find((item: any) => item.id === e.target.value);
+                setForm((current) => ({
+                  ...current,
+                  customer_id: customer?.id ?? '',
+                  customer_name: customer?.name ?? '',
+                  customer_phone: customer?.phone ?? '',
+                }));
+              }}
+            >
+              <option value="">{customersLoading ? 'Loading customers…' : 'Select a customer'}</option>
+              {customers.map((customer: any) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name} · {customer.phone} · {customer.customer_id}
+                </option>
+              ))}
+            </select>
+            {!customersLoading && customers.length === 0 && (
+              <div style={{ marginTop: 6, fontSize: 11.5, color: '#64748b' }}>
+                No active customers found. <Link href="/admin/customers/new">Create a customer first.</Link>
+              </div>
+            )}
+          </div>
           <div className="adm-grid-3" style={{ gap: 12, marginBottom: 14 }}>
             {[
-              { label: 'Customer Name *', key: 'customer_name' },
-              { label: 'Phone *', key: 'customer_phone' },
               { label: 'Test Date', key: 'test_date', type: 'date' },
               { label: 'Tested By', key: 'tested_by' },
               { label: 'Right VA', key: 'visual_acuity_right' },
