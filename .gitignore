@@ -33,8 +33,19 @@ yarn-error.log*
 .pnpm-debug.log*
 dev-server.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# Local environment files and deployment secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+.dev.vars
+.dev.vars.*
+!.env.example
+
+# Cloudflare local state
+.wrangler/
 
 # vercel
 .vercel
