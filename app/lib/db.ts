@@ -9,7 +9,7 @@ export function getDbPool(): Pool {
     if (!databaseUrl) {
       throw new Error(
         "[db] DATABASE_URL environment variable is not set. " +
-        "Add it to .env (see .env.example)."
+        "Add it to .env.local (see .env.example)."
       );
     }
 
@@ -17,8 +17,12 @@ export function getDbPool(): Pool {
       uri: databaseUrl,
       waitForConnections: true,
       connectionLimit: 10,
-      maxIdle: 10,
-      idleTimeout: 60000,
+      // Keep maxIdle below connectionLimit so mysql2 actually starts its idle
+      // connection reaper. With both values set to 10 the cleanup timer is not
+      // created, leaving TiDB sockets in the pool after the gateway closes them;
+      // the next API request then fails once with ECONNRESET.
+      maxIdle: 2,
+      idleTimeout: 30000,
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,

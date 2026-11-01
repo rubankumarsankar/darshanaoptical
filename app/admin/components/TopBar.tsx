@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/customers/new': 'New Customer',
   '/admin/eye-tests': 'Eye Tests',
   '/admin/eye-tests/new': 'New Eye Test',
+  '/admin/prescriptions': 'Prescription',
   '/admin/orders': 'Orders',
   '/admin/pos': 'POS / Billing',
   '/admin/invoices': 'Invoices',
@@ -87,9 +88,14 @@ export default function TopBar({ onOpenNav }: { onOpenNav: () => void }) {
           </Link>
         )}
 
-        <div className="adm-topbar-user">
-          <div className="adm-topbar-avatar">{user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}</div>
-          <div className="adm-topbar-user-copy"><strong>{user.name}</strong><span>{user.role}</span></div>
+        <div className="adm-topbar-user" aria-label={`Signed in as ${user.name}, ${user.role}`}>
+          <div className="adm-topbar-user-copy">
+            <strong>{user.name}</strong>
+            <span>{user.role}</span>
+          </div>
+          <div className="adm-topbar-avatar" aria-hidden="true">
+            {user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
+          </div>
         </div>
       </div>
     </header>

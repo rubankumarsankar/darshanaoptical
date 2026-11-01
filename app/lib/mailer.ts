@@ -13,7 +13,7 @@ function getTransporter(): Transporter {
   if (!user || !pass) {
     throw new Error(
       "[mailer] SMTP_FROM and SMTP_PASS env variables are required. " +
-      "Add them to .env."
+      "Add them to .env.local."
     );
   }
 

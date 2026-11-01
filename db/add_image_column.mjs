@@ -1,10 +1,11 @@
 import mysql from 'mysql2/promise';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const envPath = join(__dirname, '..', '.env');
+const localEnvPath = join(__dirname, '..', '.env.local');
+const envPath = existsSync(localEnvPath) ? localEnvPath : join(__dirname, '..', '.env');
 const raw = readFileSync(envPath, 'utf8');
 
 let dbUrl = '';

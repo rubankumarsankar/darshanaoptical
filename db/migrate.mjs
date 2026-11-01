@@ -2,7 +2,7 @@
 // Usage: node db/migrate.mjs
 
 import mysql from 'mysql2/promise';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { randomBytes, scrypt as scryptCb } from 'crypto';
 import { promisify } from 'util';
 import { fileURLToPath } from 'url';
@@ -16,7 +16,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ─── Load env manually (no dotenv needed) ─────────────────────
 function loadEnv() {
   try {
-    const envPath = join(__dirname, '..', '.env');
+    const localEnvPath = join(__dirname, '..', '.env.local');
+    const envPath = existsSync(localEnvPath) ? localEnvPath : join(__dirname, '..', '.env');
     const raw = readFileSync(envPath, 'utf8');
     for (const line of raw.split('\n')) {
       const trimmed = line.trim();
@@ -28,7 +29,7 @@ function loadEnv() {
       if (key && !process.env[key]) process.env[key] = val;
     }
   } catch {
-    console.warn('⚠  Could not read .env — using process environment');
+    console.warn('⚠  Could not read .env.local or .env — using process environment');
   }
 }
 
@@ -88,7 +89,7 @@ async function main() {
   loadEnv();
 
   const db = process.env.DATABASE_URL;
-  if (!db) throw new Error('DATABASE_URL not set in .env');
+  if (!db) throw new Error('DATABASE_URL not set in the environment, .env.local, or .env');
 
   console.log('📡 Connecting to TiDB…');
   const conn = await mysql.createConnection({ uri: db, ssl: { minVersion: 'TLSv1.2' } });

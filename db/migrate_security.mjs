@@ -12,7 +12,7 @@
 //   node db/migrate_security.mjs
 
 import mysql from 'mysql2/promise';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -20,14 +20,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function loadDbUrl() {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
-  const raw = readFileSync(join(__dirname, '..', '.env'), 'utf8');
+  const localEnvPath = join(__dirname, '..', '.env.local');
+  const envPath = existsSync(localEnvPath) ? localEnvPath : join(__dirname, '..', '.env');
+  const raw = readFileSync(envPath, 'utf8');
   for (const line of raw.split('\n')) {
     const trimmed = line.trim();
     if (trimmed.startsWith('DATABASE_URL=')) {
       return trimmed.slice('DATABASE_URL='.length).replace(/^["']|["']$/g, '');
     }
   }
-  throw new Error('DATABASE_URL not found in environment or .env');
+  throw new Error('DATABASE_URL not found in environment, .env.local, or .env');
 }
 
 const connection = await mysql.createConnection({
