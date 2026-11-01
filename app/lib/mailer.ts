@@ -4,17 +4,17 @@ import nodemailer, { Transporter } from "nodemailer";
 
 let _transporter: Transporter | null = null;
 
-function getTransporter(): Transporter {
+function getTransporter(): Transporter | null {
   if (_transporter) return _transporter;
 
-  const user = process.env.SMTP_FROM;
-  const pass = process.env.SMTP_PASS;
+  const user = process.env.SMTP_FROM?.trim();
+  // Google displays app passwords in four-character groups. Nodemailer needs
+  // the actual 16-character password, so tolerate copied display spaces.
+  const pass = process.env.SMTP_PASS?.replace(/\s+/g, '');
 
   if (!user || !pass) {
-    throw new Error(
-      "[mailer] SMTP_FROM and SMTP_PASS env variables are required. " +
-      "Add them to .env.local."
-    );
+    console.warn('[mailer] Email skipped: configure SMTP_FROM and SMTP_PASS as Cloudflare runtime bindings.');
+    return null;
   }
 
   _transporter = nodemailer.createTransport({
@@ -78,7 +78,8 @@ export async function sendAppointmentConfirmation(
   data: AppointmentEmailData
 ): Promise<void> {
   const transporter = getTransporter();
-  const ownerEmail = process.env.SMTP_FROM!;
+  if (!transporter) return;
+  const ownerEmail = process.env.SMTP_FROM!.trim();
   const dateDisplay = formatDate(data.preferredDate);
   const timeDisplay = data.preferredTime || "Flexible";
 
@@ -286,7 +287,8 @@ export async function sendInquiryNotification(
   data: InquiryEmailData
 ): Promise<void> {
   const transporter = getTransporter();
-  const ownerEmail = process.env.SMTP_FROM!;
+  if (!transporter) return;
+  const ownerEmail = process.env.SMTP_FROM!.trim();
 
   // ── A. Email to Store Owner / Staff ──
   const ownerHtml = `

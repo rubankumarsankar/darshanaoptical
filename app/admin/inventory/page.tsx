@@ -42,6 +42,9 @@ export default function InventoryPage() {
   const [err, setErr] = useState('');
 
   const submitStockIn = async () => {
+    if (!form.product_id) { setErr('Select a product.'); return; }
+    if (!Number.isInteger(Number(form.quantity)) || Number(form.quantity) <= 0) { setErr('Quantity must be a whole number greater than zero.'); return; }
+    if (form.purchase_price && (!Number.isFinite(Number(form.purchase_price)) || Number(form.purchase_price) < 0)) { setErr('Purchase price cannot be negative.'); return; }
     setSaving(true); setErr('');
     try {
       await adminPost('/api/admin/inventory/stock-in', {

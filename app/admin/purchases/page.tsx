@@ -39,6 +39,11 @@ export default function PurchasesPage() {
       return { ...i, product_name: prod?.name, product_code: prod?.product_code };
     });
     if (!filledItems.length) { setErr('Add at least one product.'); return; }
+    if (filledItems.some((item) => !Number.isInteger(Number(item.quantity)) || Number(item.quantity) <= 0)) { setErr('Every item quantity must be a whole number greater than zero.'); return; }
+    if (filledItems.some((item) => !Number.isFinite(Number(item.purchase_price)) || Number(item.purchase_price) < 0)) { setErr('Purchase prices cannot be negative.'); return; }
+    if (amtPaid && (!Number.isFinite(Number(amtPaid)) || Number(amtPaid) < 0)) { setErr('Amount paid cannot be negative.'); return; }
+    const total = filledItems.reduce((sum, item) => sum + Number(item.quantity) * Number(item.purchase_price), 0);
+    if (Number(amtPaid || 0) > total) { setErr('Amount paid cannot exceed the purchase total.'); return; }
     setSaving(true); setErr('');
     try {
       await adminPost('/api/admin/purchases', {

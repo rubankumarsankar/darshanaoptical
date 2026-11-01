@@ -37,6 +37,9 @@ export default function ExpensesPage() {
   const totalAmount = expenses.reduce((s, e) => s + Number(e.amount), 0);
 
   const handleAdd = async () => {
+    if (!form.expense_date) { setErr('Expense date is required.'); return; }
+    if (!form.description.trim()) { setErr('Description is required.'); return; }
+    if (!Number.isFinite(Number(form.amount)) || Number(form.amount) <= 0) { setErr('Enter an amount greater than zero.'); return; }
     setSaving(true); setErr('');
     try {
       await adminPost('/api/admin/expenses', form);

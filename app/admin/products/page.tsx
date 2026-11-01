@@ -80,6 +80,9 @@ export default function ProductsPage() {
   };
 
   const handleAdd = async () => {
+    if (!form.name.trim()) { setErr('Product name is required.'); return; }
+    if (!form.brand.trim()) { setErr('Brand is required.'); return; }
+    if (!form.category) { setErr('Category is required.'); return; }
     setSaving(true); setErr('');
     try {
       await adminPost('/api/admin/products', form);
@@ -90,6 +93,9 @@ export default function ProductsPage() {
 
   const handleEdit = async () => {
     if (!editing) return;
+    if (!form.name.trim()) { setErr('Product name is required.'); return; }
+    if (!form.brand.trim()) { setErr('Brand is required.'); return; }
+    if (!form.category) { setErr('Category is required.'); return; }
     setSaving(true); setErr('');
     try {
       await adminPut(`/api/admin/products/${editing.id}`, form);

@@ -27,6 +27,8 @@ export default function SuppliersPage() {
   const suppliers = data?.suppliers ?? [];
 
   const handleSave = async () => {
+    if (!form.name.trim()) { setErr('Supplier name is required.'); return; }
+    if (!form.phone.trim()) { setErr('Phone number is required.'); return; }
     setSaving(true); setErr('');
     try {
       if (editing) {
