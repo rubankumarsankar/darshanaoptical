@@ -63,8 +63,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const rows = await query("SELECT COUNT(*) as total FROM appointments");
-    return NextResponse.json({ success: true, count: rows });
+    const [row] = await query("SELECT COUNT(*) as total FROM appointments") as any[];
+    return NextResponse.json({ success: true, count: Number(row?.total ?? 0) });
   } catch (error: unknown) {
     // Never echo the database error back to the caller.
     console.error("[appointments] count failed:", error);

@@ -34,7 +34,7 @@ export default function PaymentsPage() {
     if (!selected || !payAmt || parseFloat(payAmt) <= 0) { setErr('Enter a valid amount.'); return; }
     setSaving(true); setErr('');
     try {
-      await adminPut(`/api/admin/invoices/${selected.id}`, {
+      await adminPut(`/api/admin/invoices/${encodeURIComponent(selected.invoice_number.toLowerCase())}`, {
         add_payment: parseFloat(payAmt), payment_method: payMethod,
       });
       setSelected(null); setPayAmt(''); refetch(); refetchPart();
@@ -86,7 +86,7 @@ export default function PaymentsPage() {
             : invoices.length === 0 ? <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: '#16a34a' }}>All invoices are fully paid! 🎉</td></tr>
             : invoices.map((inv) => (
               <tr key={inv.id} style={{ background: selected?.id === inv.id ? '#fffbeb' : undefined }}>
-                <td><Link href={`/admin/invoices/${inv.id}`} style={{ color: '#fc5a06', fontWeight: 700, textDecoration: 'none' }}>{inv.invoice_number}</Link></td>
+                <td><Link href={`/admin/invoices/${encodeURIComponent(inv.invoice_number.toLowerCase())}`} style={{ color: '#fc5a06', fontWeight: 700, textDecoration: 'none' }}>{inv.invoice_number}</Link></td>
                 <td>
                   <div style={{ fontWeight: 600 }}>{inv.customer_name}</div>
                   <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{inv.customer_phone}</div>

@@ -3,8 +3,11 @@ import { NextRequest } from 'next/server';
 import { proxy, config } from '@/proxy';
 import { createSessionToken, SESSION_COOKIE } from '@/app/lib/admin/session-token';
 
-function request(path: string, opts: { token?: string } = {}) {
-  const req = new NextRequest(new URL(`https://shop.example${path}`));
+function request(path: string, opts: { token?: string; method?: string; headers?: Record<string, string> } = {}) {
+  const req = new NextRequest(new URL(`https://shop.example${path}`), {
+    method: opts.method,
+    headers: opts.headers,
+  });
   if (opts.token) req.cookies.set(SESSION_COOKIE, opts.token);
   return req;
 }
@@ -49,6 +52,12 @@ describe('proxy admin gate', () => {
     expect(location(res)!.pathname).toBe('/admin/dashboard');
   });
 
+  it('sends a signed-in user from login to a validated deep link', () => {
+    const res = proxy(request('/admin/login?next=%2Fadmin%2Fproducts%3Fcat%3Dframe', { token: validToken() }));
+    expect(location(res)!.pathname).toBe('/admin/products');
+    expect(location(res)!.search).toBe('?cat=frame');
+  });
+
   it.each([
     ['a forged token', 'abc.def'],
     ['an empty cookie', ''],
@@ -74,7 +83,33 @@ describe('proxy admin gate', () => {
 });
 
 describe('proxy matcher', () => {
-  it('scopes to /admin only, so API routes can answer 401 as JSON', () => {
-    expect(config.matcher).toEqual(['/admin/:path*']);
+  it('covers admin pages and APIs', () => {
+    expect(config.matcher).toEqual(['/admin/:path*', '/api/admin/:path*']);
+  });
+});
+
+describe('admin API cross-site protection', () => {
+  it('blocks cross-site mutations', async () => {
+    const res = proxy(request('/api/admin/customers', {
+      method: 'POST',
+      headers: { origin: 'https://evil.example', 'sec-fetch-site': 'cross-site' },
+    }));
+    expect(res.status).toBe(403);
+    await expect(res.json()).resolves.toEqual({ error: 'Cross-site request blocked.' });
+  });
+
+  it('allows same-origin mutations to reach route authorization', () => {
+    const res = proxy(request('/api/admin/customers', {
+      method: 'POST',
+      headers: { origin: 'https://shop.example', 'sec-fetch-site': 'same-origin' },
+    }));
+    expect(res.status).toBe(200);
+  });
+
+  it('allows safe cross-site reads to reach route authorization', () => {
+    const res = proxy(request('/api/admin/customers', {
+      headers: { origin: 'https://evil.example', 'sec-fetch-site': 'cross-site' },
+    }));
+    expect(res.status).toBe(200);
   });
 });

@@ -57,9 +57,10 @@ export async function POST(request: Request) {
     notes, has_order, expected_date, frame_product, lens_product,
   } = b;
 
-  // Calculate totals
-  const subtotal = items.reduce((s: number, i: any) => s + (i.unit_price * (i.quantity ?? i.qty ?? 1) - (i.discount ?? 0)), 0);
-  const discount_amount = b.discount_amount !== undefined ? b.discount_amount : subtotal * ((discount_percent ?? 0) / 100);
+  const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+  // Persist the same two-decimal values used for item and invoice totals.
+  const subtotal = money(items.reduce((s: number, i: any) => s + money(i.unit_price * i.quantity - (i.discount ?? 0)), 0));
+  const discount_amount = money(b.discount_amount !== undefined ? b.discount_amount : subtotal * ((discount_percent ?? 0) / 100));
 
   // A discount must never exceed the bill, or the invoice total goes negative.
   if (discount_amount < 0 || discount_amount > subtotal) {
@@ -80,10 +81,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const total = Math.round((subtotal - discount_amount) * 100) / 100;
+  const total = money(subtotal - discount_amount);
   const initialPaid = amount_paid ?? b.advance_paid ?? 0;
-  const paid = Math.min(initialPaid, total);
-  const balance = Math.round((total - paid) * 100) / 100;
+  if (initialPaid > total) {
+    return NextResponse.json(
+      { error: `Amount paid cannot exceed the invoice total of ₹${total.toFixed(2)}.` },
+      { status: 400 }
+    );
+  }
+  const paid = money(initialPaid);
+  const balance = money(total - paid);
   const status =
     paid >= total ? 'paid' :
     paid > 0      ? 'partially_paid' : 'pending';
@@ -113,7 +120,7 @@ export async function POST(request: Request) {
       // Insert invoice items + decrement stock
       for (const item of items) {
         const itemId = randomUUID();
-        const itemTotal = item.unit_price * item.quantity - (item.discount ?? 0);
+        const itemTotal = money(item.unit_price * item.quantity - (item.discount ?? 0));
         await tx.query(
           `INSERT INTO invoice_items (id,invoice_id,product_id,product_name,product_code,category,quantity,unit_price,discount,total)
            VALUES (?,?,?,?,?,?,?,?,?,?)`,

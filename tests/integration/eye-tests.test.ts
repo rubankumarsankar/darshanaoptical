@@ -36,7 +36,12 @@ vi.mock('@/app/lib/db', () => ({
     if (/FROM eye_tests WHERE 1=1/.test(sql)) return state.eyeTests;
     return [];
   }),
-  withTransaction: vi.fn(),
+  withTransaction: vi.fn(async (fn: any) => fn({
+    query: async (sql: string, params: unknown[] = []) => {
+      state.calls.push({ sql, params });
+      return [];
+    },
+  })),
   getDbPool: vi.fn(),
 }));
 
@@ -75,6 +80,17 @@ const detailRequest = (id = RECORD_ID) =>
     new Request(`http://localhost:3000/api/admin/eye-tests/${id}`),
     { params: Promise.resolve({ id }) }
   );
+
+const postRequest = (body: unknown) => collection.POST(new Request('http://localhost:3000/api/admin/eye-tests', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+}));
+
+const putRequest = (id: string, body: unknown) => detail.PUT(
+  new Request(`http://localhost:3000/api/admin/eye-tests/${id}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
+  { params: Promise.resolve({ id }) },
+);
 
 beforeEach(() => {
   state.calls = [];
@@ -136,5 +152,28 @@ describe('eye-test request behavior', () => {
     const response = await collection.GET(listRequest());
     expect(response.status).toBe(200);
     expect(new URL(listRequest().url).pathname).toBe('/api/admin/eye-tests');
+  });
+
+  it('returns 400 for missing required customer fields instead of a database 500', async () => {
+    signInAs('admin');
+    const response = await postRequest({ customer_id: 'customer-1', test_date: '2026-11-01' });
+    expect(response.status).toBe(400);
+    expect(state.calls.some(({ sql }) => /INSERT INTO eye_tests/.test(sql))).toBe(false);
+  });
+
+  it('rejects optical values longer than the database column', async () => {
+    signInAs('admin');
+    const response = await postRequest({
+      customer_id: 'customer-1', customer_name: 'Ravi Kumar', customer_phone: '9000000000',
+      test_date: '2026-11-01', re_sph: '12345678901',
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('returns 404 and writes no audit entry when updating an unknown test', async () => {
+    signInAs('admin');
+    const response = await putRequest('missing-eye-test', { notes: 'changed' });
+    expect(response.status).toBe(404);
+    expect(state.calls.some(({ sql }) => /INSERT INTO audit_logs/.test(sql))).toBe(false);
   });
 });

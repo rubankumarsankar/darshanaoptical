@@ -78,6 +78,16 @@ test('admin loads every main operational screen without a server failure', async
   expect(serverFailures).toEqual([]);
 });
 
+test('login returns the admin to a protected deep link', async ({ page }) => {
+  await page.context().clearCookies();
+  await page.goto('/admin/products?cat=frame');
+  await expect(page).toHaveURL(/\/admin\/login\?next=/);
+  await page.locator('#admin-email').fill(credentials.admin.email);
+  await page.locator('#admin-password').fill(credentials.admin.password);
+  await page.locator('#admin-login-submit').click();
+  await expect(page).toHaveURL(/\/admin\/products\?cat=frame$/);
+});
+
 for (const viewport of [
   { name: 'mobile', width: 390, height: 844 },
   { name: 'tablet', width: 820, height: 1180 },

@@ -15,7 +15,8 @@
     "db:migrate": "node db/migrate.mjs",
     "db:reset": "node db/reset.mjs --confirm-reset=darshana_optical",
     "db:seed": "node db/seed.mjs",
-    "db:migrate:security": "node db/migrate_security.mjs"
+    "db:migrate:security": "node db/migrate_security.mjs",
+    "db:migrate:email-settings": "node db/migrate_email_settings.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",

@@ -70,13 +70,14 @@ export async function verifyPassword(password: string, stored: string | null | u
     if (!Number.isInteger(n) || !Number.isInteger(r) || !Number.isInteger(p)) {
       return { valid: false, needsRehash: false };
     }
-    let expected: Buffer;
-    try {
-      expected = Buffer.from(keyB64, 'base64');
-    } catch {
+    const validBase64 = (value: string) => /^[A-Za-z0-9+/]+={0,2}$/.test(value) && value.length % 4 === 0;
+    if (!validBase64(saltB64) || !validBase64(keyB64)) {
       return { valid: false, needsRehash: false };
     }
-    const actual = await scrypt(password.normalize('NFKC'), Buffer.from(saltB64, 'base64'), expected.length, {
+    const salt = Buffer.from(saltB64, 'base64');
+    const expected = Buffer.from(keyB64, 'base64');
+    if (salt.length !== 16 || expected.length !== KEYLEN) return { valid: false, needsRehash: false };
+    const actual = await scrypt(password.normalize('NFKC'), salt, expected.length, {
       N: n,
       r,
       p,

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withTransaction } from '@/app/lib/db';
 import { requireRole, requireSession } from '@/app/lib/admin/session';
 import { randomUUID } from 'crypto';
+import { productCreateSchema, validate } from '@/app/lib/admin/validation';
 
 export async function GET(request: Request) {
   // Any signed-in user may browse the catalogue — the POS needs it.
@@ -30,36 +31,32 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
-  const b = await request.json();
-  if (!b.name || !b.brand || !b.category) {
-    return NextResponse.json({ error: 'name, brand and category are required.' }, { status: 400 });
-  }
-  let cat = (b.category || 'frame').toLowerCase();
-  if (cat === 'frames') cat = 'frame';
-  if (cat === 'lenses') cat = 'lens';
-  if (cat === 'sunglasses') cat = 'sunglass';
-  if (cat === 'accessories') cat = 'accessory';
-  if (cat === 'services') cat = 'service';
+  const parsed = validate(productCreateSchema, await request.json());
+  if (parsed.error) return parsed.error;
+  const b = parsed.data;
+  const cat = b.category;
 
   const id = randomUUID();
   const code = b.product_code || `${cat.toUpperCase().slice(0,2)}-${Date.now().toString().slice(-6)}`;
-  const purchase_price = b.purchase_price ?? b.cost_price ?? 0;
-  const selling_price = b.selling_price ?? 0;
-  const stock = b.stock ?? b.stock_qty ?? 0;
-  const low_stock_threshold = b.low_stock_threshold ?? b.min_stock ?? 5;
+  const purchase_price = b.purchase_price;
+  const selling_price = b.selling_price;
+  const stock = b.stock;
+  const low_stock_threshold = b.low_stock_threshold;
 
-  await query(
-    `INSERT INTO products (id,product_code,name,brand,model,category,color,size,material,
+  await withTransaction(async (tx) => {
+    await tx.query(
+      `INSERT INTO products (id,product_code,name,brand,model,category,color,size,material,
        purchase_price,selling_price,mrp,stock,low_stock_threshold,image_url,description,status)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'active')`,
-    [id, code, b.name, b.brand, b.model || b.model_number || null, cat, b.color || null, b.size || null,
-     b.material || null, purchase_price, selling_price, b.mrp ?? selling_price,
-     stock, low_stock_threshold, b.image_url || null, b.description || null]
-  );
-  await query(
-    `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
-    [randomUUID(), 'CREATE', 'product', id, `Added product: ${b.name}`, session.name, session.role]
-  );
+      [id, code, b.name, b.brand, b.model || null, cat, b.color || null, b.size || null,
+       b.material || null, purchase_price, selling_price, b.mrp ?? selling_price,
+       stock, low_stock_threshold, b.image_url || null, b.description || null]
+    );
+    await tx.query(
+      `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
+      [randomUUID(), 'CREATE', 'product', id, `Added product: ${b.name}`, session.name, session.role]
+    );
+  });
   const [row] = await query('SELECT * FROM products WHERE id = ?', [id]) as any[];
   return NextResponse.json({ product: row }, { status: 201 });
 }

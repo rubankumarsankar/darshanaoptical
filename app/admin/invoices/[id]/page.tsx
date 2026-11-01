@@ -1,14 +1,14 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
-import { adminPut } from '@/app/lib/admin/api';
+import { adminPost, adminPut } from '@/app/lib/admin/api';
 import AdminLoader from '../../components/AdminLoader';
 import TablePagination from '../../components/TablePagination';
-import { ArrowLeft, Printer, Plus, CheckCircle, X, FileText, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Printer, Plus, CheckCircle, X, FileText, ClipboardList, Mail } from 'lucide-react';
 
 function fmt(n: number) { return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtDate(d: string) { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
@@ -49,13 +49,22 @@ function PrescriptionTable({ test, compact = false }: { test: any; compact?: boo
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data, loading, error, refetch } = useAdminFetch<{ invoice: any; items: any[]; payments: any[]; settings: any; eyeTest: any | null }>(`/api/admin/invoices/${id}`);
+  const { data, loading, error, refetch } = useAdminFetch<{ invoice: any; items: any[]; payments: any[]; settings: any; eyeTest: any | null; customerEmail: string | null }>(`/api/admin/invoices/${id}`);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payAmt, setPayAmt] = useState('');
   const [payMethod, setPayMethod] = useState<PaymentMethod>('cash');
   const [payNotes, setPayNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [emailing, setEmailing] = useState(false);
+  const [emailResult, setEmailResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [printMode, setPrintMode] = useState<'invoice' | 'prescription' | 'jobcard' | null>(null);
+
+  useEffect(() => {
+    const invoiceNumber = data?.invoice?.invoice_number?.toLowerCase();
+    if (invoiceNumber && id !== invoiceNumber) {
+      router.replace(`/admin/invoices/${encodeURIComponent(invoiceNumber)}`);
+    }
+  }, [data?.invoice?.invoice_number, id, router]);
 
   if (error) {
     router.replace('/admin/invoices');
@@ -63,7 +72,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   }
   if (loading || !data) return <AdminLoader label="Loading invoice" />;
 
-  const { invoice, items, payments, settings, eyeTest } = data;
+  const { invoice, items, payments, settings, eyeTest, customerEmail } = data;
 
   const printDocument = (mode: 'invoice' | 'prescription' | 'jobcard') => {
     setPrintMode(mode);
@@ -78,7 +87,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     if (!amount || amount <= 0) return;
     setSaving(true);
     try {
-      await adminPut(`/api/admin/invoices/${id}`, {
+      await adminPut(`/api/admin/invoices/${encodeURIComponent(invoice.invoice_number.toLowerCase())}`, {
         add_payment: amount,
         payment_method: payMethod,
         payment_notes: payNotes || undefined,
@@ -92,6 +101,21 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
+  const handleEmailBill = async () => {
+    setEmailing(true);
+    setEmailResult(null);
+    try {
+      const result = await adminPost<{ message: string }>(
+        `/api/admin/invoices/${encodeURIComponent(invoice.invoice_number.toLowerCase())}/email`, {}
+      );
+      setEmailResult({ type: 'success', message: result.message });
+    } catch (emailError: any) {
+      setEmailResult({ type: 'error', message: emailError.message ?? 'Failed to email bill.' });
+    } finally {
+      setEmailing(false);
+    }
+  };
+
   return (
     <div className="adm-print-page" data-print-mode={printMode ?? undefined} style={{ maxWidth: 820 }}>
       <div className="adm-page-header adm-no-print">
@@ -102,6 +126,8 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => printDocument('invoice')} className="adm-btn adm-btn-secondary adm-btn-sm"><Printer width={13} height={13} /> Print Bill</button>
+          <a href={`/api/admin/invoices/${encodeURIComponent(invoice.invoice_number.toLowerCase())}/email`} target="_blank" rel="noreferrer" className="adm-btn adm-btn-ghost adm-btn-sm"><Mail width={13} height={13} /> Preview Email</a>
+          <button onClick={handleEmailBill} disabled={emailing || !customerEmail} title={customerEmail ? `Send to ${customerEmail}` : 'Add an email to the customer profile first'} className="adm-btn adm-btn-secondary adm-btn-sm"><Mail width={13} height={13} /> {emailing ? 'Sending...' : customerEmail ? 'Email Bill' : 'No Customer Email'}</button>
           <button onClick={() => printDocument('jobcard')} className="adm-btn adm-btn-secondary adm-btn-sm"><ClipboardList width={13} height={13} /> Job Card</button>
           {eyeTest && <button onClick={() => printDocument('prescription')} className="adm-btn adm-btn-secondary adm-btn-sm"><FileText width={13} height={13} /> Prescription</button>}
           {Number(invoice.balance) > 0 && invoice.status !== 'cancelled' && (
@@ -109,6 +135,8 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           )}
         </div>
       </div>
+
+      {emailResult && <div className="adm-no-print" style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 8, background: emailResult.type === 'success' ? '#f0fdf4' : '#fef2f2', color: emailResult.type === 'success' ? '#15803d' : '#dc2626', fontSize: 13 }}>{emailResult.message}</div>}
 
       {/* Status Row */}
       <div className="adm-no-print" style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>

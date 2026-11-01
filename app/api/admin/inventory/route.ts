@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
+import { shopDate } from '@/app/lib/admin/date';
 
 // GET /api/admin/inventory?from=YYYY-MM-DD&to=YYYY-MM-DD
 //
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = shopDate();
   const from = searchParams.get('from') || `${today.slice(0, 7)}-01`;
   const to = searchParams.get('to') || today;
 
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
     query("SELECT * FROM products WHERE status='active' ORDER BY category, brand, name LIMIT 1000"),
     query(
       `SELECT * FROM stock_movements
-        WHERE DATE(created_at) BETWEEN ? AND ?
+        WHERE DATE(CONVERT_TZ(created_at,'+00:00','+05:30')) BETWEEN ? AND ?
         ORDER BY created_at DESC LIMIT 200`,
       [from, to]
     ),
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
               COALESCE(SUM(CASE WHEN type='return'   THEN quantity ELSE 0 END), 0)  AS returned,
               COALESCE(SUM(CASE WHEN type IN ('adjustment','damage') THEN quantity ELSE 0 END), 0) AS adjusted
          FROM stock_movements
-        WHERE DATE(created_at) BETWEEN ? AND ?
+        WHERE DATE(CONVERT_TZ(created_at,'+00:00','+05:30')) BETWEEN ? AND ?
         GROUP BY product_id`,
       [from, to]
     ),

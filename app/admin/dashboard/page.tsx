@@ -51,7 +51,7 @@ export default function DashboardPage() {
 
     <div className="adm-dash-grid">
       <article className="adm-dash-panel"><PanelHeader title="Orders in progress" count={data.pending_orders?.length || 0} href="/admin/orders" link="View orders" /><div className="adm-dash-list">
-        {data.pending_orders?.slice(0, 6).map((item: any) => <Link href={`/admin/invoices/${item.id}`} className="adm-dash-row" key={item.id}><span className="adm-row-icon"><Clock3 size={16} /></span><span className="adm-row-main"><strong>{item.customer_name}</strong><small>{item.invoice_number}</small></span><Status value={item.order_status} /></Link>)}
+        {data.pending_orders?.slice(0, 6).map((item: any) => <Link href={`/admin/invoices/${encodeURIComponent(item.invoice_number.toLowerCase())}`} className="adm-dash-row" key={item.id}><span className="adm-row-icon"><Clock3 size={16} /></span><span className="adm-row-main"><strong>{item.customer_name}</strong><small>{item.invoice_number}</small></span><Status value={item.order_status} /></Link>)}
         {!data.pending_orders?.length && <div className="adm-empty"><Check size={18} /><strong>Orders are up to date</strong><span>Nothing is waiting for processing.</span></div>}
       </div></article>
 
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     </div>
 
     <article className="adm-dash-panel adm-payments-panel"><PanelHeader title="Outstanding payments" count={data.pending_payments?.length || 0} href="/admin/payments" link="View payments" />
-      {data.pending_payments?.length ? <><div className="adm-table-wrap adm-dash-table"><table className="adm-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Received</th><th>Due</th><th /></tr></thead><tbody>{data.pending_payments.slice(0, 6).map((item: any) => <tr key={item.id}><td className="adm-code">{item.invoice_number}</td><td><strong>{item.customer_name}</strong></td><td>{money(item.total)}</td><td>{money(item.paid)}</td><td className="adm-due">{money(item.balance)}</td><td><Link href={`/admin/invoices/${item.id}`} className="adm-row-action">Collect <ArrowUpRight size={13} /></Link></td></tr>)}</tbody></table></div><TablePagination /></> : <div className="adm-empty adm-empty-wide"><Check size={18} /><strong>No outstanding payments</strong><span>Every invoice is settled.</span></div>}
+      {data.pending_payments?.length ? <><div className="adm-table-wrap adm-dash-table"><table className="adm-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Received</th><th>Due</th><th /></tr></thead><tbody>{data.pending_payments.slice(0, 6).map((item: any) => <tr key={item.id}><td className="adm-code">{item.invoice_number}</td><td><strong>{item.customer_name}</strong></td><td>{money(item.total)}</td><td>{money(item.paid)}</td><td className="adm-due">{money(item.balance)}</td><td><Link href={`/admin/invoices/${encodeURIComponent(item.invoice_number.toLowerCase())}`} className="adm-row-action">Collect <ArrowUpRight size={13} /></Link></td></tr>)}</tbody></table></div><TablePagination /></> : <div className="adm-empty adm-empty-wide"><Check size={18} /><strong>No outstanding payments</strong><span>Every invoice is settled.</span></div>}
     </article>
   </section>;
 }

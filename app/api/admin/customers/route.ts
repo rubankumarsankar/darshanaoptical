@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { query, withTransaction } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { nextSequence } from '@/app/lib/admin/sequence';
+import { customerCreateSchema, validate } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
 // GET /api/admin/customers
@@ -33,12 +34,9 @@ export async function POST(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
-  const body = await request.json();
-  const { name, phone, email, gender, dob, address, notes } = body;
-
-  if (!name || !phone) {
-    return NextResponse.json({ error: 'Name and phone are required.' }, { status: 400 });
-  }
+  const parsed = validate(customerCreateSchema, await request.json());
+  if (parsed.error) return parsed.error;
+  const { name, phone, email, gender, dob, address, notes } = parsed.data;
 
   // Generate customer_id: DO-YYYY-NNN.
   // customer_id is UNIQUE, so the old COUNT(*)+1 approach meant two staff

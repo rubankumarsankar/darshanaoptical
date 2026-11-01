@@ -67,7 +67,7 @@ export default function InvoicesPage() {
               <tr><td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: 32 }}>No invoices found.</td></tr>
             ) : invoices.map((inv) => (
               <tr key={inv.id}>
-                <td><Link href={`/admin/invoices/${inv.id}`} style={{ color: '#fc5a06', fontWeight: 700, textDecoration: 'none' }}>{inv.invoice_number}</Link></td>
+                <td><Link href={`/admin/invoices/${encodeURIComponent(inv.invoice_number.toLowerCase())}`} style={{ color: '#fc5a06', fontWeight: 700, textDecoration: 'none' }}>{inv.invoice_number}</Link></td>
                 <td>
                   <div style={{ fontWeight: 600 }}>{inv.customer_name}</div>
                   <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{inv.customer_phone}</div>
@@ -78,7 +78,7 @@ export default function InvoicesPage() {
                 <td style={{ color: Number(inv.balance) > 0 ? '#d97706' : '#94a3b8', fontWeight: Number(inv.balance) > 0 ? 700 : 400 }}>{Number(inv.balance) > 0 ? fmt(inv.balance) : '—'}</td>
                 <td><span className={`adm-badge ${STATUS_COLORS[inv.status] ?? 'adm-badge-gray'}`}>{STATUS_LABELS[inv.status] ?? inv.status}</span></td>
                 <td style={{ fontSize: 12.5, color: '#94a3b8' }}>{new Date(inv.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                <td><Link href={`/admin/invoices/${inv.id}`} className="adm-btn adm-btn-ghost adm-btn-sm">View</Link></td>
+                <td><Link href={`/admin/invoices/${encodeURIComponent(inv.invoice_number.toLowerCase())}`} className="adm-btn adm-btn-ghost adm-btn-sm">View</Link></td>
               </tr>
             ))}
           </tbody>

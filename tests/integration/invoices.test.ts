@@ -56,7 +56,7 @@ const post = (body: unknown) =>
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   }));
 
-const put = (body: unknown, id = 'inv-1') =>
+const put = (body: unknown, id = '1e47ac31-6fcb-4ca9-99cd-9477f16cab8f') =>
   invoiceById.PUT(
     new Request(`http://localhost/api/admin/invoices/${id}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
@@ -158,6 +158,15 @@ describe('discount arithmetic', () => {
   });
 });
 
+describe('initial payment integrity', () => {
+  it('rejects an overpayment rather than silently discarding the excess', async () => {
+    const res = await post(sale({ amount_paid: 1200 }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/cannot exceed the invoice total/i);
+    expect(state.txLog).toHaveLength(0);
+  });
+});
+
 describe('stock protection', () => {
   it('refuses to sell more than is in stock', async () => {
     state.products.set('p1', { stock: 2, name: 'Aviator' });
@@ -183,6 +192,10 @@ describe('payments on an existing invoice', () => {
 
   it('accepts a payment up to the outstanding balance', async () => {
     expect((await put({ add_payment: 600 })).status).toBe(200);
+  });
+
+  it('accepts the readable invoice number as the route reference', async () => {
+    expect((await put({ add_payment: 600 }, 'DO-2026-00100')).status).toBe(200);
   });
 
   it('rejects an overpayment instead of silently clamping it', async () => {

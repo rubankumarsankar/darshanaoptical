@@ -154,4 +154,11 @@ describe('clientIp', () => {
   it('caps the length so a huge header cannot overflow the key column', () => {
     expect(clientIp(req({ 'x-forwarded-for': 'a'.repeat(500) })).length).toBeLessThanOrEqual(100);
   });
+
+  it('ignores forwarded headers unless the proxy is explicitly trusted', () => {
+    const previous = process.env.TRUST_PROXY_HEADERS;
+    delete process.env.TRUST_PROXY_HEADERS;
+    expect(clientIp(req({ 'x-forwarded-for': '203.0.113.1' }))).toBe('unknown');
+    process.env.TRUST_PROXY_HEADERS = previous;
+  });
 });

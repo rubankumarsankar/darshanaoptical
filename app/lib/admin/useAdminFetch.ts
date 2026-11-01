@@ -22,6 +22,9 @@ export function useAdminFetch<T>(
 ) {
   const [state, setState] = useState<FetchState<T>>({ data: null, loading: !!url, error: null });
   const abortRef = useRef<AbortController | null>(null);
+  const abortTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestKeyRef = useRef<string | null>(null);
+  const inFlightRef = useRef<Promise<void> | null>(null);
 
   // Callers pass `params` as a fresh object literal on every render, so the
   // dependency has to be its serialised value. Extracted to a variable because
@@ -31,33 +34,59 @@ export function useAdminFetch<T>(
 
   const fetchData = useCallback(async () => {
     if (!url || skip) return;
-    if (abortRef.current) abortRef.current.abort();
+    const query = paramsKey ? new URLSearchParams(JSON.parse(paramsKey)).toString() : '';
+    const fullUrl = query ? `${url}?${query}` : url;
+
+    // Reuse the request when Strict Mode immediately replays this effect.
+    if (requestKeyRef.current === fullUrl && inFlightRef.current) {
+      return inFlightRef.current;
+    }
+
+    abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    requestKeyRef.current = fullUrl;
 
-    setState((s) => ({ ...s, loading: true, error: null }));
-    try {
-      const fullUrl = paramsKey ? `${url}?${new URLSearchParams(JSON.parse(paramsKey)).toString()}` : url;
-      const res = await fetch(fullUrl, { signal: ctrl.signal });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        if (res.status === 401) {
-          await handleAdminUnauthorized();
-          return;
+    const request = (async () => {
+      setState((s) => ({ ...s, loading: true, error: null }));
+      try {
+        const res = await fetch(fullUrl, { signal: ctrl.signal });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          if (res.status === 401) {
+            await handleAdminUnauthorized();
+            return;
+          }
+          throw new Error(j.error ?? `HTTP ${res.status}`);
         }
-        throw new Error(j.error ?? `HTTP ${res.status}`);
+        const json = await res.json();
+        setState({ data: json as T, loading: false, error: null });
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        setState({ data: null, loading: false, error: err.message ?? 'Failed to load data.' });
+      } finally {
+        if (abortRef.current === ctrl) {
+          inFlightRef.current = null;
+          requestKeyRef.current = null;
+        }
       }
-      const json = await res.json();
-      setState({ data: json as T, loading: false, error: null });
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      setState({ data: null, loading: false, error: err.message ?? 'Failed to load data.' });
-    }
+    })();
+
+    inFlightRef.current = request;
+    return request;
   }, [url, skip, paramsKey]);
 
   useEffect(() => {
+    if (abortTimerRef.current) {
+      clearTimeout(abortTimerRef.current);
+      abortTimerRef.current = null;
+    }
     fetchData();
-    return () => abortRef.current?.abort();
+    return () => {
+      // Delay by one task so Strict Mode's immediate effect replay can reuse
+      // the same request. A real unmount still aborts promptly.
+      abortTimerRef.current = setTimeout(() => abortRef.current?.abort(), 0);
+    };
   }, [fetchData]);
 
   return { ...state, refetch: fetchData };

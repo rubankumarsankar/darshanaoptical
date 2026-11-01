@@ -54,7 +54,8 @@ export async function POST(request: Request) {
   const id = randomUUID();
   let purchase_number = '';
 
-  await withTransaction(async (tx) => {
+  try {
+    await withTransaction(async (tx) => {
     // Numbered inside the transaction so concurrent entries cannot collide.
     purchase_number = `PO-${year}-${String(await nextSequence(tx, 'purchase')).padStart(3, '0')}`;
 
@@ -66,9 +67,14 @@ export async function POST(request: Request) {
     );
 
     for (const item of b.items) {
-      const productId = item.product_id || randomUUID();
-      const productName = item.product_name || item.description || 'Optical Goods';
-      const productCode = item.product_code || 'PO-ITEM';
+      const [product] = await tx.query(
+        'SELECT id, name, product_code FROM products WHERE id = ? FOR UPDATE',
+        [item.product_id],
+      ) as any[];
+      if (!product) throw new Error(`Product not found: ${item.product_id}`);
+      const productId = product.id;
+      const productName = product.name;
+      const productCode = product.product_code;
       const qty = item.quantity;
       const price = item.purchase_price ?? item.unit_cost ?? 0;
       const itemTotal = price * qty;
@@ -79,17 +85,14 @@ export async function POST(request: Request) {
         [randomUUID(), id, productId, productName, productCode, qty, price, itemTotal]
       );
 
-      if (item.product_id) {
-        // Increase stock
-        await tx.query('UPDATE products SET stock = stock + ?, purchase_price = ?, updated_at = NOW() WHERE id = ?',
-          [qty, price, item.product_id]);
-        await tx.query(
-          `INSERT INTO stock_movements (id,product_id,product_name,product_code,type,quantity,reason,reference,created_by)
+      await tx.query('UPDATE products SET stock = stock + ?, purchase_price = ?, updated_at = NOW() WHERE id = ?',
+        [qty, price, productId]);
+      await tx.query(
+        `INSERT INTO stock_movements (id,product_id,product_name,product_code,type,quantity,reason,reference,created_by)
            VALUES (?,?,?,?,'purchase',?,?,?,?)`,
-          [randomUUID(), item.product_id, productName, productCode,
+        [randomUUID(), productId, productName, productCode,
            qty, `Purchased via ${purchase_number}`, purchase_number, session.name]
-        );
-      }
+      );
     }
 
     // Update supplier balance
@@ -101,7 +104,10 @@ export async function POST(request: Request) {
       `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
       [randomUUID(),'CREATE','purchase',id,`Purchase ${purchase_number} from ${b.supplier_name} — ₹${total}`,session.name,session.role]
     );
-  });
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message ?? 'Failed to create purchase.' }, { status: 400 });
+  }
   const [row] = await query('SELECT * FROM purchases WHERE id = ?', [id]) as any[];
   return NextResponse.json({ purchase: row, purchase_number }, { status: 201 });
 }

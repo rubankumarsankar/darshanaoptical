@@ -91,7 +91,7 @@ export default function CustomersPage() {
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <Link href={`/admin/customers/${c.id}`} className="adm-btn adm-btn-ghost adm-btn-sm" title="View profile"><User width={13} height={13} /></Link>
+                    <Link href={`/admin/customers/${encodeURIComponent(c.customer_id.toLowerCase())}`} className="adm-btn adm-btn-ghost adm-btn-sm" title="View profile"><User width={13} height={13} /></Link>
                     <Link href={`/admin/eye-tests/new?customerId=${c.id}&customerName=${encodeURIComponent(c.name)}`} className="adm-btn adm-btn-ghost adm-btn-sm" title="New eye test"><Eye width={13} height={13} /></Link>
                     <Link href={`/admin/pos?customerId=${c.id}`} className="adm-btn adm-btn-ghost adm-btn-sm" title="New sale"><ShoppingCart width={13} height={13} /></Link>
                     <a href={`tel:${c.phone}`} className="adm-btn adm-btn-ghost adm-btn-sm" title="Call"><Phone width={13} height={13} /></a>

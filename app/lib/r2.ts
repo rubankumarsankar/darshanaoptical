@@ -46,10 +46,11 @@ export async function uploadToR2(key: string, body: Buffer, contentType: string)
   return `${getPublicUrlBase()}/${key}`;
 }
 
-/** Deletes an object from R2 given its public URL (no-op if the URL isn't an R2 object). */
-export async function deleteFromR2ByUrl(url: string): Promise<void> {
+/** Deletes an object from R2 given its public URL. Returns false for unmanaged URLs. */
+export async function deleteFromR2ByUrl(url: string): Promise<boolean> {
   const base = getPublicUrlBase();
-  if (!url.startsWith(`${base}/`)) return;
+  if (!url.startsWith(`${base}/`)) return false;
   const key = url.slice(base.length + 1);
   await getClient().send(new DeleteObjectCommand({ Bucket: getBucket(), Key: key }));
+  return true;
 }

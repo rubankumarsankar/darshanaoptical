@@ -19,13 +19,19 @@ export interface LockStatus {
 }
 
 export function clientIp(request: Request): string {
-  const fwd = request.headers.get('x-forwarded-for');
-  if (fwd) return fwd.split(',')[0]!.trim().slice(0, 100);
-  return (
-    request.headers.get('x-real-ip')?.slice(0, 100) ??
-    request.headers.get('cf-connecting-ip')?.slice(0, 100) ??
-    'unknown'
-  );
+  // Cloudflare removes a visitor-supplied value and supplies this at the edge.
+  const cloudflare = request.headers.get('cf-connecting-ip');
+  if (cloudflare) return cloudflare.trim().slice(0, 100);
+
+  // Forwarded headers are trustworthy only when the deployment explicitly
+  // confirms that the application is unreachable except through its proxy.
+  if (process.env.TRUST_PROXY_HEADERS === 'true') {
+    const fwd = request.headers.get('x-forwarded-for');
+    if (fwd) return fwd.split(',')[0]!.trim().slice(0, 100);
+    const real = request.headers.get('x-real-ip');
+    if (real) return real.trim().slice(0, 100);
+  }
+  return 'unknown';
 }
 
 async function statusFor(identifier: string): Promise<LockStatus> {

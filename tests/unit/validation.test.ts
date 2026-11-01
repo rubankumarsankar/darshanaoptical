@@ -4,12 +4,17 @@ import {
   staffCreateSchema,
   staffUpdateSchema,
   customerUpdateSchema,
+  customerCreateSchema,
+  customerPathRefSchema,
+  productCreateSchema,
   productUpdateSchema,
+  expenseCreateSchema,
   settingsUpdateSchema,
   supplierCreateSchema,
   supplierUpdateSchema,
   invoiceCreateSchema,
   invoiceUpdateSchema,
+  invoicePathRefSchema,
   purchaseCreateSchema,
 } from '@/app/lib/admin/validation';
 
@@ -95,7 +100,7 @@ describe('customerUpdateSchema', () => {
   });
 
   it('accepts empty strings from cleared form inputs', () => {
-    ok(customerUpdateSchema, { name: 'Ravi', phone: '900', email: '', gender: '', dob: '', address: '', notes: '' });
+    ok(customerUpdateSchema, { name: 'Ravi', phone: '9000000000', email: '', gender: '', dob: '', address: '', notes: '' });
   });
 
   it('strips identity columns so they cannot be rewritten', () => {
@@ -108,6 +113,26 @@ describe('customerUpdateSchema', () => {
   it('rejects an unknown gender', () => rejects(customerUpdateSchema, { gender: 'unknown' }));
   it('rejects a malformed email', () => rejects(customerUpdateSchema, { email: 'not-an-email' }));
   it('rejects an empty name', () => rejects(customerUpdateSchema, { name: '' }));
+  it.each(['1', '123', '1,2,3', 'https://example.com', 'Ravi123'])('rejects invalid customer name %j', (name) =>
+    rejects(customerUpdateSchema, { name })
+  );
+  it.each(['1', '1234567890', '9000', '900000000a', 'https://example.com'])('rejects invalid phone %j', (phone) =>
+    rejects(customerUpdateSchema, { phone })
+  );
+});
+
+describe('customerCreateSchema', () => {
+  it('normalises a valid customer', () => {
+    const data = ok<any>(customerCreateSchema, { name: '  Ravi Kumar  ', phone: ' 9876543210 ' });
+    expect(data).toMatchObject({ name: 'Ravi Kumar', phone: '9876543210' });
+  });
+  it('requires both name and phone', () => rejects(customerCreateSchema, { name: 'Ravi Kumar' }));
+});
+
+describe('customerPathRefSchema', () => {
+  it('accepts a UUID', () => ok(customerPathRefSchema, '008e69f9-eebe-45bc-8366-8ba23f9e6cf8'));
+  it('accepts and normalises a customer number', () => expect(ok(customerPathRefSchema, 'do-2026-001')).toBe('DO-2026-001'));
+  it.each(['1', '123', 'Ravi', 'https://example.com'])('rejects invalid path reference %j', (id) => rejects(customerPathRefSchema, id));
 });
 
 describe('productUpdateSchema', () => {
@@ -140,6 +165,31 @@ describe('productUpdateSchema', () => {
   });
 });
 
+describe('productCreateSchema', () => {
+  const body = (over = {}) => ({ name: 'Aviator', brand: 'Darshana', category: 'frame', ...over });
+  it('applies safe numeric defaults', () => {
+    expect(ok<any>(productCreateSchema, body())).toMatchObject({ purchase_price: 0, selling_price: 0, stock: 0 });
+  });
+  it('normalises supported plural categories', () => {
+    expect(ok<any>(productCreateSchema, body({ category: 'sunglasses' })).category).toBe('sunglass');
+  });
+  it.each([
+    { stock: 1.5 }, { stock: -1 }, { purchase_price: 'not-money' }, { category: 'invalid' }, { name: '' },
+  ])('rejects malformed product input %#', (over) => rejects(productCreateSchema, body(over)));
+});
+
+describe('expenseCreateSchema', () => {
+  const body = (over = {}) => ({
+    expense_date: '2026-11-02', category: 'supplies', amount: 500,
+    payment_method: 'cash', description: 'Cleaning supplies', ...over,
+  });
+  it('coerces a valid numeric amount', () => expect(ok<any>(expenseCreateSchema, body({ amount: '500.25' })).amount).toBe(500.25));
+  it.each([
+    { amount: 'not-money' }, { amount: 0 }, { amount: -1 }, { expense_date: '02/11/2026' },
+    { category: 'misc' }, { payment_method: 'cheque' }, { description: '' },
+  ])('rejects malformed expense input %#', (over) => rejects(expenseCreateSchema, body(over)));
+});
+
 describe('settingsUpdateSchema', () => {
   it('keeps only known keys, dropping anything else in the body', () => {
     const data = ok<any>(settingsUpdateSchema, {
@@ -154,6 +204,18 @@ describe('settingsUpdateSchema', () => {
   );
 
   it('rejects an out-of-range tax rate', () => rejects(settingsUpdateSchema, { tax_rate: 120 }));
+
+  it('accepts comma-separated notification recipients', () => {
+    ok(settingsUpdateSchema, {
+      notification_to: 'owner@example.com, manager@example.com',
+      notification_cc: 'staff@example.com',
+      notification_bcc: '',
+    });
+  });
+
+  it('rejects any malformed notification recipient', () => {
+    rejects(settingsUpdateSchema, { notification_cc: 'valid@example.com, not-an-email' });
+  });
 });
 
 describe('supplier schemas', () => {
@@ -208,6 +270,10 @@ describe('invoiceCreateSchema', () => {
     rejects(invoiceCreateSchema, body({ items: [item({ quantity: 0 })] }));
     rejects(invoiceCreateSchema, body({ items: [item({ quantity: -2 })] }));
   });
+  it('rejects fractional and unreasonably large quantities', () => {
+    rejects(invoiceCreateSchema, body({ items: [item({ quantity: 1.5 })] }));
+    rejects(invoiceCreateSchema, body({ items: [item({ quantity: 10001 })] }));
+  });
   it('rejects a negative unit price', () => rejects(invoiceCreateSchema, body({ items: [item({ unit_price: -5 })] })));
   it.each([-1, 101])('rejects discount_percent %i', (v) => rejects(invoiceCreateSchema, body({ discount_percent: v })));
   it('rejects an unknown payment method', () => rejects(invoiceCreateSchema, body({ payment_method: 'crypto' })));
@@ -226,6 +292,12 @@ describe('invoiceUpdateSchema', () => {
   );
 });
 
+describe('invoicePathRefSchema', () => {
+  it('accepts a UUID', () => ok(invoicePathRefSchema, '1e47ac31-6fcb-4ca9-99cd-9477f16cab8f'));
+  it('accepts and normalises an invoice number', () => expect(ok(invoicePathRefSchema, 'do-2026-00126')).toBe('DO-2026-00126'));
+  it.each(['1', '123', 'Ravi', 'https://example.com'])('rejects invalid path reference %j', (ref) => rejects(invoicePathRefSchema, ref));
+});
+
 describe('purchaseCreateSchema', () => {
   const body = (over = {}) => ({
     supplier_id: 's1', supplier_name: 'Lens Co',
@@ -236,4 +308,8 @@ describe('purchaseCreateSchema', () => {
   it('requires at least one item', () => rejects(purchaseCreateSchema, body({ items: [] })));
   it('rejects a non-positive quantity', () =>
     rejects(purchaseCreateSchema, body({ items: [{ product_id: 'p1', quantity: 0, purchase_price: 5 }] })));
+  it('requires an existing product reference on every item', () =>
+    rejects(purchaseCreateSchema, body({ items: [{ quantity: 1, purchase_price: 5 }] })));
+  it('rejects fractional quantities', () =>
+    rejects(purchaseCreateSchema, body({ items: [{ product_id: 'p1', quantity: 1.5, purchase_price: 5 }] })));
 });

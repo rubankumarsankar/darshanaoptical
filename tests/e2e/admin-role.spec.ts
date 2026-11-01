@@ -61,6 +61,37 @@ test.describe.serial('Role: Admin (admin@darshana.com)', () => {
     await expect(page.locator('.adm-topbar')).toContainText('Settings');
   });
 
+  test('settings inputs keep focus while typing multiple characters', async () => {
+    await page.goto('/admin/settings');
+    const shopName = page.locator('#settings-shop_name');
+    await expect(shopName).toBeVisible();
+    await shopName.fill('Darshana Optical Test');
+    await expect(shopName).toBeFocused();
+    await expect(shopName).toHaveValue('Darshana Optical Test');
+  });
+
+  test('controlled inputs across admin pages retain focus while typing', async () => {
+    const cases = [
+      ['/admin/customers', 'Search name, phone, ID…'],
+      ['/admin/products', 'Search name, brand, code…'],
+      ['/admin/inventory', 'Name, brand or code…'],
+      ['/admin/invoices', 'Search invoice #, customer…'],
+      ['/admin/orders', 'Search name, phone, invoice…'],
+      ['/admin/eye-tests', 'Search patient name or phone…'],
+      ['/admin/pos', 'Search by name, phone, customer ID…'],
+      ['/admin/customers/new', 'e.g. Rajesh Kumar'],
+    ] as const;
+
+    for (const [url, placeholder] of cases) {
+      await page.goto(url);
+      const input = page.getByPlaceholder(placeholder);
+      await expect(input).toBeVisible();
+      await input.fill('Focus check');
+      await expect(input).toBeFocused();
+      await expect(input).toHaveValue('Focus check');
+    }
+  });
+
   test('admin can access Audit Log page', async () => {
     await page.goto('/admin/audit');
     await expect(page).toHaveURL(/\/admin\/audit/);

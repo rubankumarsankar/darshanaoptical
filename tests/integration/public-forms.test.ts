@@ -162,7 +162,9 @@ describe('admin count endpoints', () => {
   });
 
   it('accepts the correct secret', async () => {
-    expect((await getWith(appointments, 'a-long-test-admin-secret-value')).status).toBe(200);
+    const response = await getWith(appointments, 'a-long-test-admin-secret-value');
+    expect(response.status).toBe(200);
+    expect((await response.json()).count).toBe(0);
   });
 
   it('rejects everything when the secret is not configured', async () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import type { AdminUser, Role } from './types';
 
 // ─── Auth Context ─────────────────────────────────────────────────────────────
@@ -18,9 +18,16 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const sessionRestoreStarted = useRef(false);
 
   // Restore session on mount by calling /api/admin/auth/me
   useEffect(() => {
+    // React Strict Mode replays mount effects in development. The provider
+    // instance survives that replay, so this guard prevents a duplicate /me
+    // request without changing production behaviour.
+    if (sessionRestoreStarted.current) return;
+    sessionRestoreStarted.current = true;
+
     fetch('/api/admin/auth/me')
       .then(async (res) => {
         if (!res.ok) {

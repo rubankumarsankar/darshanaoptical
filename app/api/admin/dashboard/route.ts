@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
+import { shopDate } from '@/app/lib/admin/date';
 
 // GET aggregated dashboard KPIs
 export async function GET() {
   const { error } = await requireSession();
   if (error) return error;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = shopDate();
   const month = today.slice(0, 7);
 
   const [[todaySales], [monthSales], [monthExpenses], customers, lowStock, outOfStock, pendingOrders, pendingPayments, [totalCustomers], [totalProducts]] = await Promise.all([
-    query(`SELECT COALESCE(SUM(total),0) as total, COALESCE(SUM(paid),0) as paid, COALESCE(SUM(balance),0) as balance, COUNT(*) as count FROM invoices WHERE DATE(created_at)=? AND status!='cancelled'`, [today]) as Promise<any[]>,
-    query(`SELECT COALESCE(SUM(total),0) as total, COALESCE(SUM(paid),0) as paid, COUNT(*) as count FROM invoices WHERE DATE_FORMAT(created_at,'%Y-%m')=? AND status!='cancelled'`, [month]) as Promise<any[]>,
+    query(`SELECT COALESCE(SUM(total),0) as total, COALESCE(SUM(paid),0) as paid, COALESCE(SUM(balance),0) as balance, COUNT(*) as count FROM invoices WHERE DATE(CONVERT_TZ(created_at,'+00:00','+05:30'))=? AND status!='cancelled'`, [today]) as Promise<any[]>,
+    query(`SELECT COALESCE(SUM(total),0) as total, COALESCE(SUM(paid),0) as paid, COUNT(*) as count FROM invoices WHERE DATE_FORMAT(CONVERT_TZ(created_at,'+00:00','+05:30'),'%Y-%m')=? AND status!='cancelled'`, [month]) as Promise<any[]>,
     query(`SELECT COALESCE(SUM(amount),0) as total FROM expenses WHERE DATE_FORMAT(expense_date,'%Y-%m')=?`, [month]) as Promise<any[]>,
-    query(`SELECT COUNT(*) as count FROM customers WHERE DATE(created_at)=?`, [today]) as Promise<any[]>,
+    query(`SELECT COUNT(*) as count FROM customers WHERE DATE(CONVERT_TZ(created_at,'+00:00','+05:30'))=?`, [today]) as Promise<any[]>,
     query(`SELECT id,name,brand,product_code,category,stock,low_stock_threshold FROM products WHERE stock>0 AND stock<=low_stock_threshold AND status='active' ORDER BY stock LIMIT 20`) as Promise<any[]>,
     query(`SELECT id,name,brand,product_code,category FROM products WHERE stock=0 AND status='active' LIMIT 20`) as Promise<any[]>,
     query(`SELECT * FROM invoices WHERE order_status IS NOT NULL AND order_status NOT IN ('delivered','cancelled') ORDER BY expected_date ASC LIMIT 20`) as Promise<any[]>,

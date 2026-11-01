@@ -1,6 +1,7 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
 import { adminPut } from '@/app/lib/admin/api';
@@ -15,10 +16,12 @@ function fmtDate(d: string) { return new Date(d).toLocaleDateString('en-IN', { d
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const [tab, setTab] = useState<'overview' | 'eyetests' | 'invoices'>('overview');
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   const { data, loading, refetch } = useAdminFetch<{ customer: any; eyeTests: any[]; invoices: any[] }>(
     `/api/admin/customers/${id}`
@@ -28,13 +31,32 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const eyeTests = data?.eyeTests ?? [];
   const invoices = data?.invoices ?? [];
 
-  const openEdit = () => { setEditForm({ ...customer }); setEditing(true); };
+  // Preserve old UUID bookmarks, then replace them with the readable canonical
+  // customer-number URL once the record has resolved.
+  useEffect(() => {
+    const canonicalId = customer?.customer_id?.toLowerCase();
+    if (canonicalId && id !== canonicalId) {
+      router.replace(`/admin/customers/${encodeURIComponent(canonicalId)}`);
+    }
+  }, [customer?.customer_id, id, router]);
+
+  const openEdit = () => { setEditForm({ ...customer }); setEditErrors({}); setEditing(true); };
   const saveEdit = async () => {
+    const errors: Record<string, string> = {};
+    const name = String(editForm.name ?? '').trim();
+    const phone = String(editForm.phone ?? '').trim();
+    if (!/^[\p{L}][\p{L}\p{M} .'-]*[\p{L}\p{M}]$/u.test(name) || (name.match(/\p{L}/gu)?.length ?? 0) < 2) {
+      errors.name = 'Use at least 2 letters; numbers and URLs are not allowed';
+    }
+    if (!/^[6-9]\d{9}$/.test(phone)) errors.phone = 'Enter a valid 10-digit Indian mobile number';
+    if (editForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.email)) errors.email = 'Enter a valid email address';
+    if (Object.keys(errors).length) { setEditErrors(errors); return; }
+
     setSaving(true);
     try {
-      await adminPut(`/api/admin/customers/${id}`, editForm);
+      await adminPut(`/api/admin/customers/${encodeURIComponent(customer.customer_id.toLowerCase())}`, { ...editForm, name, phone });
       setEditing(false); refetch();
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { setEditErrors({ form: e.message ?? 'Failed to update customer.' }); }
     setSaving(false);
   };
 
@@ -61,8 +83,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           ) : (
             <button className="adm-btn adm-btn-secondary adm-btn-sm" onClick={openEdit}><Edit2 size={13} /> Edit</button>
           )}
-          <Link href={`/admin/eye-tests/new?customerId=${id}&customerName=${encodeURIComponent(customer.name)}&customerPhone=${encodeURIComponent(customer.phone)}`} className="adm-btn adm-btn-ghost adm-btn-sm"><Eye size={13} /> Eye Test</Link>
-          <Link href={`/admin/pos?customerId=${id}`} className="adm-btn adm-btn-primary adm-btn-sm"><ShoppingCart size={13} /> New Sale</Link>
+          <Link href={`/admin/eye-tests/new?customerId=${customer.id}&customerName=${encodeURIComponent(customer.name)}&customerPhone=${encodeURIComponent(customer.phone)}`} className="adm-btn adm-btn-ghost adm-btn-sm"><Eye size={13} /> Eye Test</Link>
+          <Link href={`/admin/pos?customerId=${customer.id}`} className="adm-btn adm-btn-primary adm-btn-sm"><ShoppingCart size={13} /> New Sale</Link>
         </div>
       </div>
 
@@ -77,9 +99,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               ].map(({ label, key, type = 'text' }) => (
                 <div key={key}>
                   <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 3 }}>{label}</label>
-                  <input type={type} className="adm-input" value={editForm[key] ?? ''} onChange={(e) => setEditForm((f: any) => ({ ...f, [key]: e.target.value }))} />
+                  <input type={type} className="adm-input" value={editForm[key] ?? ''} maxLength={key === 'phone' ? 10 : undefined} onChange={(e) => {
+                    setEditForm((f: any) => ({ ...f, [key]: e.target.value }));
+                    setEditErrors((current) => { const next = { ...current }; delete next[key]; delete next.form; return next; });
+                  }} />
+                  {editErrors[key] && <div style={{ color: '#dc2626', fontSize: 11.5, marginTop: 3 }}>{editErrors[key]}</div>}
                 </div>
               ))}
+              {editErrors.form && <div style={{ color: '#dc2626', fontSize: 12 }}>{editErrors.form}</div>}
               <div>
                 <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#64748b', marginBottom: 3 }}>Gender</label>
                 <select className="adm-input" value={editForm.gender ?? ''} onChange={(e) => setEditForm((f: any) => ({ ...f, gender: e.target.value }))}>
@@ -147,7 +174,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <table className="adm-table">
             <thead><tr><th>Date</th><th>RE SPH/CYL/AXIS</th><th>LE SPH/CYL/AXIS</th><th>Tested By</th><th>Recommendation</th></tr></thead>
             <tbody>
-              {eyeTests.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>No eye tests yet. <Link href={`/admin/eye-tests/new?customerId=${id}&customerName=${encodeURIComponent(customer.name)}&customerPhone=${encodeURIComponent(customer.phone)}`} style={{ color: '#fc5a06' }}>Add one</Link></td></tr>
+              {eyeTests.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>No eye tests yet. <Link href={`/admin/eye-tests/new?customerId=${customer.id}&customerName=${encodeURIComponent(customer.name)}&customerPhone=${encodeURIComponent(customer.phone)}`} style={{ color: '#fc5a06' }}>Add one</Link></td></tr>
               : eyeTests.map((t) => (
                 <tr key={t.id}>
                   <td>{fmtDate(t.test_date)}</td>
@@ -179,7 +206,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <td style={{ color: Number(inv.balance) > 0 ? '#d97706' : '#94a3b8', fontWeight: Number(inv.balance) > 0 ? 700 : 400 }}>{Number(inv.balance) > 0 ? fmt(inv.balance) : '—'}</td>
                   <td><span className={`adm-badge ${inv.status === 'paid' ? 'adm-badge-success' : inv.status === 'partially_paid' ? 'adm-badge-warning' : 'adm-badge-danger'}`}>{inv.status === 'partially_paid' ? 'Part Paid' : inv.status}</span></td>
                   <td style={{ fontSize: 12.5, color: '#94a3b8' }}>{fmtDate(inv.created_at)}</td>
-                  <td><Link href={`/admin/invoices/${inv.id}`} className="adm-btn adm-btn-ghost adm-btn-sm">View</Link></td>
+                  <td><Link href={`/admin/invoices/${encodeURIComponent(inv.invoice_number.toLowerCase())}`} className="adm-btn adm-btn-ghost adm-btn-sm">View</Link></td>
                 </tr>
               ))}
             </tbody>

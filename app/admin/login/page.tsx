@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/lib/admin/auth-context';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 
@@ -12,7 +11,6 @@ import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,10 +22,16 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    // Capture this before login sets the cookie: the proxy may immediately
+    // redirect the current login URL once it sees an authenticated session.
+    const requested = new URLSearchParams(window.location.search).get('next');
+    const destination = requested?.startsWith('/admin/') && !requested.startsWith('//')
+      ? requested
+      : '/admin/dashboard';
     const result = await login(email.trim(), password);
     setLoading(false);
     if (result.success) {
-      router.replace('/admin/dashboard');
+      window.location.replace(destination);
     } else {
       setError(result.error ?? 'Login failed.');
     }

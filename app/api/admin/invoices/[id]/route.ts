@@ -1,34 +1,53 @@
 import { NextResponse } from 'next/server';
 import { query, withTransaction } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
-import { validate, invoiceUpdateSchema } from '@/app/lib/admin/validation';
+import { validate, invoicePathRefSchema, invoiceUpdateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
+
+function parseInvoiceRef(value: string) {
+  const parsed = invoicePathRefSchema.safeParse(value);
+  return parsed.success
+    ? { ref: parsed.data, error: null }
+    : { ref: null, error: NextResponse.json({ error: 'Invalid invoice reference.' }, { status: 400 }) };
+}
+
+async function findInvoice(ref: string) {
+  const [invoice] = await query('SELECT * FROM invoices WHERE id = ? OR invoice_number = ? LIMIT 1', [ref, ref]) as any[];
+  return invoice;
+}
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireSession();
   if (error) return error;
-  const { id } = await params;
-  const [invoice] = await query('SELECT * FROM invoices WHERE id = ?', [id]) as any[];
+  const { id: value } = await params;
+  const { ref, error: refError } = parseInvoiceRef(value);
+  if (refError) return refError;
+  const invoice = await findInvoice(ref!);
   if (!invoice) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
-  const items = await query('SELECT * FROM invoice_items WHERE invoice_id = ?', [id]);
-  const payments = await query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [id]);
+  const internalId = invoice.id;
+  const items = await query('SELECT * FROM invoice_items WHERE invoice_id = ?', [internalId]);
+  const payments = await query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [internalId]);
+  const [customer] = await query('SELECT email FROM customers WHERE id = ? LIMIT 1', [invoice.customer_id]) as any[];
   const [settings] = await query('SELECT * FROM shop_settings WHERE id=1') as any[];
   const [eyeTest] = invoice.eye_test_id
     ? await query('SELECT * FROM eye_tests WHERE id = ? LIMIT 1', [invoice.eye_test_id]) as any[]
     : [];
-  return NextResponse.json({ invoice, items, payments, settings: settings ?? {}, eyeTest: eyeTest ?? null });
+  return NextResponse.json({ invoice, items, payments, settings: settings ?? {}, eyeTest: eyeTest ?? null, customerEmail: customer?.email ?? null });
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireSession();
   if (error) return error;
-  const { id } = await params;
+  const { id: value } = await params;
+  const { ref, error: refError } = parseInvoiceRef(value);
+  if (refError) return refError;
   const parsed = validate(invoiceUpdateSchema, await request.json());
   if (parsed.error) return parsed.error;
   const b = parsed.data;
 
-  const [current] = await query('SELECT * FROM invoices WHERE id = ?', [id]) as any[];
+  const current = await findInvoice(ref!);
   if (!current) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
+  const internalId = current.id;
 
   // A cancelled invoice is closed: no further payments, no order progress.
   if (current.status === 'cancelled' && (b.add_payment || b.order_status !== undefined)) {
@@ -41,7 +60,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       await withTransaction(async (tx) => {
         // Lock the invoice row so two concurrent payments can't both read the same
         // stale `paid`/`total` and overwrite each other's update (lost update).
-        const [locked] = await tx.query('SELECT paid, total, status, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [id]) as any[];
+        const [locked] = await tx.query('SELECT paid, total, status, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [internalId]) as any[];
         if (!locked) throw new Error('Not found.');
         if (locked.status === 'cancelled') throw new Error('This invoice is cancelled and can no longer be modified.');
 
@@ -59,15 +78,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
         await tx.query(
           'UPDATE invoices SET paid=?, balance=?, status=?, updated_at=NOW() WHERE id=?',
-          [newPaid, newBalance, newStatus, id]
+          [newPaid, newBalance, newStatus, internalId]
         );
         await tx.query(
           `INSERT INTO payments (id,invoice_id,amount,method,payment_date,notes,received_by) VALUES (?,?,?,?,NOW(),?,?)`,
-          [randomUUID(), id, b.add_payment, b.payment_method??'cash', b.payment_notes||null, session.name]
+          [randomUUID(), internalId, b.add_payment, b.payment_method??'cash', b.payment_notes||null, session.name]
         );
         await tx.query(
           `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
-          [randomUUID(), 'PAYMENT', 'invoice', id,
+          [randomUUID(), 'PAYMENT', 'invoice', internalId,
            `Payment of ₹${b.add_payment} via ${b.payment_method??'cash'} on invoice ${locked.invoice_number}`,
            session.name, session.role]
         );
@@ -82,11 +101,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const deliveredAt = b.order_status === 'delivered' ? 'NOW()' : 'NULL';
     await query(
       `UPDATE invoices SET order_status=?, delivered_at=${deliveredAt}, updated_at=NOW() WHERE id=?`,
-      [b.order_status, id]
+      [b.order_status, internalId]
     );
     await query(
       `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
-      [randomUUID(), 'UPDATE', 'invoice', id,
+      [randomUUID(), 'UPDATE', 'invoice', internalId,
        `Order status changed to '${b.order_status}' on invoice ${current.invoice_number}`,
        session.name, session.role]
     );
@@ -101,7 +120,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       await withTransaction(async (tx) => {
         // Lock + re-check status so two concurrent cancel requests can't both
         // pass and double-restore stock.
-        const [locked] = await tx.query('SELECT status, paid, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [id]) as any[];
+        const [locked] = await tx.query('SELECT status, paid, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [internalId]) as any[];
         if (!locked) throw new Error('Not found.');
         if (locked.status === 'cancelled') return; // already cancelled — no-op
 
@@ -112,16 +131,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         if (alreadyPaid > 0) {
           await tx.query(
             `INSERT INTO payments (id,invoice_id,amount,method,payment_date,notes,received_by) VALUES (?,?,?,?,NOW(),?,?)`,
-            [randomUUID(), id, -alreadyPaid, 'cash', `Refund — invoice ${locked.invoice_number} cancelled`, session.name]
+            [randomUUID(), internalId, -alreadyPaid, 'cash', `Refund — invoice ${locked.invoice_number} cancelled`, session.name]
           );
         }
 
         await tx.query(
           "UPDATE invoices SET status='cancelled', order_status='cancelled', paid=0, balance=0, updated_at=NOW() WHERE id=?",
-          [id]
+          [internalId]
         );
         // Restore stock
-        const items = await tx.query('SELECT * FROM invoice_items WHERE invoice_id = ?', [id]) as any[];
+        const items = await tx.query('SELECT * FROM invoice_items WHERE invoice_id = ?', [internalId]) as any[];
         for (const item of items) {
           if (item.category !== 'service') {
             await tx.query('UPDATE products SET stock = stock + ? WHERE id = ?', [item.quantity, item.product_id]);
@@ -135,7 +154,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         }
         await tx.query(
           `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
-          [randomUUID(), 'CANCEL', 'invoice', id, `Cancelled invoice ${locked.invoice_number}`, session.name, session.role]
+          [randomUUID(), 'CANCEL', 'invoice', internalId, `Cancelled invoice ${locked.invoice_number}`, session.name, session.role]
         );
       });
     } catch (err: any) {
@@ -145,11 +164,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   // Handle notes update
   if (b.notes !== undefined && !b.add_payment && !b.cancel && b.order_status === undefined) {
-    await query('UPDATE invoices SET notes=?, updated_at=NOW() WHERE id=?', [b.notes, id]);
+    await query('UPDATE invoices SET notes=?, updated_at=NOW() WHERE id=?', [b.notes, internalId]);
   }
 
-  const [updated] = await query('SELECT * FROM invoices WHERE id = ?', [id]) as any[];
-  const items = await query('SELECT * FROM invoice_items WHERE invoice_id = ?', [id]);
-  const payments = await query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [id]);
+  const [updated] = await query('SELECT * FROM invoices WHERE id = ?', [internalId]) as any[];
+  const items = await query('SELECT * FROM invoice_items WHERE invoice_id = ?', [internalId]);
+  const payments = await query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [internalId]);
   return NextResponse.json({ invoice: updated, items, payments });
 }

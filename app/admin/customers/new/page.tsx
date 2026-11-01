@@ -27,8 +27,11 @@ export default function NewCustomerPage() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = 'Customer name is required';
+    else if (!/^[\p{L}][\p{L}\p{M} .'-]*[\p{L}\p{M}]$/u.test(form.name.trim()) || (form.name.match(/\p{L}/gu)?.length ?? 0) < 2) {
+      e.name = 'Use at least 2 letters; numbers and URLs are not allowed';
+    }
     if (!form.phone.trim()) e.phone = 'Phone number is required';
-    else if (!/^\d{10}$/.test(form.phone.trim())) e.phone = 'Enter a valid 10-digit phone number';
+    else if (!/^[6-9]\d{9}$/.test(form.phone.trim())) e.phone = 'Enter a valid 10-digit Indian mobile number';
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email address';
     return e;
   };
@@ -48,7 +51,7 @@ export default function NewCustomerPage() {
         address: form.address.trim() || undefined,
         notes: form.notes.trim() || undefined,
       });
-      router.push(`/admin/customers/${customer.id}`);
+      router.push(`/admin/customers/${encodeURIComponent(customer.customer_id.toLowerCase())}`);
     } catch (e: any) {
       setErrors({ name: e.message ?? 'Failed to create customer.' });
       setSaving(false);

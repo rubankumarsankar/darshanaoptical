@@ -11,3 +11,6 @@ process.env.SESSION_SECRET = 'test-secret-0123456789abcdef0123456789abcdef012345
 // Fail loudly if application code ever reaches for a real database during a
 // unit test: every suite that needs one mocks '@/app/lib/db' explicitly.
 process.env.DATABASE_URL ??= 'mysql://unused:unused@127.0.0.1:3306/unused';
+// Test requests construct forwarded headers directly, modelling a deployment
+// behind a configured trusted proxy.
+process.env.TRUST_PROXY_HEADERS = 'true';

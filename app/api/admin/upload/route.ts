@@ -133,7 +133,10 @@ export async function DELETE(request: Request) {
       }
       if (existsSync(target)) unlinkSync(target);
     } else if (process.env.R2_ACCOUNT_ID) {
-      await deleteFromR2ByUrl(url);
+      const deleted = await deleteFromR2ByUrl(url);
+      if (!deleted) return NextResponse.json({ error: 'Image URL is not managed by this server.' }, { status: 400 });
+    } else {
+      return NextResponse.json({ error: 'Image URL is not managed by this server.' }, { status: 400 });
     }
     return NextResponse.json({ success: true });
   } catch (err: unknown) {

@@ -24,7 +24,11 @@ vi.mock('@/app/lib/r2', () => ({
     state.uploaded.push({ key, mime, bytes: buffer.length });
     return `https://cdn.example/${key}`;
   }),
-  deleteFromR2ByUrl: vi.fn(async (url: string) => { state.r2Deleted.push(url); }),
+  deleteFromR2ByUrl: vi.fn(async (url: string) => {
+    if (!url.startsWith('https://cdn.example/')) return false;
+    state.r2Deleted.push(url);
+    return true;
+  }),
 }));
 
 // Guard the filesystem: a traversal bug must be observable here, never on disk.
@@ -185,6 +189,13 @@ describe('delete path handling', () => {
     await del('https://cdn.example/products/prod_1.png');
     expect(state.r2Deleted).toHaveLength(1);
     expect(state.unlinked).toHaveLength(0);
+  });
+
+  it('does not claim an unmanaged remote image was deleted', async () => {
+    delete process.env.R2_ACCOUNT_ID;
+    const res = await del('https://other.example/products/prod_1.png');
+    expect(res.status).toBe(400);
+    expect(state.r2Deleted).toHaveLength(0);
   });
 });
 

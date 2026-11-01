@@ -32,9 +32,9 @@ export default function OrdersPage() {
     return matchStatus && matchQ;
   });
 
-  const updateStatus = async (id: string, order_status: OrderStatus) => {
+  const updateStatus = async (invoiceNumber: string, order_status: OrderStatus) => {
     try {
-      await adminPut(`/api/admin/invoices/${id}`, { order_status });
+      await adminPut(`/api/admin/invoices/${encodeURIComponent(invoiceNumber.toLowerCase())}`, { order_status });
       refetch();
     } catch (e: any) { alert(e.message); }
   };
@@ -70,7 +70,7 @@ export default function OrdersPage() {
             : orders.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>No orders found.</td></tr>
             : orders.map((o) => (
               <tr key={o.id}>
-                <td><Link href={`/admin/invoices/${o.id}`} style={{ color: '#fc5a06', fontWeight: 700, textDecoration: 'none' }}>{o.invoice_number}</Link></td>
+                <td><Link href={`/admin/invoices/${encodeURIComponent(o.invoice_number.toLowerCase())}`} style={{ color: '#fc5a06', fontWeight: 700, textDecoration: 'none' }}>{o.invoice_number}</Link></td>
                 <td>
                   <div style={{ fontWeight: 600 }}>{o.customer_name}</div>
                   <div style={{ fontSize: 11.5, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -89,7 +89,7 @@ export default function OrdersPage() {
                   <select
                     className="adm-input" style={{ fontSize: 12, padding: '4px 8px' }}
                     value={o.order_status}
-                    onChange={(e) => updateStatus(o.id, e.target.value as OrderStatus)}
+                    onChange={(e) => updateStatus(o.invoice_number, e.target.value as OrderStatus)}
                   >
                     {ORDER_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                   </select>

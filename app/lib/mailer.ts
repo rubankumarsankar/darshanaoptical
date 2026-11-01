@@ -1,4 +1,48 @@
 import nodemailer, { Transporter } from "nodemailer";
+import { query } from "@/app/lib/db";
+
+export function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeSubject(value: unknown): string {
+  return String(value ?? '').replace(/[\r\n]+/g, ' ').trim();
+}
+
+type NotificationRecipients = { to: string; cc?: string; bcc?: string };
+
+export type TestEmailResult = NotificationRecipients & { messageId?: string };
+
+function cleanEmailList(value: unknown): string | undefined {
+  const addresses = String(value ?? '')
+    .split(',')
+    .map((address) => address.trim())
+    .filter(Boolean);
+  return addresses.length ? addresses.join(', ') : undefined;
+}
+
+async function getNotificationRecipients(sender: string): Promise<NotificationRecipients> {
+  try {
+    const [settings] = await query(
+      'SELECT notification_to, notification_cc, notification_bcc FROM shop_settings WHERE id=1'
+    ) as any[];
+    return {
+      to: cleanEmailList(settings?.notification_to) || sender,
+      cc: cleanEmailList(settings?.notification_cc),
+      bcc: cleanEmailList(settings?.notification_bcc),
+    };
+  } catch (error) {
+    // This fallback also keeps mail working during a rolling deployment before
+    // the recipient-settings migration has reached the database.
+    console.error('[mailer] Could not load notification recipients; using SMTP_FROM.', error);
+    return { to: sender };
+  }
+}
 
 // ─── Singleton Transporter ───────────────────────────────────────────────────
 
@@ -23,6 +67,26 @@ function getTransporter(): Transporter | null {
   });
 
   return _transporter;
+}
+
+export async function sendTestNotification(): Promise<TestEmailResult> {
+  const transporter = getTransporter();
+  if (!transporter) throw new Error('SMTP_FROM and SMTP_PASS must be configured before sending a test email.');
+
+  const sender = process.env.SMTP_FROM!.trim();
+  const recipients = await getNotificationRecipients(sender);
+  const sentAt = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'long', timeStyle: 'medium' });
+  const info = await transporter.sendMail({
+    from: `"Darshana Optical System" <${sender}>`,
+    to: recipients.to,
+    cc: recipients.cc,
+    bcc: recipients.bcc,
+    subject: 'Darshana Optical email settings test',
+    text: `This is a test of the Darshana Optical internal notification settings. Sent at ${sentAt} IST.`,
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#0f172a"><h2 style="color:#fc5a06">Email settings are working</h2><p>This is a test of the Darshana Optical internal notification settings.</p><p><strong>Sent:</strong> ${escapeHtml(sentAt)} IST</p><p>No customer received this message.</p></div>`,
+  });
+
+  return { ...recipients, messageId: info?.messageId };
 }
 
 // ─── Shared Store Metadata ───────────────────────────────────────────────────
@@ -80,8 +144,18 @@ export async function sendAppointmentConfirmation(
   const transporter = getTransporter();
   if (!transporter) return;
   const ownerEmail = process.env.SMTP_FROM!.trim();
-  const dateDisplay = formatDate(data.preferredDate);
-  const timeDisplay = data.preferredTime || "Flexible";
+  const recipients = await getNotificationRecipients(ownerEmail);
+  const dateDisplay = escapeHtml(formatDate(data.preferredDate));
+  const timeDisplay = escapeHtml(data.preferredTime || "Flexible");
+  const safe = {
+    name: escapeHtml(data.name),
+    phone: escapeHtml(data.phone),
+    email: escapeHtml(data.email || 'Not provided'),
+    testType: escapeHtml(data.testType),
+    wearsGlasses: escapeHtml(data.wearsGlasses),
+    notes: escapeHtml(data.notes),
+  };
+  const phoneDigits = data.phone.replace(/[^0-9]/g, '');
 
   // ── A. Email to Store Owner / Staff ──
   const ownerHtml = `
@@ -111,28 +185,28 @@ export async function sendAppointmentConfirmation(
               <tr>
                 <td style="padding:32px;">
                   <p style="margin:0 0 20px;font-size:15px;line-height:1.5;">
-                    A new eye examination request has been submitted by <strong>${data.name}</strong>. Details below:
+                    A new eye examination request has been submitted by <strong>${safe.name}</strong>. Details below:
                   </p>
                   
                   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;width:140px;">Customer Name</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#0f172a;">${data.name}</td></tr>
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Phone Number</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#fc5a06;"><a href="tel:${data.phone}" style="color:#fc5a06;text-decoration:none;">${data.phone}</a></td></tr>
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Customer Email</td><td style="padding:8px 0;font-size:13px;color:#0f172a;">${data.email || 'Not provided'}</td></tr>
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Service Requested</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;">${data.testType}</td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;width:140px;">Customer Name</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#0f172a;">${safe.name}</td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Phone Number</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#fc5a06;"><a href="tel:${safe.phone}" style="color:#fc5a06;text-decoration:none;">${safe.phone}</a></td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Customer Email</td><td style="padding:8px 0;font-size:13px;color:#0f172a;">${safe.email}</td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Service Requested</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;">${safe.testType}</td></tr>
                     <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Preferred Date</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;">${dateDisplay}</td></tr>
                     <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Preferred Time</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;">${timeDisplay}</td></tr>
-                    ${data.wearsGlasses ? `<tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Currently Wears Glasses?</td><td style="padding:8px 0;font-size:13px;color:#0f172a;">${data.wearsGlasses}</td></tr>` : ''}
-                    ${data.notes ? `<tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Notes / Concerns</td><td style="padding:8px 0;font-size:13px;color:#0f172a;font-style:italic;">${data.notes}</td></tr>` : ''}
+                    ${data.wearsGlasses ? `<tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Currently Wears Glasses?</td><td style="padding:8px 0;font-size:13px;color:#0f172a;">${safe.wearsGlasses}</td></tr>` : ''}
+                    ${data.notes ? `<tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Notes / Concerns</td><td style="padding:8px 0;font-size:13px;color:#0f172a;font-style:italic;">${safe.notes}</td></tr>` : ''}
                   </table>
 
                   <!-- Action Buttons -->
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center">
-                        <a href="tel:${data.phone}" style="display:inline-block;background:#fc5a06;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;margin-right:12px;">
+                        <a href="tel:${safe.phone}" style="display:inline-block;background:#fc5a06;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;margin-right:12px;">
                           📞 Call Customer
                         </a>
-                        <a href="https://wa.me/91${data.phone.replace(/[^0-9]/g, '')}" style="display:inline-block;background:#25d366;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+                        <a href="https://wa.me/91${phoneDigits}" style="display:inline-block;background:#25d366;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
                           💬 Message on WhatsApp
                         </a>
                       </td>
@@ -157,8 +231,10 @@ export async function sendAppointmentConfirmation(
   const tasks: Promise<any>[] = [
     transporter.sendMail({
       from: `"Darshana Optical System" <${ownerEmail}>`,
-      to: ownerEmail,
-      subject: `🔔 New Eye Test Booking: ${data.name} (${data.phone})`,
+      to: recipients.to,
+      cc: recipients.cc,
+      bcc: recipients.bcc,
+      subject: `🔔 New Eye Test Booking: ${safeSubject(data.name)} (${safeSubject(data.phone)})`,
       html: ownerHtml,
       replyTo: data.email || ownerEmail,
     }),
@@ -190,7 +266,7 @@ export async function sendAppointmentConfirmation(
                 <tr>
                   <td style="padding:36px 32px;">
                     <p style="margin:0 0 12px;font-size:16px;color:#0f172a;">
-                      Dear <strong>${data.name}</strong>,
+                      Dear <strong>${safe.name}</strong>,
                     </p>
                     <p style="margin:0 0 24px;font-size:14.5px;color:#334155;line-height:1.6;">
                       Thank you for choosing <strong>Darshana Optical</strong>. We have successfully received your eye testing appointment request. Our team will review your requested slot and confirm shortly.
@@ -208,10 +284,10 @@ export async function sendAppointmentConfirmation(
                       <tr>
                         <td style="padding-top:14px;">
                           <table width="100%" cellpadding="0" cellspacing="0">
-                            <tr><td style="padding:6px 0;font-size:13px;color:#7c2d12;width:140px;">Service</td><td style="padding:6px 0;font-size:14px;font-weight:700;color:#431407;">${data.testType}</td></tr>
+                            <tr><td style="padding:6px 0;font-size:13px;color:#7c2d12;width:140px;">Service</td><td style="padding:6px 0;font-size:14px;font-weight:700;color:#431407;">${safe.testType}</td></tr>
                             <tr><td style="padding:6px 0;font-size:13px;color:#7c2d12;">Date</td><td style="padding:6px 0;font-size:14px;font-weight:700;color:#431407;">${dateDisplay}</td></tr>
                             <tr><td style="padding:6px 0;font-size:13px;color:#7c2d12;">Time Window</td><td style="padding:6px 0;font-size:14px;font-weight:700;color:#431407;">${timeDisplay}</td></tr>
-                            <tr><td style="padding:6px 0;font-size:13px;color:#7c2d12;">Phone</td><td style="padding:6px 0;font-size:13px;color:#431407;">${data.phone}</td></tr>
+                            <tr><td style="padding:6px 0;font-size:13px;color:#7c2d12;">Phone</td><td style="padding:6px 0;font-size:13px;color:#431407;">${safe.phone}</td></tr>
                           </table>
                         </td>
                       </tr>
@@ -289,6 +365,15 @@ export async function sendInquiryNotification(
   const transporter = getTransporter();
   if (!transporter) return;
   const ownerEmail = process.env.SMTP_FROM!.trim();
+  const recipients = await getNotificationRecipients(ownerEmail);
+  const safe = {
+    name: escapeHtml(data.name),
+    phone: escapeHtml(data.phone),
+    email: escapeHtml(data.email || 'Not provided'),
+    interest: escapeHtml(data.interest),
+    message: escapeHtml(data.message),
+  };
+  const phoneDigits = data.phone.replace(/[^0-9]/g, '');
 
   // ── A. Email to Store Owner / Staff ──
   const ownerHtml = `
@@ -315,21 +400,21 @@ export async function sendInquiryNotification(
               <tr>
                 <td style="padding:32px;">
                   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;width:130px;">Name</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#0f172a;">${data.name}</td></tr>
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Phone</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#fc5a06;"><a href="tel:${data.phone}" style="color:#fc5a06;text-decoration:none;">${data.phone}</a></td></tr>
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Email</td><td style="padding:8px 0;font-size:13px;color:#0f172a;">${data.email || 'Not provided'}</td></tr>
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Interest</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;">${data.interest}</td></tr>
-                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Message</td><td style="padding:8px 0;font-size:14px;color:#334155;line-height:1.5;">${data.message || 'No additional message provided.'}</td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;width:130px;">Name</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#0f172a;">${safe.name}</td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Phone</td><td style="padding:8px 0;font-size:14px;font-weight:700;color:#fc5a06;"><a href="tel:${safe.phone}" style="color:#fc5a06;text-decoration:none;">${safe.phone}</a></td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Email</td><td style="padding:8px 0;font-size:13px;color:#0f172a;">${safe.email}</td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Interest</td><td style="padding:8px 0;font-size:14px;font-weight:600;color:#0f172a;">${safe.interest}</td></tr>
+                    <tr><td style="padding:8px 0;font-size:13px;color:#64748b;">Message</td><td style="padding:8px 0;font-size:14px;color:#334155;line-height:1.5;">${data.message ? safe.message : 'No additional message provided.'}</td></tr>
                   </table>
 
                   <!-- Actions -->
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center">
-                        <a href="tel:${data.phone}" style="display:inline-block;background:#fc5a06;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;margin-right:12px;">
+                        <a href="tel:${safe.phone}" style="display:inline-block;background:#fc5a06;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;margin-right:12px;">
                           📞 Call Customer
                         </a>
-                        <a href="https://wa.me/91${data.phone.replace(/[^0-9]/g, '')}" style="display:inline-block;background:#25d366;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
+                        <a href="https://wa.me/91${phoneDigits}" style="display:inline-block;background:#25d366;color:#ffffff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;">
                           💬 Message on WhatsApp
                         </a>
                       </td>
@@ -354,8 +439,10 @@ export async function sendInquiryNotification(
   const tasks: Promise<any>[] = [
     transporter.sendMail({
       from: `"Darshana Optical Website" <${ownerEmail}>`,
-      to: ownerEmail,
-      subject: `📩 New Customer Inquiry: ${data.name} (${data.interest})`,
+      to: recipients.to,
+      cc: recipients.cc,
+      bcc: recipients.bcc,
+      subject: `📩 New Customer Inquiry: ${safeSubject(data.name)} (${safeSubject(data.interest)})`,
       html: ownerHtml,
       replyTo: data.email || ownerEmail,
     }),
@@ -387,16 +474,16 @@ export async function sendInquiryNotification(
                 <tr>
                   <td style="padding:36px 32px;">
                     <p style="margin:0 0 12px;font-size:16px;color:#0f172a;">
-                      Dear <strong>${data.name}</strong>,
+                      Dear <strong>${safe.name}</strong>,
                     </p>
                     <p style="margin:0 0 20px;font-size:14.5px;color:#334155;line-height:1.6;">
-                      Thank you for contacting <strong>Darshana Optical</strong>. We have received your inquiry regarding <strong>${data.interest}</strong>. Our optometrist or customer support team will be in touch with you shortly.
+                      Thank you for contacting <strong>Darshana Optical</strong>. We have received your inquiry regarding <strong>${safe.interest}</strong>. Our optometrist or customer support team will be in touch with you shortly.
                     </p>
 
                     <!-- Inquiry Summary -->
                     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:20px;margin-bottom:24px;">
-                      <tr><td style="padding:6px 0;font-size:13px;color:#64748b;width:130px;">Inquiry Topic</td><td style="padding:6px 0;font-size:14px;font-weight:700;color:#0f172a;">${data.interest}</td></tr>
-                      ${data.message ? `<tr><td style="padding:6px 0;font-size:13px;color:#64748b;">Your Message</td><td style="padding:6px 0;font-size:13.5px;color:#334155;font-style:italic;">"${data.message}"</td></tr>` : ''}
+                      <tr><td style="padding:6px 0;font-size:13px;color:#64748b;width:130px;">Inquiry Topic</td><td style="padding:6px 0;font-size:14px;font-weight:700;color:#0f172a;">${safe.interest}</td></tr>
+                      ${data.message ? `<tr><td style="padding:6px 0;font-size:13px;color:#64748b;">Your Message</td><td style="padding:6px 0;font-size:13.5px;color:#334155;font-style:italic;">"${safe.message}"</td></tr>` : ''}
                     </table>
 
                     <p style="margin:0 0 8px;font-size:13.5px;color:#334155;line-height:1.5;">
