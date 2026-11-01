@@ -15,6 +15,9 @@ export function getDbPool(): Pool {
 
     pool = mysql.createPool({
       uri: databaseUrl,
+      // Cloudflare Workers disallow runtime code generation. mysql2's static
+      // packet parser keeps the driver compatible with the Workers runtime.
+      disableEval: true,
       waitForConnections: true,
       connectionLimit: 10,
       // Keep maxIdle below connectionLimit so mysql2 actually starts its idle
