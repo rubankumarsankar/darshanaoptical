@@ -1,4 +1,22 @@
+import tls from 'node:tls';
 import mysql, { Connection, ConnectionOptions } from 'mysql2/promise';
+
+// ─── CLOUDFLARE WORKERS TLS SHIM ─────────────────────────────────────────────
+// Cloudflare Workers (workerd) does not implement checkServerIdentity.
+// Stripping it allows mysql2 to connect to TiDB Cloud over TLS without throwing:
+// "Error: The options.checkServerIdentity option is not implemented"
+if (tls && tls.connect) {
+  const originalTlsConnect = tls.connect;
+  tls.connect = function (...args: any[]) {
+    for (const arg of args) {
+      if (arg && typeof arg === 'object' && 'checkServerIdentity' in arg) {
+        delete arg.checkServerIdentity;
+      }
+    }
+    return (originalTlsConnect as any).apply(this, args);
+  };
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function getConnectionOptions(): ConnectionOptions {
   const databaseUrl = process.env.DATABASE_URL;
