@@ -61,6 +61,13 @@ npm run build
 
 Configure all required values as encrypted secrets in the production hosting environment, run the database migration, and then deploy the `main` branch.
 
-If Cloudflare only manages DNS for the domain, configure secrets on the origin hosting platform. If the application itself runs on Cloudflare Workers or Pages, configure them under **Workers & Pages → Project → Settings → Variables and Secrets** and redeploy after changes.
+This application requires a dynamic server runtime for its API routes, login, database, and email. Deploy it to **Cloudflare Workers** through OpenNext rather than as a static Pages export.
+
+```bash
+npm run build:cloudflare
+npx wrangler deploy
+```
+
+In Cloudflare, create or use a **Workers** project (not Pages) with build command `npm run build:cloudflare` and deploy command `npx wrangler deploy`. Configure runtime secrets under **Workers & Pages → Project → Settings → Variables and Secrets** before deployment.
 
 Additional operating instructions are available in `USER-MANUAL.md`.
