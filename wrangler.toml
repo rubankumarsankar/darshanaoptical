@@ -1,6 +1,13 @@
 name = "darshanaoptical"
-compatibility_date = "2024-11-01"
+main = ".open-next/worker.js"
+compatibility_date = "2026-11-02"
 compatibility_flags = ["nodejs_compat"]
+upload_source_maps = true
 
-pages_build_output_dir = ".next"
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true
 
