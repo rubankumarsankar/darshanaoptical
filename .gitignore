@@ -46,8 +46,9 @@ dev-server.log
 
 # Cloudflare local state
 .wrangler/
+.cloudflare/
 .open-next/
-cloudflare-env.d.ts
+wrangler-debug.log*
 
 # vercel
 .vercel
