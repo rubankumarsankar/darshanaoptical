@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireRole } from '@/app/lib/admin/session';
 import { uploadToR2, deleteFromR2ByUrl } from '@/app/lib/r2';
-import { writeFileSync, mkdirSync, unlinkSync, existsSync } from 'fs';
 import { basename, join, resolve, sep } from 'path';
 import { randomBytes } from 'crypto';
 
@@ -43,8 +42,13 @@ async function saveImage(key: string, buffer: Buffer, mime: string): Promise<str
     return await uploadToR2(key, buffer, mime);
   }
 
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Product image storage is not configured. Set the R2 variables before uploading in production.');
+  }
+
   // Fallback: save to public/uploads/products/ (local development only — this
   // directory does not persist on serverless hosting).
+  const { mkdirSync, writeFileSync } = await import('node:fs');
   const fileName = basename(key);
   const dir = uploadDir();
   mkdirSync(dir, { recursive: true });
@@ -123,6 +127,9 @@ export async function DELETE(request: Request) {
 
   try {
     if (url.startsWith('/uploads/products/')) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ error: 'Local product uploads are not supported in production.' }, { status: 400 });
+      }
       // Strip any path segments before resolving, then confirm the result is
       // still inside the uploads directory — a url of
       // "/uploads/products/../../../.env" must not escape it.
@@ -131,6 +138,7 @@ export async function DELETE(request: Request) {
       if (target !== join(dir, basename(target)) || !target.startsWith(dir + sep)) {
         return NextResponse.json({ error: 'Invalid image path.' }, { status: 400 });
       }
+      const { existsSync, unlinkSync } = await import('node:fs');
       if (existsSync(target)) unlinkSync(target);
     } else if (process.env.R2_ACCOUNT_ID) {
       const deleted = await deleteFromR2ByUrl(url);

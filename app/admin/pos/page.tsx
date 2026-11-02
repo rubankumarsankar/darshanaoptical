@@ -40,8 +40,10 @@ function POSContent() {
   // Load customers and products from DB
   const { data: custData } = useAdminFetch<{ customers: any[] }>('/api/admin/customers', { params: { status: 'active' } });
   const { data: prodData } = useAdminFetch<{ products: any[] }>('/api/admin/products', { params: { status: 'active' } });
+  const { data: settingsData } = useAdminFetch<{ settings: any }>('/api/admin/settings');
   const customers = custData?.customers ?? [];
   const allProducts = prodData?.products ?? [];
+  const taxRate = settingsData?.settings?.tax_enabled ? Number(settingsData.settings.tax_rate ?? 0) : 0;
 
   // Filter customer eye tests
   const { data: eyeTestData } = useAdminFetch<{ eyeTests: any[] }>(
@@ -97,7 +99,9 @@ function POSContent() {
   // Totals
   const subtotal = cart.reduce((s, i) => s + i.unit_price * i.quantity - (i.discount ?? 0), 0);
   const discountAmount = subtotal * (discountPercent / 100);
-  const total = Math.round((subtotal - discountAmount) * 100) / 100;
+  const taxableAmount = Math.round((subtotal - discountAmount) * 100) / 100;
+  const taxAmount = Math.round(taxableAmount * taxRate) / 100;
+  const total = Math.round((taxableAmount + taxAmount) * 100) / 100;
   const paid = Math.min(parseFloat(amountPaid) || 0, total);
   const balance = Math.round((total - paid) * 100) / 100;
 
@@ -289,6 +293,7 @@ function POSContent() {
                 <div style={{ marginTop: 10, borderTop: '2px solid #f1f5f9', paddingTop: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}><span style={{ color: '#64748b' }}>Subtotal</span><span>{fmt(subtotal)}</span></div>
                   {discountPercent > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13, color: '#16a34a' }}><span>Discount ({discountPercent}%)</span><span>-{fmt(discountAmount)}</span></div>}
+                  {taxRate > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}><span>GST ({taxRate}%)</span><span>{fmt(taxAmount)}</span></div>}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 16 }}><span>Total</span><span style={{ color: '#fc5a06' }}>{fmt(total)}</span></div>
                 </div>
               </>

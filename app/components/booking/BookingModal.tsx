@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, User, Phone, Mail, Check, Send, Sparkles, MapPin, ArrowRight, ArrowLeft } from "lucide-react";
 import { useBooking } from "./BookingContext";
@@ -18,6 +18,8 @@ export default function BookingModal() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [whatsAppUrl, setWhatsAppUrl] = useState("");
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const today = new Date();
   today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
@@ -31,6 +33,25 @@ export default function BookingModal() {
       document.body.style.overflow = previousOverflow;
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const keepFocusInDialog = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSubmitting) handleReset();
+      if (event.key !== "Tab") return;
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    window.addEventListener("keydown", keepFocusInDialog);
+    dialogRef.current?.focus();
+    return () => window.removeEventListener("keydown", keepFocusInDialog);
+  }, [isOpen, isSubmitting]);
 
   const handleNext = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +73,13 @@ export default function BookingModal() {
             test_type: testType,
           }),
         });
-        if (!response.ok) throw new Error("Appointment request failed");
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.error || "Appointment request failed");
+        }
         setIsSuccess(true);
-      } catch {
-        setSubmitError("We couldn't save your appointment. Check your connection and try again.");
+      } catch (error: any) {
+        setSubmitError(error?.message || "We couldn't save your appointment. Check your connection and try again.");
         return;
       } finally {
         setIsSubmitting(false);
@@ -71,9 +95,7 @@ export default function BookingModal() {
         `*Preferred Time:* ${time}\n\n` +
         `Please confirm my booking.`
       );
-      setTimeout(() => {
-        window.location.assign(`https://wa.me/918870571536?text=${message}`);
-      }, 900);
+      setWhatsAppUrl(`https://wa.me/918870571536?text=${message}`);
     }
   };
 
@@ -88,6 +110,7 @@ export default function BookingModal() {
     setTime("10:00 AM");
     setTestType("Comprehensive Eye Test");
     setSubmitError("");
+    setWhatsAppUrl("");
     closeBooking();
   };
 
@@ -113,6 +136,11 @@ export default function BookingModal() {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", duration: 0.5, ease: EASE_STANDARD }}
             className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-neutral-100 z-10 my-auto"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="booking-modal-title"
+            tabIndex={-1}
           >
             {/* Close Button */}
             <button
@@ -130,7 +158,7 @@ export default function BookingModal() {
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-semibold uppercase tracking-wider mb-2">
                     <Sparkles size={12} /> Easy Online Appointment
                   </span>
-                  <h3 className="text-2xl font-extrabold text-neutral-950">Book Your Eye Test</h3>
+                  <h3 id="booking-modal-title" className="text-2xl font-extrabold text-neutral-950">Book Your Eye Test</h3>
                   <p className="mt-1 text-xs sm:text-sm text-neutral-500">
                     Schedule a visit with our certified optometrist at Harur.
                   </p>
@@ -401,9 +429,9 @@ export default function BookingModal() {
                   transition={{ delay: 0.3, duration: 0.4 }}
                   className="space-y-2"
                 >
-                  <h3 className="text-2xl font-extrabold text-neutral-950">Your Eye Test Is Booked!</h3>
+                  <h3 className="text-2xl font-extrabold text-neutral-950">Your Request Has Been Received</h3>
                   <p className="text-xs sm:text-sm text-neutral-600 max-w-sm mx-auto">
-                    Connecting to Darshana Optical WhatsApp for slot confirmation.
+                    This is not a confirmed appointment yet. Darshana Optical will contact you to confirm your slot.
                   </p>
                 </motion.div>
 
@@ -421,6 +449,9 @@ export default function BookingModal() {
                   >
                     <MapPin size={14} className="text-brand-orange" /> Get Directions
                   </a>
+                  {whatsAppUrl && <a href={whatsAppUrl} target="_blank" rel="noreferrer" className="btn-primary text-xs py-2.5 px-6">
+                    Continue on WhatsApp
+                  </a>}
                   <button onClick={handleReset} className="btn-primary text-xs py-2.5 px-6">
                     Done
                   </button>

@@ -127,11 +127,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         // Reverse any money already taken by writing an offsetting refund row, so
         // SUM(payments.amount) for this invoice nets to zero and the payment
         // reports stop counting a cancelled sale as collected.
-        const alreadyPaid = parseFloat(locked.paid ?? 0);
-        if (alreadyPaid > 0) {
+        const originalPayments = await tx.query(
+          'SELECT amount, method FROM payments WHERE invoice_id = ? AND amount > 0', [internalId]
+        ) as any[];
+        for (const payment of originalPayments) {
           await tx.query(
             `INSERT INTO payments (id,invoice_id,amount,method,payment_date,notes,received_by) VALUES (?,?,?,?,NOW(),?,?)`,
-            [randomUUID(), internalId, -alreadyPaid, 'cash', `Refund — invoice ${locked.invoice_number} cancelled`, session.name]
+            [randomUUID(), internalId, -parseFloat(payment.amount), payment.method, `Refund - invoice ${locked.invoice_number} cancelled`, session.name]
           );
         }
 

@@ -30,13 +30,18 @@ export async function POST(request: Request) {
     );
 
     // Send email notification to shop (non-blocking — don't await)
-    sendInquiryNotification({
+    // Await delivery attempt: Workers may stop untracked work after returning.
+    try {
+      await sendInquiryNotification({
       name: b.name,
       phone: b.phone,
       email: b.email,
       interest: b.interest,
       message: b.message,
-    }).catch((err) => console.error("[mailer] Inquiry email failed:", err));
+      });
+    } catch (err) {
+      console.error("[mailer] Inquiry email failed:", err);
+    }
 
     return NextResponse.json(
       { success: true, message: "Inquiry saved successfully.", id: (result as any).insertId },

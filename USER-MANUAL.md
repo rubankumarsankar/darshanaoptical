@@ -5,8 +5,6 @@
 **System:** Darshana Optical · Harur, Tamil Nadu · ☎ 88705 71536
 **Website:** https://darshanaoptical.com · **Admin panel:** https://darshanaoptical.com/admin/login
 
----
-
 ## Contents
 
 1. [What this system does](#1-what-this-system-does)
@@ -227,6 +225,24 @@ npm start         # (or deploy to your host; keep env vars set on the host)
 If `db/schema.sql` changed, check `db/` for a new migration script and run it — they are all idempotent.
 
 ---
+
+### 8.5 Backup and restore
+
+Take a logical MySQL backup before every deployment and retain daily backups off the production machine. Never store an unencrypted database dump in the repository.
+
+```bash
+# Backup (replace connection details locally; never commit them)
+mysqldump --single-transaction --routines --events --databases darshana_optical > darshana-optical-backup.sql
+
+# Restore only to the intended database, preferably a staging copy first
+mysql darshana_optical < darshana-optical-backup.sql
+```
+
+After restoring, run idempotent migrations, verify admin login, open a recent invoice, and compare customer/invoice counts before allowing staff to use the system.
+
+### 8.6 Cancellation and refund workflow
+
+Only an Admin or Manager may cancel an invoice. Cancellation is final: it marks the invoice cancelled, restores stock for non-service items, and records a negative refund entry for each original payment method (cash, UPI, card, or bank). Confirm the actual customer refund has been completed before cancellation. Do not cancel an invoice merely to edit it; use a corrective sale or credit process with an audit note instead.
 
 ## 9. Troubleshooting & FAQ
 

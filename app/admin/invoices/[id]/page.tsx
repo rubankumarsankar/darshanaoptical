@@ -194,6 +194,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           <div className="adm-bill-totals">
             <div><span>Subtotal</span><strong>{fmt(invoice.subtotal)}</strong></div>
             {Number(invoice.discount_amount) > 0 && <div className="is-discount"><span>Discount ({Number(invoice.discount_percent).toFixed(1)}%)</span><strong>-{fmt(invoice.discount_amount)}</strong></div>}
+            {Number(invoice.tax_amount) > 0 && <div><span>GST ({Number(invoice.tax_rate).toFixed(1)}%)</span><strong>{fmt(invoice.tax_amount)}</strong></div>}
             <div className="is-total"><span>Total</span><strong>{fmt(invoice.total)}</strong></div>
             <div><span>Amount paid</span><strong>{fmt(invoice.paid)}</strong></div>
             <div className={Number(invoice.balance) > 0 ? 'is-balance' : ''}><span>Balance due</span><strong>{fmt(invoice.balance)}</strong></div>

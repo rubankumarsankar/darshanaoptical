@@ -22,6 +22,7 @@ const securityHeaders = [
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
+      "frame-src 'self' https://www.google.com https://maps.google.com",
       "object-src 'none'",
       scriptSource,
       "style-src 'self' 'unsafe-inline'",

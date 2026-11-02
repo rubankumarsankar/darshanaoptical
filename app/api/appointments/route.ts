@@ -31,7 +31,9 @@ export async function POST(request: Request) {
     );
 
     // Send dual email notifications (shop owner + customer confirmation if email provided)
-    sendAppointmentConfirmation({
+    // Await delivery attempt: Workers may stop untracked work after returning.
+    try {
+      await sendAppointmentConfirmation({
       name: b.name,
       phone: b.phone,
       email: b.email,
@@ -40,7 +42,10 @@ export async function POST(request: Request) {
       preferredTime: b.preferred_time,
       wearsGlasses: b.wears_glasses,
       notes: b.notes,
-    }).catch((err) => console.error("[mailer] Appointment email failed:", err));
+      });
+    } catch (err) {
+      console.error("[mailer] Appointment email failed:", err);
+    }
 
     return NextResponse.json(
       { success: true, message: "Appointment request saved successfully.", id: (result as any).insertId },

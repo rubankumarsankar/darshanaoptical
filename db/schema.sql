@@ -105,6 +105,8 @@ CREATE TABLE IF NOT EXISTS invoices (
   subtotal         DECIMAL(10,2) NOT NULL DEFAULT 0,
   discount_amount  DECIMAL(10,2) NOT NULL DEFAULT 0,
   discount_percent DECIMAL(5,2)  NOT NULL DEFAULT 0,
+  tax_rate         DECIMAL(5,2)  NOT NULL DEFAULT 0,
+  tax_amount       DECIMAL(10,2) NOT NULL DEFAULT 0,
   total            DECIMAL(10,2) NOT NULL DEFAULT 0,
   paid             DECIMAL(10,2) NOT NULL DEFAULT 0,
   balance          DECIMAL(10,2) NOT NULL DEFAULT 0,

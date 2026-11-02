@@ -272,6 +272,10 @@ export const invoiceUpdateSchema = z.object({
   order_status: z.enum(['new', 'lens_ordered', 'in_process', 'ready', 'delivered', 'cancelled']).optional(),
   cancel: z.boolean().optional(),
   notes: z.string().optional().nullable(),
+}).superRefine((value, ctx) => {
+  const actions = [value.add_payment !== undefined, value.order_status !== undefined, value.cancel === true, value.notes !== undefined]
+    .filter(Boolean).length;
+  if (actions !== 1) ctx.addIssue({ code: 'custom', message: 'Send exactly one invoice action per request.' });
 });
 
 export const invoicePathRefSchema = z.union([
