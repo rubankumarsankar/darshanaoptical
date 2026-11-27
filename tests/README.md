@@ -88,3 +88,10 @@ Suites included under `tests/e2e/`:
   MySQL evaluating `ON DUPLICATE KEY UPDATE` assignments left to right — but a
   schema change can still break production while these pass. Run
   `node db/migrate_security.mjs` and exercise the app after schema work.
+
+## Windows note
+
+Run the tests from a terminal opened at `D:\...` (capital drive letter), such as the
+normal PowerShell prompt. If the folder is opened as lower-case `d:\...` (Git Bash,
+some editor terminals), Vitest loads itself twice and every file fails with
+"failed to find the runner" / "reading 'config'". `cd D:\LSKR\do\darshanaoptical` fixes it.
