@@ -8,6 +8,9 @@ import type { AdminUser, Role } from './types';
 interface AuthContextValue {
   user: AdminUser | null;
   isLoading: boolean;
+  /** The session check could not reach the server (offline, timeout or 5xx). */
+  connectionError: boolean;
+  retry: () => void;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   role: Role | null;
@@ -18,18 +21,35 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const sessionRestoreStarted = useRef(false);
+  const sessionRestoreStarted = useRef(0);
+  const [connectionError, setConnectionError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => {
+    setConnectionError(false);
+    setIsLoading(true);
+    setAttempt((n) => n + 1);
+  }, []);
 
   // Restore session on mount by calling /api/admin/auth/me
   useEffect(() => {
     // React Strict Mode replays mount effects in development. The provider
     // instance survives that replay, so this guard prevents a duplicate /me
     // request without changing production behaviour.
-    if (sessionRestoreStarted.current) return;
-    sessionRestoreStarted.current = true;
+    if (sessionRestoreStarted.current === attempt + 1) return;
+    sessionRestoreStarted.current = attempt + 1;
 
-    fetch('/api/admin/auth/me')
+    // A hung request must not leave the loader spinning for ever.
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 15_000);
+
+    fetch('/api/admin/auth/me', { signal: controller.signal })
       .then(async (res) => {
+        // Server trouble is not "signed out": keep the cookie and offer a retry,
+        // otherwise proxy.ts and this provider bounce between sign-in and Home.
+        if (res.status >= 500) {
+          setConnectionError(true);
+          return;
+        }
         if (!res.ok) {
           // The cookie signature is still valid but the server rejected the
           // session — the account was deactivated, its role changed, or the
@@ -53,9 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           phone: u.phone ?? '',
         });
       })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, []);
+      .catch(() => setConnectionError(true))
+      .finally(() => {
+        window.clearTimeout(timer);
+        setIsLoading(false);
+      });
+  }, [attempt]);
 
   const login = useCallback(
     async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -92,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, role: user?.role ?? null }}>
+    <AuthContext.Provider value={{ user, isLoading, connectionError, retry, login, logout, role: user?.role ?? null }}>
       {children}
     </AuthContext.Provider>
   );

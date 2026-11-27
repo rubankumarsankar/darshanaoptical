@@ -11,9 +11,9 @@
 2. [Who can do what — roles](#2-who-can-do-what--roles)
 3. [Part A — For visitors (public website)](#3-part-a--for-visitors-public-website)
 4. [Part B — Signing in to the Admin Panel](#4-part-b--signing-in-to-the-admin-panel)
-5. [Part C — Daily counter work (all roles)](#5-part-c--daily-counter-work-all-roles)
-6. [Part D — Shop management (manager & admin)](#6-part-d--shop-management-manager--admin)
-7. [Part E — Administrator only](#7-part-e--administrator-only)
+5. [Part C — Daily counter work (everyone)](#5-part-c--daily-counter-work-everyone)
+6. [Part D — Money and reports (manager & owner)](#6-part-d--money-and-reports-manager--owner)
+7. [Part E — Owner only](#7-part-e--owner-only)
 8. [First-time setup & deployment](#8-first-time-setup--deployment)
 9. [Troubleshooting & FAQ](#9-troubleshooting--faq)
 10. [Golden rules](#10-golden-rules)
@@ -25,24 +25,27 @@
 | Part | Who uses it | What it does |
 |---|---|---|
 | **Public website** | Customers | Shows the shop, frames, lenses, offers; lets anyone **book an eye test** or **send an inquiry** |
-| **Admin panel** | Shop staff | Runs the whole shop: customers, eye tests, billing (POS), orders, stock, purchases, expenses, reports |
+| **Admin panel** | Shop staff | Runs the whole shop: customers, eye tests, sales and bills, orders, stock, purchases, expenses, reports |
 
-The two are connected: a booking made on the website appears instantly in the admin panel under **Website Bookings**, and both the shop owner and the customer receive an email automatically.
+The two are connected: a booking made on the website appears straight away in the admin panel under **Bookings**, and both the shop owner and the customer receive an email automatically.
 
 ---
 
 ## 2. Who can do what — roles
 
-| Feature | Staff | Manager | Admin |
+There are three kinds of account. The owner sets each person's access in **Settings → Staff**; the **Can see money** switch turns a front-desk account into a manager account.
+
+| Screen or action | Front desk | Can see money (manager) | Owner (admin) |
 |---|---|---|---|
-| Dashboard, Billing/POS, Website Bookings, Customers, Eye Tests, Orders, Pending Payments, Products & Stock, Stock In/Out | ✅ | ✅ | ✅ |
-| Purchases & Suppliers, Expenses, Daily Reports, Audit Log | — | ✅ | ✅ |
-| Staff Team, Shop Settings | — | — | ✅ |
+| Home, New sale, Bills, Bookings, Customers, Eye test, Orders, Products, Stock, Take payment, New stock arrived | ✅ | ✅ | ✅ |
+| Shop totals on Home ("Sold today"), **Money**, **Monthly report** | — | ✅ | ✅ |
+| Cancel a bill | — | ✅ | ✅ |
+| Settings → **Bills & tax**, **Activity** | — | ✅ | ✅ |
+| Settings → **Shop details**, **Staff**, **Email alerts** | — | — | ✅ |
 | Delete a customer or product | — | — | ✅ |
-| Maximum discount at billing | 5 % | 15 % | 100 % |
+| Biggest discount allowed (default) | 5 % | 15 % | 100 % |
 
-> These discount ceilings are configurable by the Admin in **Shop Settings**. Billing is always re-checked on the server, so the UI can never talk it into a bigger discount.
-
+> The owner can change the discount limits in **Settings → Staff**. Every bill is re-checked on the server, so nobody can get past the limit by changing the screen.
 
 ---
 
@@ -65,124 +68,92 @@ Open **Contact**, fill in name, phone, what you're interested in, and your messa
 
 ## 4. Part B — Signing in to the Admin Panel
 
-1. Go to **/admin** (e.g. `darshanaoptical.com/admin`). Anyone not signed in is automatically taken to the sign-in page.
-2. Enter your **email** and **password** (accounts are created by the Administrator — see Part E).
-3. Click **Sign In**. You land on the **Dashboard**.
-4. Click **Logout** at the bottom of the left sidebar when finished — especially on shared computers.
+1. Go to **/admin** (e.g. `darshanaoptical.com/admin`). Anyone not signed in is taken to the sign-in page.
+2. Enter your **email** and **password** (the owner creates accounts in **Settings → Staff**). On a shared counter computer, people who signed in before appear as tiles — tap your name and type only the password.
+3. You land on **Home**.
+4. Tap the **sign-out button** next to your name at the bottom of the menu when you finish, especially on shared computers.
 
 **Good to know:**
-- After **8 wrong passwords within 15 minutes**, that email (and the computer's IP) is locked out for **15 minutes**. This is intentional protection — wait, or ask the admin.
-- Sessions last 7 days, but changing a password or deactivating a user cuts their sessions off immediately.
-- Sessions survive closing the browser; use Logout to end them early.
+- After **8 wrong passwords within 15 minutes**, that email (and the computer's IP) is locked out for **15 minutes**. Wait, or ask the owner.
+- Sessions last 7 days, but changing a password or switching off an account ends its sessions straight away.
+- If the screen says **"Can't connect right now"**, the shop's internet or the server is down. You are still signed in — check the connection and press **Try again**.
+- On a phone the menu sits at the bottom of the screen; **More** opens the rest.
 
 ---
 
-## 5. Part C — Daily counter work (all roles)
+## 5. Part C — Daily counter work (everyone)
 
-### 5.1 Dashboard (`/admin/dashboard`)
-Your morning overview: **today's sales & invoices**, **money collected today**, **new customers today**, **this month's sales**, plus **pending orders**, **low-stock alerts**, **recent invoices**, and **today's website bookings**. Use the ↻ button to refresh.
+### 5.1 Home (`/admin`)
+Shows what needs doing today: late orders, glasses that have arrived, today's bookings, orders ready but customer not told, low stock and new website messages. Each line has a button that takes you straight to the job. People who can see money also see **Sold today**, **Received** and **To collect**.
 
-### 5.2 Billing / POS — the main daily screen
-Creates an invoice and, optionally, an order for lens fitting. Four steps:
+### 5.2 New sale (`/admin/sale`) — the main counter screen
+A step-by-step sale:
+1. **Customer** — search by name or mobile number, or add a new customer.
+2. **Power** — use the latest eye test, or carry on without one.
+3. **Items** — add frames, lenses and services. Stock is checked as you go.
+4. **Discount** — you can't give more than your limit; the screen tells you the limit.
+5. **Payment** — pay in full, half, nothing now, or another amount; choose cash, UPI, card or bank.
+6. **Done** — print the bill or send it on WhatsApp.
 
-> The **Express Counter** button in the top bar leads here too (the old `/admin/counter` page now redirects to POS, so old bookmarks keep working).
+The server works out the totals again before saving, and bill numbers never repeat.
 
-**Step 1 — Customer**
-- Search by name, phone, or customer ID (e.g. `DO-2026-041`) → click the customer.
-- New customer? Click **+ New Customer**, fill the form, save — you return to billing with them selected.
-- If the customer has earlier eye tests, you can pick one to link to the invoice (it prints on the job card).
+### 5.3 Bills (`/admin/bills`)
+Every bill, newest first; search by bill number, name or phone. Open a bill to **print** it, **send it on WhatsApp**, **email it**, **take a payment** or (managers and owner) **cancel** it. Old `/admin/invoices` links still work.
 
-**Step 2 — Products**
-- The cart shows on the right. Filter tabs: All / Frames / Lenses / Sunglasses / Service.
-- Click a product to add it; adjust **quantity** or remove ✕. Only in-stock items are listed.
-- Apply a **discount %** — you will get an error if it exceeds your role's ceiling (staff 5 %, manager 15 %, admin 100 %).
+### 5.4 Bookings (`/admin/bookings`)
+Three tabs:
+- **Eye test bookings** — today, tomorrow and the day after. **+ Add booking** for phone or walk-in bookings; **Start eye test** when the customer arrives; **Cancel** if they can't come.
+- **All bookings** — every booking from the website or the counter, any date, newest first. Filter by New, Confirmed, Done or Cancelled; **WhatsApp**, **Call**, **Mark confirmed** or **Cancel**.
+- **Website messages** — everything sent from the website's Contact page. **WhatsApp** or **Call** the customer, then **Mark replied** or **Close**.
 
-**Step 3 — Payment**
-- Choose **Cash / UPI / Card / Bank**, enter **Amount Paid** (may be an advance; the rest becomes balance), optionally mark **this bill includes an order** and set the **expected date** (default +3 days) plus frame/lens description.
+### 5.5 Customers (`/admin/customers`)
+Search by name or mobile number. Each customer shows their eye tests, bills, what they still owe, and buttons to start a sale, test eyes, or message them. **+ Add customer** needs a name and a 10-digit mobile number.
 
-**Step 4 — Done**
-- The invoice is created with number `DO-YYYY-#####`. Use **View Invoices** to see it, open it, and **print**. Stock is reduced automatically and the payment is recorded.
+### 5.6 Eye test (`/admin/eye-test`)
+Pick the customer, enter the power for each eye (SPH, CYL, Axis, ADD, PD), vision and a recommendation, and save. Then **Print prescription**, **Send on WhatsApp** or **Start sale with this power**. The prescription page is at `/admin/prescriptions/<id>`.
 
-### 5.3 Customers (`/admin/customers`)
-- Search by name/phone/ID; click a row for the full profile: contact details, **eye-test history**, invoices, notes, last visit.
-- **+ Add Customer** (`/admin/customers/new`): name and phone are required; email, DOB, gender, address, notes optional. The customer ID is generated automatically.
-- Edit with **Edit**; only an **Admin** can delete.
+### 5.7 Orders (`/admin/orders`)
+Glasses being made, step by step from **New** to **Collected**. Tap the next step to move an order along. When it's ready, **Tell customer** sends a WhatsApp message. Late orders are shown first.
 
-### 5.4 Eye Tests (`/admin/eye-tests`)
-- **+ New Eye Test** (`/admin/eye-tests/new`): choose the customer, date, tester name, then enter the prescription for **Right Eye** and **Left Eye**: SPH, CYL, Axis, ADD (for progressives), PD, plus visual acuity and recommendation.
-- Save — it stays attached to the customer forever and can be picked during billing.
-- **Printable prescription:** in the Eye Tests list, the **Prescription** button opens a clean print-ready prescription sheet for the customer (`/admin/prescriptions/…`).
+### 5.8 Take payment (`/admin/take-payment`)
+Find the customer, see what they owe on each bill, enter the amount and method, and save. The money is put against their oldest bills first.
 
-### 5.5 Orders & Fitting (`/admin/orders`)
-Every invoice that included an order appears here. Move each one along the pipeline with the status dropdown:
-**New → Lens Ordered → In Process → Ready → Delivered** (or Cancelled).
-Call the customer from the phone icon when the order is **Ready**.
+### 5.9 Products (`/admin/products`)
+Every frame, lens, sunglass, accessory and service, with price, stock and photo. **+ Add product** to add one; open a product to change it.
 
-### 5.6 Pending Payments (`/admin/payments`)
-All invoices with an outstanding **balance**. Open an invoice to **record a payment** (choose method); the balance and status update automatically (Paid / Part Paid / Pending).
-
-### 5.7 Invoices (`/admin/invoices`)
-The full invoice register (reached via **View Invoices** after a sale, or from any invoice link):
-- Top cards: **Total Value, Received, Pending** for the filtered list.
-- Search by invoice number or customer; filter by status (Paid / Part Paid / Pending / Cancelled).
-- Click a row to open the **invoice detail**: line items, payment history, **+ Add Payment** (amount, method, notes), **print**, and order-status updates. This is the same screen you land on from *Pending Payments*.
-
-### 5.8 Products & Stock (`/admin/products`)
-- Tabs for **Frames / Lenses / Sunglasses**. Search by name, brand, or code.
-- **+ Add Product**: name, brand, model, category, colour, size, material, **purchase price, selling price, MRP**, opening stock, low-stock threshold, description, and optional **photo** (uploaded to cloud storage).
-- **Edit** to change prices/details; **Admin** can delete. Inactive products stop appearing at billing.
-
-### 5.9 Stock In / Out (`/admin/inventory`)
-- **Stock In**: pick a product, quantity, reason (purchase/damage-return/adjustment), optional reference — stock increases and a movement is recorded.
-- The **Stock Movements** ledger shows every in/out with who did it and when — the audit trail for physical stock. Negative quantities = out (sale, damage, return).
+### 5.10 Stock (`/admin/stock`) and New stock arrived (`/admin/new-stock`)
+- **Stock** shows what's in the shop and what's running low. Tabs: **Deliveries** (supplier bills), **Suppliers**, **History** (every stock movement).
+- **New stock arrived** — pick the supplier, add what came in and how much was paid. Stock goes up automatically.
 
 ---
 
-## 6. Part D — Shop management (manager & admin)
+## 6. Part D — Money and reports (manager & owner)
 
-### 6.1 Purchases & Suppliers (`/admin/purchases`)
-When stock arrives from a supplier:
-1. Click **+ New Purchase**. Choose the **supplier** and enter their **bill number**.
-2. Add each item (product, quantity, purchase price) — totals calculate automatically.
-3. Enter how much you **paid now** (the rest becomes the supplier **balance** — money you owe them).
-4. Save. Stock increases for every item automatically and a stock movement is recorded.
-   - The balance can only be changed by recording payments against purchases — it is server-owned.
+### 6.1 Money (`/admin/money`)
+Pick a month to see **money in**, **money out** and **what you kept**. Tabs:
+- **Who owes you** — customers with unpaid bills, with WhatsApp reminders.
+- **Payments** — every payment taken, with the bill and who took it.
+- **Expenses** — rent, salary, electricity and so on. Add an expense to record one; delete a wrong entry.
 
-### 6.2 Suppliers (`/admin/suppliers`)
-Add/edit suppliers: name, contact person, phone, email, address, **GST number**. The **Balance** column shows what you currently owe each supplier.
+### 6.2 Monthly report (`/admin/report`)
+A plain-words summary of the month: sales, bills, expenses, what you kept, a comparison with last month, what sold most and where money went. **Download PDF** or **Send to my WhatsApp**.
 
-### 6.3 Expenses (`/admin/expenses`)
-- **+ Add Expense**: date, category (**rent, electricity, salary, transport, maintenance, marketing, supplies, other**), amount, payment method, description, optional reference/bill number.
-- Filter by month; totals shown at the top. These feed straight into **Daily Reports**.
-
-### 6.4 Daily Reports (`/admin/reports`)
-Pick a month (last 6 available): **Total Sales, Amount Collected, Total Expenses, Net Profit** (collected − expenses), plus an **expense breakdown by category** and the invoice list for that month. Cancelled invoices are excluded automatically.
-
-### 6.5 Website Bookings (`/admin/bookings`)
-Every eye-test booking from the website and every contact inquiry, newest first, with status filters.
-- **Appointments:** set status to **Confirmed** once you've called the customer, **Completed** after the test, or **Cancelled**.
-- **Inquiries:** mark **Contacted** once handled, then **Closed**.
-- Use the phone/mail icons to contact the person directly.
+### 6.3 Settings — Bills & tax, Activity
+- **Bills & tax** — GST and other bill extras.
+- **Activity** — who did what and when (every create and change is recorded).
 
 ---
 
-## 7. Part E — Administrator only
+## 7. Part E — Owner only
 
-### 7.1 Staff Team (`/admin/staff`)
-- **+ Add Staff**: name, email, phone, **role** (staff/manager/admin), password. Share the password privately.
-- **Edit** a user to change role/details, **reset their password**, or set status **Inactive** (instantly blocks their sign-in and existing sessions).
-- Safety rails: you cannot deactivate or demote **yourself**, and you cannot remove/demote the **last active admin**.
+### 7.1 Settings → Shop details
+Shop name, tagline, phone, WhatsApp number, email, address, GSTIN, **opening hours** and the **logo** printed on bills. (Opening hours and logo need the one-time database update `npm run db:migrate:shop-details` — see 8.2.)
 
-### 7.2 Shop Settings (`/admin/settings`)
-- **Shop profile:** name, tagline, phone, WhatsApp, email, address — used on invoices.
-- **Document numbering:** invoice prefix and customer prefix (default `DO`).
-- **Tax:** enable/disable and set rate. **Low-stock threshold** (default 5).
-- **Discount ceilings per role:** admin / manager / staff percentages.
-- **Invoice footer & terms** text.
-- Only the **Admin** sees and can change this page; every change is written to the audit log.
+### 7.2 Settings → Staff
+Add staff, change their name, phone or password, switch **Can see money** on or off, and set the **biggest discount allowed** for each kind of account.
 
-### 7.3 Audit Log (`/admin/audit`)
-A read-only trail of who did what, when: logins, invoice creation, product/price changes, settings changes, staff changes — with the performer's name and role. Use the filters to investigate a specific entity or date.
+### 7.3 Settings → Email alerts
+Choose which emails the shop receives.
 
 ---
 
@@ -197,7 +168,8 @@ npm install                   # 1. install dependencies
 cp .env.example .env.local    # 2. create the environment file, then edit it (see below)
 node db/migrate.mjs           # 3. create all tables + seed users (FIRST TIME ONLY)
 node db/migrate_security.mjs  # 4. idempotent security migration (safe to re-run)
-npm run dev                   # 5. development server at http://localhost:3000
+npm run db:migrate:shop-details  # 5. opening hours + logo columns (safe to re-run)
+npm run dev                   # 6. development server at http://localhost:3000
 npm run build && npm start    # production mode
 ```
 
@@ -242,7 +214,7 @@ After restoring, run idempotent migrations, verify admin login, open a recent in
 
 ### 8.6 Cancellation and refund workflow
 
-Only an Admin or Manager may cancel an invoice. Cancellation is final: it marks the invoice cancelled, restores stock for non-service items, and records a negative refund entry for each original payment method (cash, UPI, card, or bank). Confirm the actual customer refund has been completed before cancellation. Do not cancel an invoice merely to edit it; use a corrective sale or credit process with an audit note instead.
+Only the owner or a manager may cancel a bill (open it in **Bills** and cancel it there). Cancellation is final: it marks the invoice cancelled, restores stock for non-service items, and records a negative refund entry for each original payment method (cash, UPI, card, or bank). Confirm the actual customer refund has been completed before cancellation. Do not cancel an invoice merely to edit it; use a corrective sale or credit process with an audit note instead.
 
 ## 9. Troubleshooting & FAQ
 
@@ -252,13 +224,15 @@ Only an Admin or Manager may cancel an invoice. Cancellation is final: it marks 
 | **"a valid phone number is required" when booking** | The phone field needs 7–15 digits (e.g. `9876543210` or `+91 98765 43210`). Letters and symbols like `(` `)` are not accepted. |
 | **"Invalid email or password" but I'm sure it's right** | After 8 failures you're locked 15 minutes. Wait, or have an admin verify the account is **Active**. |
 | **Redirected to login even after signing in** | Your session was revoked (password/role changed) — sign in again. |
-| **"Discount exceeds the limit for your role"** | Intentional. Ask a manager/admin to apply the larger discount. |
-| **Product missing in POS** | Stock is 0 or status inactive — restock via **Stock In** or fix in **Products**. |
+| **"Discount exceeds the limit for your role"** | Intentional. Ask a manager or the owner to make the sale, or ask the owner to raise the limit in **Settings → Staff**. |
+| **Product missing in New sale** | Stock is 0 or the product is switched off — record it in **New stock arrived** or fix it in **Products**. |
+| **"Can't connect right now"** | The internet or server is down. You are still signed in — fix the connection and press **Try again**. |
+| **Saving opening hours or logo fails** | Run `npm run db:migrate:shop-details` once. |
 | **Emails not arriving** | Check `SMTP_FROM`/`SMTP_PASS` in `.env.local`; the Gmail App Password must be current (16 chars). The booking still saves even if email fails. |
 | **Invoice number looks skipped** | Numbers come from a collision-safe counter; cancelled invoices still consume a number. Normal. |
 | **Product photo won't upload** | Only images (JPG/PNG/WebP) are allowed — SVG is rejected for security; check R2 settings. |
 | **`DATABASE_URL` error on start** | `.env.local` missing or incomplete — compare with `.env.example`. |
-| **Forgot admin password** | Another admin resets it in **Staff Team**; or set `SEED_ADMIN_PASSWORD` and re-run `node db/migrate.mjs` (does not delete data). |
+| **Forgot admin password** | Another owner account resets it in **Settings → Staff**; or set `SEED_ADMIN_PASSWORD` and re-run `node db/migrate.mjs` (does not delete data). |
 
 ---
 
@@ -266,9 +240,9 @@ Only an Admin or Manager may cancel an invoice. Cancellation is final: it marks 
 
 1. **Logout** on shared counter computers.
 2. **Never share passwords** — create separate staff accounts so the audit log is meaningful.
-3. Check **Website Bookings** every morning; confirm appointments by phone.
-4. Record every stock arrival as a **Purchase** (or Stock In) — reports and low-stock alerts depend on it.
-5. Record every payment in **Pending Payments** — never adjust balances by hand.
-6. Only the Admin changes **Settings** and **Staff**; everything there is audit-logged.
+3. Check **Home** every morning — it lists today's bookings, ready orders and new website messages.
+4. Record every delivery in **New stock arrived** — reports and low-stock alerts depend on it.
+5. Record every payment with **Take payment** (or from the bill) — never adjust balances by hand.
+6. Only the owner changes **Shop details** and **Staff**; every change is recorded in **Settings → Activity**.
 7. After any code update: run `npm test` and `npm run build` before restarting.
 
