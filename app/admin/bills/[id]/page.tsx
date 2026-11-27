@@ -1,6 +1,6 @@
 'use client';
 
-import '../../admin.css';
+import '../../_ui/print.css';
 import s from '../../_ui/simple.module.css';
 
 import { use, useEffect, useRef, useState } from 'react';
@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
 import { adminPost, adminPut } from '@/app/lib/admin/api';
-import AdminLoader from '../../components/AdminLoader';
-import TablePagination from '../../components/TablePagination';
+import AdminLoader from '../../_ui/AdminLoader';
+import TablePagination from '../../_ui/TablePagination';
 import { ArrowLeft, Printer, Plus, CheckCircle, X, FileText, ClipboardList, Mail } from 'lucide-react';
 
 function fmt(n: number) { return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }

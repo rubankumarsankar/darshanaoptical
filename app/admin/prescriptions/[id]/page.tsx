@@ -1,12 +1,12 @@
 'use client';
 
-import '../../admin.css';
+import '../../_ui/print.css';
 
 import { use, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
-import AdminLoader from '../../components/AdminLoader';
+import AdminLoader from '../../_ui/AdminLoader';
 import { ArrowLeft, MessageCircle, Printer, ShoppingCart } from 'lucide-react';
 import s from '../../_ui/simple.module.css';
 import { EmptyState, WhatsAppButton } from '../../_ui/parts';

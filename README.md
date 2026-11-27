@@ -2,6 +2,23 @@
 
 Darshana Optical's customer website and administration system, built with Next.js 16, React 19, TypeScript, and MySQL/TiDB Cloud.
 
+## Project layout
+
+```
+app/
+  (public pages)        page.tsx, frames/, lenses/, book/, contact/, …
+  components/site/      website header, footer, page sections and forms
+  components/booking/   the Book-an-eye-test popup
+  admin/                admin screens (/admin, /admin/sale, /admin/bills, …)
+  admin/_ui/            admin shell, menu, shared parts, simple.module.css, print.css
+  api/                  public form endpoints and /api/admin/* endpoints
+  lib/                  database, sessions, validation, mailers and admin helpers
+db/                     schema.sql and one-off, re-runnable migration scripts
+public/                 logos and website images
+tests/                  unit/, integration/ (Vitest) and e2e/ (Playwright)
+proxy.ts                cookie check in front of /admin
+```
+
 ## Local development
 
 Requirements: Node.js 20 or newer and a MySQL-compatible database.

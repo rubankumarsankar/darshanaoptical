@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import s from './_ui/simple.module.css';
 import { fontVars } from './_ui/fonts';
-import AdminShell from './components/AdminShell';
+import AdminShell from './_ui/AdminShell';
 import { AuthProvider } from '@/app/lib/admin/auth-context';
 
 export const metadata: Metadata = {

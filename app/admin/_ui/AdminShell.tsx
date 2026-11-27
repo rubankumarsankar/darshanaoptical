@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/app/lib/admin/auth-context';
-import SimpleShell from '../_ui/SimpleShell';
+import SimpleShell from './SimpleShell';
 import AdminLoader from './AdminLoader';
 
 const PUBLIC_PATHS = ['/admin/login'];
