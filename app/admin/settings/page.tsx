@@ -337,7 +337,7 @@ function Staff() {
                 <Switch label={`${m.name} can see money`} checked={m.role === 'manager'} disabled={busy === m.id || m.id === user?.id} onChange={(v) => setMoney(m, v)} />
               </div>
             )}
-            <button type="button" className={`${s.btn} ${s.btnSoft}`} style={{ alignSelf: 'flex-start', minHeight: 48 }} onClick={() => setChanging(m)} aria-label={`Change ${m.name}`}>
+            <button type="button" className={`${s.btn} ${s.btnSoft}`} style={{ alignSelf: 'stretch', minHeight: 48, padding: '8px 16px', textAlign: 'center' }} onClick={() => setChanging(m)} aria-label={`Change ${m.name}`}>
               Change name, phone or password
             </button>
           </div>

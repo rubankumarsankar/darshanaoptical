@@ -139,7 +139,7 @@ export default function PrescriptionPage({ params }: { params: Promise<{ id: str
               <tbody>{rows.map((row) => (
                 <tr key={row.short}>
                   <td><strong>{row.eye}</strong><span>{row.short}</span></td>
-                  {row.values.map((value, index) => <td key={index}>{display(value)}</td>)}
+                  {row.values.map((value, index) => <td key={index}>{value === null || value === undefined || value === '' ? '—' : String(value)}</td>)}
                 </tr>
               ))}</tbody>
             </table>
