@@ -21,25 +21,26 @@
     "db:seed": "node db/seed.mjs",
     "db:migrate:security": "node db/migrate_security.mjs",
     "db:migrate:email-settings": "node db/migrate_email_settings.mjs",
-    "db:migrate:invoice-tax": "node db/migrate_invoice_tax.mjs"
+    "db:migrate:invoice-tax": "node db/migrate_invoice_tax.mjs",
+    "db:migrate:shop-details": "node db/migrate_shop_details.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",
-    "@next/third-parties": "^16.3.4",
-    "@opennextjs/cloudflare": "^1.20.15",
+    "@next/third-parties": "^16.4.6",
+    "@opennextjs/cloudflare": "^1.20.19",
     "@tidbcloud/serverless": "^0.3.0",
     "@types/nodemailer": "^8.0.1",
     "framer-motion": "^13.1.1",
     "lenis": "^1.3.26",
     "lucide-react": "^1.35.0",
     "mysql2": "^3.24.3",
-    "next": "^16.4.1",
-    "nodemailer": "^10.0.1",
+    "next": "^16.4.6",
+    "nodemailer": "^10.6.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-icons": "^5.7.0",
     "sharp": "^0.35.4",
-    "zod": "^4.6.2"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
@@ -48,7 +49,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "^16.4.1",
+    "eslint-config-next": "^16.4.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",

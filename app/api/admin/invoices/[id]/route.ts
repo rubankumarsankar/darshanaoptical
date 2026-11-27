@@ -11,6 +11,9 @@ function parseInvoiceRef(value: string) {
     : { ref: null, error: NextResponse.json({ error: 'Invalid invoice reference.' }, { status: 400 }) };
 }
 
+/** Rounds to paise so floating-point drift (0.7 + 0.1 = 0.7999…) never decides an invoice's status. */
+const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
 async function findInvoice(ref: string) {
   const [invoice] = await query('SELECT * FROM invoices WHERE id = ? OR invoice_number = ? LIMIT 1', [ref, ref]) as any[];
   return invoice;
@@ -25,13 +28,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const invoice = await findInvoice(ref!);
   if (!invoice) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
   const internalId = invoice.id;
-  const items = await query('SELECT * FROM invoice_items WHERE invoice_id = ?', [internalId]);
-  const payments = await query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [internalId]);
-  const [customer] = await query('SELECT email FROM customers WHERE id = ? LIMIT 1', [invoice.customer_id]) as any[];
-  const [settings] = await query('SELECT * FROM shop_settings WHERE id=1') as any[];
-  const [eyeTest] = invoice.eye_test_id
-    ? await query('SELECT * FROM eye_tests WHERE id = ? LIMIT 1', [invoice.eye_test_id]) as any[]
-    : [];
+  // Independent reads run in parallel: each query() opens its own connection,
+  // so running them one after another pays a TLS handshake per query.
+  const [items, payments, [customer], [settings], [eyeTest]] = await Promise.all([
+    query('SELECT * FROM invoice_items WHERE invoice_id = ?', [internalId]),
+    query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [internalId]),
+    query('SELECT email FROM customers WHERE id = ? LIMIT 1', [invoice.customer_id]) as Promise<any[]>,
+    query('SELECT * FROM shop_settings WHERE id=1') as Promise<any[]>,
+    invoice.eye_test_id
+      ? query('SELECT * FROM eye_tests WHERE id = ? LIMIT 1', [invoice.eye_test_id]) as Promise<any[]>
+      : Promise.resolve([] as any[]),
+  ]);
   return NextResponse.json({ invoice, items, payments, settings: settings ?? {}, eyeTest: eyeTest ?? null, customerEmail: customer?.email ?? null });
 }
 
@@ -44,6 +51,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const parsed = validate(invoiceUpdateSchema, await request.json());
   if (parsed.error) return parsed.error;
   const b = parsed.data;
+
+  // Checked before anything is written: a request that combines a payment or
+  // order update with a cancel must not half-apply and then be refused.
+  if (b.cancel && session.role !== 'admin' && session.role !== 'manager') {
+    return NextResponse.json({ error: 'Insufficient permission to cancel.' }, { status: 403 });
+  }
 
   const current = await findInvoice(ref!);
   if (!current) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
@@ -67,14 +80,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         // Reject overpayment rather than silently clamping the invoice while the
         // payments table still records the full amount — that inflated the
         // collected totals on the reports screen.
-        const outstanding = Math.round((parseFloat(locked.total) - parseFloat(locked.paid)) * 100) / 100;
-        if (b.add_payment! > outstanding) {
+        const total = money(parseFloat(locked.total));
+        const alreadyPaid = money(parseFloat(locked.paid));
+        const payment = money(b.add_payment!);
+        const outstanding = money(total - alreadyPaid);
+        if (payment > outstanding) {
           throw new Error(`Payment of ₹${b.add_payment} exceeds the outstanding balance of ₹${outstanding}.`);
         }
 
-        const newPaid = parseFloat(locked.paid) + b.add_payment!;
-        const newBalance = Math.max(0, parseFloat(locked.total) - newPaid);
-        const newStatus = newBalance === 0 ? 'paid' : 'partially_paid';
+        const newPaid = money(alreadyPaid + payment);
+        const newBalance = Math.max(0, money(total - newPaid));
+        const newStatus = newBalance <= 0 ? 'paid' : 'partially_paid';
 
         await tx.query(
           'UPDATE invoices SET paid=?, balance=?, status=?, updated_at=NOW() WHERE id=?',
@@ -99,23 +115,30 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   // Handle order status update
   if (b.order_status !== undefined) {
     const deliveredAt = b.order_status === 'delivered' ? 'NOW()' : 'NULL';
-    await query(
-      `UPDATE invoices SET order_status=?, delivered_at=${deliveredAt}, updated_at=NOW() WHERE id=?`,
-      [b.order_status, internalId]
-    );
-    await query(
-      `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
-      [randomUUID(), 'UPDATE', 'invoice', internalId,
-       `Order status changed to '${b.order_status}' on invoice ${current.invoice_number}`,
-       session.name, session.role]
-    );
+    try {
+      await withTransaction(async (tx) => {
+        // Lock and re-check: a cancel committed after `current` was read must win.
+        const [locked] = await tx.query('SELECT status, invoice_number FROM invoices WHERE id = ? FOR UPDATE', [internalId]) as any[];
+        if (!locked) throw new Error('Not found.');
+        if (locked.status === 'cancelled') throw new Error('This invoice is cancelled and can no longer be modified.');
+        await tx.query(
+          `UPDATE invoices SET order_status=?, delivered_at=${deliveredAt}, updated_at=NOW() WHERE id=?`,
+          [b.order_status, internalId]
+        );
+        await tx.query(
+          `INSERT INTO audit_logs (id,action,entity,entity_id,details,performed_by,performed_by_role) VALUES (?,?,?,?,?,?,?)`,
+          [randomUUID(), 'UPDATE', 'invoice', internalId,
+           `Order status changed to '${b.order_status}' on invoice ${locked.invoice_number}`,
+           session.name, session.role]
+        );
+      });
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message ?? 'Failed to update order status.' }, { status: 400 });
+    }
   }
 
-  // Handle cancellation
+  // Handle cancellation (permission already checked above)
   if (b.cancel) {
-    if (session.role !== 'admin' && session.role !== 'manager') {
-      return NextResponse.json({ error: 'Insufficient permission to cancel.' }, { status: 403 });
-    }
     try {
       await withTransaction(async (tx) => {
         // Lock + re-check status so two concurrent cancel requests can't both
@@ -169,8 +192,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     await query('UPDATE invoices SET notes=?, updated_at=NOW() WHERE id=?', [b.notes, internalId]);
   }
 
-  const [updated] = await query('SELECT * FROM invoices WHERE id = ?', [internalId]) as any[];
-  const items = await query('SELECT * FROM invoice_items WHERE invoice_id = ?', [internalId]);
-  const payments = await query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [internalId]);
+  const [[updated], items, payments] = await Promise.all([
+    query('SELECT * FROM invoices WHERE id = ?', [internalId]) as Promise<any[]>,
+    query('SELECT * FROM invoice_items WHERE invoice_id = ?', [internalId]),
+    query('SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at', [internalId]),
+  ]);
   return NextResponse.json({ invoice: updated, items, payments });
 }

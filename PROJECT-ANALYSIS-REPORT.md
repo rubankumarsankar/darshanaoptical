@@ -6,6 +6,23 @@
 
 ---
 
+## 0. Current status — recheck of 26 Nov 2026 (supersedes the figures below)
+
+All code checks pass after this recheck's fixes: lint 0/0, `tsc` clean, **566 / 566 tests (19 files)**, `npm run build` succeeds, and `npm audit --omit=dev` reports **0 vulnerabilities**.
+
+| Item | Fix |
+|---|---|
+| 16 invoice tests failing after the billing hardening commit (mock out of date) | Test mock now serves full product rows, settings and payments inside the transaction |
+| BookingModal lint errors (`handleReset` used before declaration, `any`) | `useEffectEvent` for the Escape handler; `unknown` in the catch |
+| 9 vulnerable production packages (7 high) | next 16.4.6, nodemailer 10.6.1, zod 4.6.7, @opennextjs/cloudflare 1.20.19 |
+| Payment status decided by float equality (0.70 + 0.10 left an invoice "partially paid" at zero balance) | Amounts rounded to paise before comparison; test added |
+| Order-status change ran outside a transaction against a stale status | Locked, re-checked transaction; test added |
+| Serial independent queries, each opening its own TiDB connection | Run in parallel on invoice and customer views. Cloudflare Hyperdrive remains the larger win |
+| TLS shim patched `tls.connect` process-wide | Installed only inside workerd |
+| `dev-server.log`, `scratch/`, `public/uploads/` tracked | Untracked and ignored |
+
+Note: `npm run build:cloudflare` needs symlink permission on Windows (Developer Mode, or build in WSL/CI).
+
 ## 1. Executive Summary
 
 Darshana Optical is a production-grade two-part system:
@@ -185,7 +202,7 @@ node db/migrate_security.mjs # idempotent: token_version, login_attempts, counte
 #                          node db/add_image_column.mjs   (products.image_url)
 # dev helper: node setup-images.mjs (downloads placeholder photos into public/images)
 npm run dev                  # http://localhost:3000  (admin at /admin/login)
-npm test                     # 483 tests
+npm test                     # 566 tests
 npm run build && npm start   # production
 ```
 

@@ -57,3 +57,7 @@ wrangler-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local scratch scripts and dev-only uploads (production images live in R2)
+/scratch/
+/public/uploads/

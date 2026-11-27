@@ -8,8 +8,14 @@ const state = vi.hoisted(() => ({
   invoice: null as any,
   counters: new Map<string, number>(),
   txLog: [] as { sql: string; params: any[] }[],
-  products: new Map<string, { stock: number; name: string }>(),
+  products: new Map<string, Record<string, unknown>>(),
+  payments: [] as { amount: string; method: string }[],
 }));
+
+const product = (id: string, over: Record<string, unknown> = {}) => ({
+  id, product_code: `PC-${id}`, name: 'Aviator', category: 'frame', selling_price: '1000.00',
+  stock: 50, status: 'active', ...over,
+});
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({
@@ -22,12 +28,14 @@ vi.mock('@/app/lib/db', () => {
     state.txLog.push({ sql, params });
     if (/FROM counters/.test(sql)) return [{ value: state.counters.get(params[0]) ?? 0 }];
     if (/UPDATE counters/.test(sql)) { state.counters.set(params[1], params[0]); return {}; }
-    if (/FROM products WHERE id = \? FOR UPDATE/.test(sql)) {
+    if (/FROM products WHERE id\s*=\s*\? FOR UPDATE/.test(sql)) {
       const p = state.products.get(params[0]);
       return p ? [p] : [];
     }
-    if (/FROM invoices WHERE id = \? FOR UPDATE/.test(sql)) return state.invoice ? [state.invoice] : [];
+    if (/FROM shop_settings/.test(sql)) return [state.settings];
+    if (/FROM invoices WHERE id\s*=\s*\? FOR UPDATE/.test(sql)) return state.invoice ? [state.invoice] : [];
     if (/FROM invoice_items/.test(sql)) return state.invoice?.items ?? [];
+    if (/FROM payments/.test(sql)) return state.payments;
     return [];
   };
   return {
@@ -73,7 +81,11 @@ const sale = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   state.counters = new Map([['invoice', 125]]);
   state.txLog = [];
-  state.products = new Map([['p1', { stock: 50, name: 'Aviator' }]]);
+  state.products = new Map([
+    ['p1', product('p1')],
+    ['svc', product('svc', { name: 'Fitting', category: 'service', selling_price: '100.00', stock: 0 })],
+  ]);
+  state.payments = [];
   state.invoice = null;
   state.settings = { max_discount_admin: 100, max_discount_manager: 15, max_discount_staff: 5 };
   signInAs('admin');
@@ -163,13 +175,14 @@ describe('initial payment integrity', () => {
     const res = await post(sale({ amount_paid: 1200 }));
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/cannot exceed the invoice total/i);
-    expect(state.txLog).toHaveLength(0);
+    // Validation now runs inside the (rolled-back) transaction; nothing may be written.
+    expect(state.txLog.some((q) => /INSERT INTO (invoices|payments)/.test(q.sql))).toBe(false);
   });
 });
 
 describe('stock protection', () => {
   it('refuses to sell more than is in stock', async () => {
-    state.products.set('p1', { stock: 2, name: 'Aviator' });
+    state.products.set('p1', product('p1', { stock: 2 }));
     const res = await post(sale({
       items: [{ product_id: 'p1', product_name: 'Aviator', product_code: 'FR-1', category: 'frame', quantity: 5, unit_price: 100 }],
     }));
@@ -206,6 +219,40 @@ describe('payments on an existing invoice', () => {
     expect((await res.json()).error).toMatch(/exceeds the outstanding balance/i);
   });
 
+  it('marks the invoice paid when paise amounts add up exactly (no float drift)', async () => {
+    // 0.70 + 0.10 is 0.7999999999999999 in floating point.
+    state.invoice = { ...state.invoice, total: '0.80', paid: '0.70' };
+    expect((await put({ add_payment: 0.1 })).status).toBe(200);
+    const update = state.txLog.find((q) => /UPDATE invoices SET paid=/.test(q.sql));
+    expect(update!.params.slice(0, 3)).toEqual([0.8, 0, 'paid']);
+  });
+
+  it('never half-applies a request that combines a payment with a cancel', async () => {
+    signInAs('staff');
+    const res = await put({ add_payment: 100, cancel: true });
+    expect(res.status).toBe(400); // one action per request, enforced at validation
+    expect(state.txLog.some((q) => /INSERT INTO payments/.test(q.sql))).toBe(false);
+  });
+
+  it('re-checks status under lock before changing the order status', async () => {
+    // `current` still says partially_paid, but a cancel committed in between.
+    const lockedView = { ...state.invoice, status: 'cancelled' };
+    const original = state.invoice;
+    let reads = 0;
+    Object.defineProperty(state, 'invoice', {
+      configurable: true,
+      get: () => (reads++ === 0 ? original : lockedView),
+      set: () => {},
+    });
+    try {
+      const res = await put({ order_status: 'ready' });
+      expect(res.status).toBe(400);
+      expect(state.txLog.some((q) => /SET order_status=/.test(q.sql))).toBe(false);
+    } finally {
+      Object.defineProperty(state, 'invoice', { configurable: true, writable: true, value: null });
+    }
+  });
+
   it('rejects a zero or negative payment at validation', async () => {
     expect((await put({ add_payment: 0 })).status).toBe(400);
     expect((await put({ add_payment: -50 })).status).toBe(400);
@@ -235,6 +282,7 @@ describe('cancelling an invoice', () => {
       total: '1000.00', paid: '400.00',
       items: [{ product_id: 'p1', product_name: 'Aviator', product_code: 'FR-1', category: 'frame', quantity: 2 }],
     };
+    state.payments = [{ amount: '400.00', method: 'cash' }];
   });
 
   it('is refused for staff', async () => {

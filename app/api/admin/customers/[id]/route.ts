@@ -32,12 +32,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const internalId = customer.id;
 
   // Also fetch eye tests and invoices for customer profile
-  const eyeTests = await query(
-    'SELECT * FROM eye_tests WHERE customer_id = ? ORDER BY test_date DESC', [internalId]
-  );
-  const invoices = await query(
-    'SELECT * FROM invoices WHERE customer_id = ? ORDER BY created_at DESC', [internalId]
-  );
+  const [eyeTests, invoices] = await Promise.all([
+    query('SELECT * FROM eye_tests WHERE customer_id = ? ORDER BY test_date DESC', [internalId]),
+    query('SELECT * FROM invoices WHERE customer_id = ? ORDER BY created_at DESC', [internalId]),
+  ]);
 
   return NextResponse.json({ customer, eyeTests, invoices });
 }
