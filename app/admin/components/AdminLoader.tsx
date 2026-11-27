@@ -16,8 +16,8 @@ export default function AdminLoader({ label = 'Loading', fullScreen = false }: A
         alignItems: 'center',
         justifyContent: 'center',
         gap: 14,
-        background: fullScreen ? '#232328' : 'transparent',
-        color: fullScreen ? '#FFFFFF' : '#1F2024',
+        background: fullScreen ? '#F3F2EF' : 'transparent',
+        color: '#1F2024',
         fontFamily: 'inherit',
       }}
     >

@@ -11,6 +11,10 @@ import { EASE_STANDARD } from "./lib/motion";
 export default function Template({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  // The admin keeps its menu and sign-in state between screens. Re-keying it
+  // here would remount the whole admin (and re-check the session) on every click.
+  if (pathname.startsWith("/admin")) return <>{children}</>;
+
   return (
     <MotionConfig reducedMotion="user">
       <motion.div

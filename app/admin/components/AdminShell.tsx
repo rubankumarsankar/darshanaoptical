@@ -22,6 +22,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }, [user, isLoading, isPublic, router]);
 
   if (isLoading) return <AdminLoader label="Opening the shop" fullScreen />;
-  if (isPublic || !user) return <>{children}</>;
+  // While the redirect above runs, show the loader rather than a page the
+  // visitor can't use (signed out) or no longer needs (signed in on sign-in).
+  if (!user && !isPublic) return <AdminLoader label="Taking you to sign in" fullScreen />;
+  if (user && isPublic) return <AdminLoader label="Opening the shop" fullScreen />;
+  if (!user) return <>{children}</>;
   return <SimpleShell>{children}</SimpleShell>;
 }

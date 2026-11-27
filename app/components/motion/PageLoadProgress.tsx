@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 // (the server can't know the preference, so returning null broke hydration).
 export default function PageLoadProgress() {
   const pathname = usePathname();
+  // The admin has its own loading states; the lens sweep is for the website.
+  if (pathname.startsWith("/admin")) return null;
 
   return (
     <div key={pathname} className="route-loader" aria-hidden="true">
