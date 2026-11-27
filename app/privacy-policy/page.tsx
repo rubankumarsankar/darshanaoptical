@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import WhatsAppButton from "../components/motion/WhatsAppButton";
+import LegalPage from "../components/site/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Darshana Optical",
@@ -31,8 +27,8 @@ const SECTIONS = [
     body: "Several buttons on this site open a pre-filled WhatsApp message to our store number. Messages sent this way are subject to WhatsApp's own privacy policy, and our conversation with you is stored in WhatsApp like any other chat. We use it solely to assist with your enquiry.",
   },
   {
-    title: "5. Cookies & Local Storage",
-    body: "This website does not use tracking cookies or third-party advertising trackers. Your browser may store minor technical preferences locally (such as scroll position) purely to make your visit smoother; this data never leaves your device.",
+    title: "5. Cookies, Analytics & Local Storage",
+    body: "We use Google Analytics to understand how many people visit this website and which pages they find useful. Google Analytics sets cookies and collects information such as the pages you view, roughly where you are visiting from, and the type of device and browser you use. It does not tell us who you are, and we do not use it for advertising. Google processes this data under its own privacy policy (policies.google.com/privacy), and you can opt out with Google's browser add-on (tools.google.com/dlpage/gaoptout) or by blocking cookies in your browser. Your browser may also store minor technical preferences locally (such as scroll position) to make your visit smoother; this data never leaves your device.",
   },
   {
     title: "6. Third-Party Links & Embeds",
@@ -57,46 +53,5 @@ const SECTIONS = [
 ];
 
 export default function PrivacyPolicyPage() {
-  return (
-    <>
-      <Header />
-
-      <main className="flex-1 bg-white">
-        <section className="relative overflow-hidden bg-linear-to-b from-surface-warm via-white to-white py-14 sm:py-20">
-          <div className="container-brand text-center max-w-3xl mx-auto space-y-5">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck size={14} /> Your Privacy Matters
-            </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-950 tracking-tight">
-              Privacy Policy
-            </h1>
-            <p className="text-sm text-neutral-500 font-medium">Last updated: January 2026</p>
-          </div>
-        </section>
-
-        <section className="py-14 sm:py-20">
-          <div className="container-brand max-w-3xl mx-auto space-y-10">
-            {SECTIONS.map((section) => (
-              <div key={section.title} className="space-y-2">
-                <h2 className="text-lg font-bold text-neutral-950">{section.title}</h2>
-                <p className="text-sm leading-relaxed text-neutral-600 font-medium">{section.body}</p>
-              </div>
-            ))}
-
-            <div className="pt-4 border-t border-neutral-100">
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-orange hover:underline"
-              >
-                Have a question? Contact us →
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-      <WhatsAppButton />
-    </>
-  );
+  return <LegalPage crumb="Privacy policy" title="Privacy policy" updated="November 2026" sections={SECTIONS} />;
 }

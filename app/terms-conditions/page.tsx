@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { FileText } from "lucide-react";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import WhatsAppButton from "../components/motion/WhatsAppButton";
+import LegalPage from "../components/site/LegalPage";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Darshana Optical",
@@ -60,47 +56,6 @@ const SECTIONS = [
   },
 ];
 
-export default function TermsConditionsPage() {
-  return (
-    <>
-      <Header />
-
-      <main className="flex-1 bg-white">
-        <section className="relative overflow-hidden bg-linear-to-b from-surface-warm via-white to-white py-14 sm:py-20">
-          <div className="container-brand text-center max-w-3xl mx-auto space-y-5">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-bold uppercase tracking-wider">
-              <FileText size={14} /> Please Read Carefully
-            </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-950 tracking-tight">
-              Terms &amp; Conditions
-            </h1>
-            <p className="text-sm text-neutral-500 font-medium">Last updated: January 2026</p>
-          </div>
-        </section>
-
-        <section className="py-14 sm:py-20">
-          <div className="container-brand max-w-3xl mx-auto space-y-10">
-            {SECTIONS.map((section) => (
-              <div key={section.title} className="space-y-2">
-                <h2 className="text-lg font-bold text-neutral-950">{section.title}</h2>
-                <p className="text-sm leading-relaxed text-neutral-600 font-medium">{section.body}</p>
-              </div>
-            ))}
-
-            <div className="pt-4 border-t border-neutral-100">
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-orange hover:underline"
-              >
-                Have a question? Contact us →
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-      <WhatsAppButton />
-    </>
-  );
+export default function TermsPage() {
+  return <LegalPage crumb="Terms & conditions" title="Terms & conditions" updated="January 2026" sections={SECTIONS} />;
 }

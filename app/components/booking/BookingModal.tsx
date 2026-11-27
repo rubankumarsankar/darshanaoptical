@@ -1,466 +1,145 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Clock, User, Phone, Mail, Check, Send, Sparkles, MapPin, ArrowRight, ArrowLeft } from "lucide-react";
+import { useEffect, useEffectEvent, useRef } from "react";
+import { X } from "lucide-react";
 import { useBooking } from "./BookingContext";
-import { EASE_STANDARD } from "../../lib/motion";
+import BookingForm from "../site/book/BookingForm";
+import s from "../site/site.module.css";
+import { siteFontVars } from "../site/fonts";
+import { WHATSAPP_URL } from "../site/data";
 
+const PERKS = ["Computerised testing", "Near & distance check", "No obligation to buy"] as const;
+
+/**
+ * The "Book eye test" popup opened from every page. It is the /book page's
+ * design and the very same BookingForm, so both save bookings the same way.
+ */
 export default function BookingModal() {
   const { isOpen, closeBooking } = useBooking();
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("10:00 AM");
-  const [testType, setTestType] = useState("Comprehensive Eye Test");
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const [whatsAppUrl, setWhatsAppUrl] = useState("");
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  const today = new Date();
-  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  const todayStr = today.toISOString().split("T")[0];
-
+  // Don't let the page behind scroll while the popup is open.
   useEffect(() => {
     if (!isOpen) return;
-    const previousOverflow = document.body.style.overflow;
+    const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow = previous;
     };
   }, [isOpen]);
 
+  const onEscape = useEffectEvent(() => closeBooking());
+
+  // Escape closes; Tab stays inside the popup.
   useEffect(() => {
     if (!isOpen) return;
-    const keepFocusInDialog = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isSubmitting) handleReset();
+    const opener = document.activeElement as HTMLElement | null;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onEscape();
       if (event.key !== "Tab") return;
       const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
       );
       if (!focusable?.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    };
-    window.addEventListener("keydown", keepFocusInDialog);
-    dialogRef.current?.focus();
-    return () => window.removeEventListener("keydown", keepFocusInDialog);
-  }, [isOpen, isSubmitting]);
-
-  const handleNext = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitError("");
-    if (step < 3) {
-      setStep((prev) => prev + 1);
-    } else {
-      setIsSubmitting(true);
-      try {
-        const response = await fetch("/api/appointments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            phone,
-            email: email || null,
-            preferred_date: date || null,
-            preferred_time: time,
-            test_type: testType,
-          }),
-        });
-        if (!response.ok) {
-          const data = await response.json().catch(() => null);
-          throw new Error(data?.error || "Appointment request failed");
-        }
-        setIsSuccess(true);
-      } catch (error: any) {
-        setSubmitError(error?.message || "We couldn't save your appointment. Check your connection and try again.");
-        return;
-      } finally {
-        setIsSubmitting(false);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
       }
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    // Focus without scrolling, or the popup opens part-way down.
+    dialogRef.current?.focus({ preventScroll: true });
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      opener?.focus?.();
+    };
+  }, [isOpen]);
 
-      const message = encodeURIComponent(
-        `Hello Darshana Optical,\n\nI would like to book an Eye Test appointment.\n\n` +
-        `*Name:* ${name}\n` +
-        `*Phone:* ${phone}\n` +
-        (email ? `*Email:* ${email}\n` : "") +
-        `*Test Type:* ${testType}\n` +
-        `*Preferred Date:* ${date || "As soon as possible"}\n` +
-        `*Preferred Time:* ${time}\n\n` +
-        `Please confirm my booking.`
-      );
-      setWhatsAppUrl(`https://wa.me/918870571536?text=${message}`);
-    }
-  };
-
-  const handleReset = () => {
-    setIsSuccess(false);
-    setIsSubmitting(false);
-    setStep(1);
-    setName("");
-    setPhone("");
-    setEmail("");
-    setDate("");
-    setTime("10:00 AM");
-    setTestType("Comprehensive Eye Test");
-    setSubmitError("");
-    setWhatsAppUrl("");
-    closeBooking();
-  };
+  if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => {
-              if (!isSubmitting) handleReset();
-            }}
-            className="fixed inset-0 bg-neutral-950/70 backdrop-blur-md"
-          />
-
-          {/* Modal Box */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", duration: 0.5, ease: EASE_STANDARD }}
-            className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-neutral-100 z-10 my-auto"
-            ref={dialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="booking-modal-title"
-            tabIndex={-1}
+    <div
+      className={`${siteFontVars} ${s.root}`}
+      style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(20, 20, 24, 0.6)", overflowY: "auto", overscrollBehavior: "contain" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeBooking();
+      }}
+      data-lenis-prevent
+    >
+      <div style={{ minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "clamp(12px, 3vw, 32px)", boxSizing: "border-box" }}>
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="booking-title"
+          tabIndex={-1}
+          className={s.zoom}
+          style={{ position: "relative", width: "100%", maxWidth: 1120, display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start", outline: "none" }}
+        >
+          <button
+            type="button"
+            onClick={closeBooking}
+            aria-label="Close booking"
+            className={s.roundBtn}
+            style={{ position: "absolute", top: 14, right: 14, zIndex: 2, background: "var(--paper)", color: "var(--ink)", width: 48, height: 48 }}
           >
-            {/* Close Button */}
-            <button
-              onClick={handleReset}
-              disabled={isSubmitting}
-              className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900 transition-colors cursor-pointer z-10"
-              aria-label="Close modal"
-            >
-              <X size={18} />
-            </button>
+            <X size={22} aria-hidden />
+          </button>
 
-            {!isSuccess ? (
-              <>
-                <div className="mb-6">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-semibold uppercase tracking-wider mb-2">
-                    <Sparkles size={12} /> Easy Online Appointment
+          <div className={s.stack} style={{ flex: "1 1 300px", borderRadius: 40, background: "var(--night)", color: "var(--white)", padding: "clamp(24px, 4vw, 40px)", gap: 18, boxSizing: "border-box" }}>
+            <span className={s.eyebrow} style={{ fontSize: 13, color: "var(--orange)" }}>
+              Free eye test
+            </span>
+            <h2 id="booking-title" className={s.display} style={{ margin: 0, fontSize: "clamp(32px, 4vw, 44px)", lineHeight: 1.02, fontWeight: 800, letterSpacing: "-0.03em" }}>
+              Book your slot in under a minute.
+            </h2>
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: "#BDBFC8" }}>
+              Pick a day and time. We&apos;ll call to confirm, and the test takes about 15–20 minutes.
+            </p>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10, fontSize: 14, color: "#D4D5DB" }}>
+              {PERKS.map((p) => (
+                <li key={p} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <span aria-hidden="true" style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--night-2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--orange)", fontWeight: 800 }}>
+                    ✓
                   </span>
-                  <h3 id="booking-modal-title" className="text-2xl font-extrabold text-neutral-950">Book Your Eye Test</h3>
-                  <p className="mt-1 text-xs sm:text-sm text-neutral-500">
-                    Schedule a visit with our certified optometrist at Harur.
-                  </p>
-                </div>
+                  {p}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={s.pill}
+              style={{ alignSelf: "flex-start", height: 48, padding: "0 18px", borderRadius: 14, background: "#0F7A50", color: "#FFFFFF", fontSize: 14 }}
+            >
+              Prefer WhatsApp?
+            </a>
+          </div>
 
-                {/* Step Progress Indicator */}
-                <div className="mb-6 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                        step >= 1 ? "bg-brand-orange text-white" : "bg-neutral-100 text-neutral-400"
-                      }`}
-                    >
-                      01
-                    </span>
-                    <span className="text-xs font-bold text-neutral-700">Details</span>
-                  </div>
-                  <div className={`h-0.5 flex-1 mx-2 ${step >= 2 ? "bg-brand-orange" : "bg-neutral-200"}`} />
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                        step >= 2 ? "bg-brand-orange text-white" : "bg-neutral-100 text-neutral-400"
-                      }`}
-                    >
-                      02
-                    </span>
-                    <span className="text-xs font-bold text-neutral-700">Service</span>
-                  </div>
-                  <div className={`h-0.5 flex-1 mx-2 ${step >= 3 ? "bg-brand-orange" : "bg-neutral-200"}`} />
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                        step >= 3 ? "bg-brand-orange text-white" : "bg-neutral-100 text-neutral-400"
-                      }`}
-                    >
-                      03
-                    </span>
-                    <span className="text-xs font-bold text-neutral-700">Schedule</span>
-                  </div>
-                </div>
-
-                <form onSubmit={handleNext}>
-                  {submitError && (
-                    <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                      {submitError}
-                    </div>
-                  )}
-                  <AnimatePresence mode="wait">
-                    {step === 1 && (
-                      <motion.div
-                        key="step1"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25 }}
-                        className="space-y-4"
-                      >
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
-                            Full Name *
-                          </label>
-                          <div className="relative">
-                            <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                            <input
-                              type="text"
-                              required
-                              placeholder="e.g. Anand Kumar"
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
-                            Phone Number *
-                          </label>
-                          <div className="relative">
-                            <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                            <input
-                              type="tel"
-                              required
-                              placeholder="e.g. 88705 71536"
-                              value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
-                              pattern="[6-9][0-9]{9}"
-                              minLength={10}
-                              maxLength={10}
-                              title="Enter a valid 10-digit Indian mobile number"
-                              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
-                            />
-                            <p className="mt-1 text-[11px] text-neutral-400">10-digit mobile number (no spaces)</p>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
-                            Email Address <span className="text-neutral-400 text-[10px] lowercase font-normal">(optional — to receive confirmation)</span>
-                          </label>
-                          <div className="relative">
-                            <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                            <input
-                              type="email"
-                              placeholder="e.g. yourname@gmail.com"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
-                            />
-                          </div>
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={!name || !phone}
-                          className="w-full mt-4 btn-primary flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-brand-orange/20 cursor-pointer disabled:opacity-50"
-                        >
-                          Continue to Service <ArrowRight size={16} />
-                        </button>
-                      </motion.div>
-                    )}
-
-                    {step === 2 && (
-                      <motion.div
-                        key="step2"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25 }}
-                        className="space-y-4"
-                      >
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-2">
-                            Select Service Requirement
-                          </label>
-                          <div className="space-y-2">
-                            {[
-                              "Comprehensive Eye Test",
-                              "Prescription Update & Check",
-                              "Computer Vision Strain Assessment",
-                              "Progressive Lens Consultation",
-                              "Frame & Lens Fitting",
-                            ].map((service) => (
-                              <button
-                                key={service}
-                                type="button"
-                                onClick={() => setTestType(service)}
-                                className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition-all ${
-                                  testType === service
-                                    ? "border-brand-orange bg-brand-orange-soft/40 text-brand-orange shadow-xs"
-                                    : "border-neutral-200 bg-neutral-50 text-neutral-800 hover:bg-neutral-100"
-                                }`}
-                              >
-                                <span>{service}</span>
-                                {testType === service && <Check size={16} className="text-brand-orange" />}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-3 pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setStep(1)}
-                            className="flex items-center gap-1.5 rounded-xl border border-neutral-200 px-4 py-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50"
-                          >
-                            <ArrowLeft size={14} /> Back
-                          </button>
-                          <button
-                            type="submit"
-                            className="flex-1 btn-primary flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-brand-orange/20"
-                          >
-                            Continue to Schedule <ArrowRight size={16} />
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {step === 3 && (
-                      <motion.div
-                        key="step3"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25 }}
-                        className="space-y-4"
-                      >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
-                              Preferred Date
-                            </label>
-                            <div className="relative">
-                              <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                              <input
-                                type="date"
-                                value={date}
-                                min={todayStr}
-                                onChange={(e) => setDate(e.target.value)}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 mb-1.5">
-                              Preferred Time
-                            </label>
-                            <div className="relative">
-                              <Clock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-                              <select
-                                value={time}
-                                onChange={(e) => setTime(e.target.value)}
-                                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-3 pl-10 pr-3 text-sm text-neutral-900 focus:border-brand-orange focus:bg-white focus:outline-none transition-all cursor-pointer"
-                              >
-                                <option value="10:00 AM">10:00 AM - 12:00 PM</option>
-                                <option value="12:00 PM">12:00 PM - 02:00 PM</option>
-                                <option value="03:00 PM">03:00 PM - 05:00 PM</option>
-                                <option value="06:00 PM">06:00 PM - 08:00 PM</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="rounded-xl bg-neutral-50 p-4 border border-neutral-200/80 text-xs text-neutral-600 space-y-1">
-                          <p className="font-bold text-neutral-950">Appointment Summary:</p>
-                          <p>{name} • {phone}</p>
-                          <p>{testType}</p>
-                        </div>
-
-                        <div className="flex gap-3 pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setStep(2)}
-                            className="flex items-center gap-1.5 rounded-xl border border-neutral-200 px-4 py-3 text-xs font-bold text-neutral-700 hover:bg-neutral-50"
-                          >
-                            <ArrowLeft size={14} /> Back
-                          </button>
-                          <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="flex-1 btn-primary flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-brand-orange/20 cursor-pointer disabled:cursor-wait disabled:opacity-60"
-                          >
-                            <Send size={16} /> {isSubmitting ? "Saving..." : "Confirm & Book Via WhatsApp"}
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </form>
-              </>
-            ) : (
-              /* Success Screen with Animated SVG Checkmark */
-              <div className="py-8 text-center space-y-4">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-inner">
-                  <svg className="h-12 w-12 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <motion.path
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 0.6, ease: EASE_STANDARD }}
-                      d="M20 6L9 17l-5-5"
-                    />
-                  </svg>
-                </div>
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                  className="space-y-2"
-                >
-                  <h3 className="text-2xl font-extrabold text-neutral-950">Your Request Has Been Received</h3>
-                  <p className="text-xs sm:text-sm text-neutral-600 max-w-sm mx-auto">
-                    This is not a confirmed appointment yet. Darshana Optical will contact you to confirm your slot.
-                  </p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.4 }}
-                  className="pt-4 flex flex-col sm:flex-row justify-center gap-3"
-                >
-                  <a
-                    href="https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 px-5 py-2.5 text-xs font-bold text-neutral-800 hover:bg-neutral-50"
-                  >
-                    <MapPin size={14} className="text-brand-orange" /> Get Directions
-                  </a>
-                  {whatsAppUrl && <a href={whatsAppUrl} target="_blank" rel="noreferrer" className="btn-primary text-xs py-2.5 px-6">
-                    Continue on WhatsApp
-                  </a>}
-                  <button onClick={handleReset} className="btn-primary text-xs py-2.5 px-6">
-                    Done
-                  </button>
-                </motion.div>
-              </div>
-            )}
-          </motion.div>
+          <section
+            aria-label="Booking form"
+            style={{
+              flex: "2 1 520px",
+              minWidth: 0,
+              background: "var(--white)",
+              borderRadius: 40,
+              padding: "clamp(22px, 4vw, 36px)",
+              paddingTop: "clamp(64px, 6vw, 36px)",
+              boxShadow: "0 1px 2px rgba(30,41,80,.04), 0 16px 40px rgba(30,41,80,.08)",
+              boxSizing: "border-box",
+            }}
+          >
+            <BookingForm />
+          </section>
         </div>
-      )}
-    </AnimatePresence>
+      </div>
+    </div>
   );
 }

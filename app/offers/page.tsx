@@ -1,216 +1,175 @@
-"use client";
+import s from "../components/site/site.module.css";
+import SiteShell from "../components/site/SiteShell";
+import PageHero from "../components/site/PageHero";
+import BookButton from "../components/site/BookButton";
+import { WHATSAPP_URL } from "../components/site/data";
 
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Tag, Sparkles, MessageCircle, Info, ShieldCheck, CheckCircle2, ArrowRight, Gift, Percent, Calendar } from "lucide-react";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import WhatsAppButton from "../components/motion/WhatsAppButton";
-import LensCursor from "../components/motion/LensCursor";
-import { useBooking } from "../components/booking/BookingContext";
+const claimUrl = (offer: string) =>
+  `${WHATSAPP_URL}?text=${encodeURIComponent(`Hello Darshana Optical, I'd like to know more about the "${offer}" offer.`)}`;
 
-const OFFERS = [
-  {
-    id: "complete-package",
-    title: "Complete Eyewear Package Offer",
-    desc: "Selected premium frame + Anti-Reflective lens combinations available at special in-store package pricing.",
-    tag: "Best Value",
-    cta: "View Details",
-    img: "/images/offer-glasses.jpg",
-    icon: Gift
-  },
-  {
-    id: "lens-upgrade",
-    title: "Lens Upgrade Offer",
-    desc: "Receive complimentary anti-reflective coating upgrade on selected progressive and blue-filter digital lenses.",
-    tag: "Popular Choice",
-    cta: "Ask About Offer",
-    img: "/images/frame-1.jpg",
-    icon: Percent
-  },
-  {
-    id: "seasonal-promo",
-    title: "Seasonal Family Package",
-    desc: "Limited-period promotional discounts when purchasing multiple frames or family eye test packages together.",
-    tag: "Limited Time",
-    cta: "Enquire Now",
-    img: "/images/frame-3.jpg",
-    icon: Tag
-  },
-];
+const MORE_OFFERS = [
+  { tag: "Best value", title: "Complete eyewear package", text: "Selected premium frame and anti-reflective lens combinations at special in-store package pricing." },
+  { tag: "Popular", title: "Lens upgrade offer", text: "A free anti-reflective coating upgrade on selected progressive and blue-filter digital lenses." },
+  { tag: "Limited time", title: "Seasonal family package", text: "Limited-period discounts when you buy several frames or book family eye tests together." },
+] as const;
+
+const STEPS = [
+  { n: "1", title: "Book or walk in", text: "Book a free eye test slot online, or visit the store any day." },
+  { n: "2", title: "Get your power checked", text: "A quick computerised test with manual confirmation." },
+  { n: "3", title: "Pick your frame", text: "Choose from the offer range and we fit your screen-use lenses." },
+] as const;
 
 const TERMS = [
-  "Offer validity: Valid until active campaign end date or stock availability in store.",
-  "Applicable products: Valid on selected frame brands, single vision, and progressive lens packages.",
-  "Promotional combination: Cannot be combined with other ongoing store discounts unless specified.",
-  "In-store availability: Available exclusively at Darshana Optical, Harur main store location.",
-];
+  "Offers are valid until the campaign end date or while stock lasts.",
+  "Valid on selected frame brands, single vision and progressive lens packages.",
+  "Cannot be combined with other store discounts unless stated.",
+  "Available only at Darshana Optical, Harur.",
+] as const;
+
+function PriceBadge() {
+  return (
+    <div
+      className={`${s.pop} ${s.display}`}
+      style={{
+        position: "relative",
+        width: "min(340px, 82vw)",
+        aspectRatio: "1",
+        borderRadius: "50%",
+        background: "var(--orange)",
+        color: "var(--ink)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 4,
+        textAlign: "center",
+      }}
+    >
+      <span className={s.spin} aria-hidden="true" style={{ position: "absolute", inset: -18, borderRadius: "50%", border: "3px dashed var(--orange)" }} />
+      <span style={{ fontFamily: "var(--font-dm-sans)", fontSize: 15, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase" }}>Computer glasses</span>
+      <span style={{ fontFamily: "var(--font-dm-sans)", fontSize: 15, fontWeight: 600 }}>starting from</span>
+      <span style={{ fontSize: "clamp(56px, 16vw, 86px)", lineHeight: 1, fontWeight: 800, letterSpacing: "-0.04em" }}>₹1,499*</span>
+      <span style={{ fontFamily: "var(--font-dm-sans)", fontSize: 14, fontWeight: 600 }}>frame + screen-use lenses</span>
+    </div>
+  );
+}
+
+const bullet = { display: "flex", gap: 12, alignItems: "center", padding: "14px 16px", borderRadius: 18, background: "var(--paper)", fontSize: 15, fontWeight: 600 } as const;
+const dot = { width: 12, height: 12, borderRadius: "50%", background: "var(--orange)", flex: "none" } as const;
 
 export default function OffersPage() {
-  const { openBooking } = useBooking();
-
-  const handleWhatsAppOffer = (title: string) => {
-    const msg = encodeURIComponent(`Hello Darshana Optical, I am inquiring about the current in-store offer: "${title}". Can you share full details?`);
-    window.open(`https://wa.me/918870571536?text=${msg}`, "_blank");
-  };
-
   return (
-    <>
-      <LensCursor />
-      <Header />
-
-      <main className="flex-1 bg-white">
-        {/* HERO SECTION */}
-        <section className="relative overflow-hidden bg-[#faf8f5] py-12 sm:py-16 lg:py-20 border-b border-neutral-200/60">
-          <div className="container-brand grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
-            <div className="lg:col-span-6 space-y-5 text-left">
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-orange-soft text-brand-orange text-xs font-extrabold uppercase tracking-wider">
-                <Tag size={14} /> In-Store Specials
-              </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-neutral-950 tracking-tight leading-none">
-                Great Eyewear. <br />
-                <span className="text-brand-orange">More Value.</span>
-              </h1>
-              <p className="text-sm sm:text-base text-neutral-600 font-medium leading-relaxed max-w-xl">
-                Discover current in-store promotions, frame & lens package bundles, and seasonal offers at Darshana Optical.
-              </p>
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <button
-                  onClick={openBooking}
-                  className="btn-primary gap-2 text-xs sm:text-sm font-bold shadow-md shadow-brand-orange/20 cursor-pointer"
-                >
-                  <Calendar size={16} />
-                  <span>Book Eye Test</span>
-                </button>
-                <button
-                  onClick={() => handleWhatsAppOffer("All In-Store Offers")}
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-white px-5 py-3 text-xs sm:text-sm font-bold text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs cursor-pointer"
-                >
-                  <MessageCircle size={16} />
-                  <span>Ask Available Deals</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Hero Right Image */}
-            <div className="lg:col-span-6 flex justify-center">
-              <div className="relative w-full max-w-md aspect-4/3 rounded-3xl overflow-hidden shadow-2xl border border-stone-200">
-                <img
-                  src="/images/offer-glasses.jpg"
-                  alt="Special Offer Glasses"
-                  className="h-full w-full object-cover object-center"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent flex items-end p-6">
-                  <div className="text-white space-y-1">
-                    <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Exclusive Harur Deals</span>
-                    <h3 className="text-lg font-bold">Premium Quality Eyewear Bundles</h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ACTIVE OFFERS GRID */}
-        <section className="py-16 bg-white border-b border-neutral-100">
-          <div className="container-brand space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-950">Active Offers</h2>
-              <p className="text-xs sm:text-sm text-neutral-600 font-medium">
-                Visit our Harur store to redeem these exclusive in-store value packages.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {OFFERS.map((offer) => {
-                const IconComp = offer.icon;
-                return (
-                  <div
-                    key={offer.id}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-6 border border-neutral-200/80 shadow-xs transition-all duration-300 hover:border-brand-orange hover:shadow-xl"
-                  >
-                    <div>
-                      <div className="relative aspect-16/10 overflow-hidden rounded-xl bg-neutral-100 mb-5">
-                        <img
-                          src={offer.img}
-                          alt={offer.title}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <span className="absolute top-3 right-3 rounded-full bg-brand-orange text-white px-3 py-1 text-[10px] font-extrabold uppercase shadow-xs">
-                          {offer.tag}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 mb-2 text-xs font-bold text-brand-orange">
-                        <IconComp size={16} />
-                        <span>Special In-Store Bundle</span>
-                      </div>
-
-                      <h3 className="text-lg font-bold text-neutral-950 group-hover:text-brand-orange transition-colors">
-                        {offer.title}
-                      </h3>
-                      <p className="mt-2 text-xs leading-relaxed text-neutral-600 font-medium">
-                        {offer.desc}
-                      </p>
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t border-neutral-100">
-                      <button
-                        onClick={() => handleWhatsAppOffer(offer.title)}
-                        className="w-full btn-primary justify-center text-xs font-bold gap-2 cursor-pointer shadow-xs"
-                      >
-                        <MessageCircle size={16} /> {offer.cta}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* OFFER TERMS */}
-        <section className="py-16 bg-neutral-50 border-b border-neutral-200/80">
-          <div className="container-brand max-w-4xl space-y-8">
-            <div className="flex items-center gap-2 text-neutral-950 text-xl font-bold border-b border-neutral-200 pb-4">
-              <Info size={20} className="text-brand-orange" />
-              <span>Offer Terms & Conditions</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {TERMS.map((term, idx) => (
-                <div key={idx} className="flex items-start gap-3 rounded-xl bg-white p-4 border border-neutral-200/70 text-xs font-medium text-neutral-700 shadow-2xs">
-                  <CheckCircle2 size={16} className="shrink-0 text-brand-orange mt-0.5" />
-                  <span>{term}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section className="py-16 bg-[#18191c] text-white text-center">
-          <div className="container-brand max-w-3xl space-y-6">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Want to Know What&apos;s Available Today?
-            </h2>
-            <p className="text-base text-neutral-300 font-medium">
-              Send us a message on WhatsApp for today&apos;s active inventory deals and package pricing.
+    <SiteShell>
+      <PageHero
+        active="/offers"
+        crumb="Offers"
+        title={
+          <>
+            Good vision, <span style={{ color: "var(--orange)" }}>fair price.</span>
+          </>
+        }
+        lede="Current offers at our Harur store. Visit us or message on WhatsApp to claim."
+        art={<PriceBadge />}
+      />
+      <main>
+        <section className={s.wrap} style={{ paddingTop: 72, paddingBottom: 40, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 18 }}>
+          <article className={`${s.lift} ${s.reveal} ${s.stack}`} style={{ borderRadius: 40, background: "var(--white)", padding: "clamp(24px, 4vw, 36px)", gap: 16 }}>
+            <span className={s.tag} style={{ background: "var(--orange)" }}>
+              Featured
+            </span>
+            <h2 className={s.h3}>Computer glasses from ₹1,499*</h2>
+            <p className={s.lede} style={{ fontSize: 16 }}>
+              For long mobile and laptop days. Includes:
             </p>
-            <div className="pt-2">
-              <button
-                onClick={() => handleWhatsAppOffer("Today's Available Offers")}
-                className="btn-primary gap-2 text-base font-bold shadow-lg shadow-brand-orange/20 cursor-pointer"
-              >
-                <MessageCircle size={20} /> WhatsApp Us
-              </button>
+            <div className={s.stack} style={{ gap: 10 }}>
+              <span style={bullet}>
+                <span style={dot} />A frame from the offer range
+              </span>
+              <span style={bullet}>
+                <span style={dot} />
+                Screen-use lenses
+              </span>
             </div>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--muted)" }}>*See offer terms below.</p>
+            <a
+              href={claimUrl("Computer glasses from ₹1,499")}
+              target="_blank"
+              rel="noreferrer"
+              className={`${s.pill} ${s.pillDark} ${s.btn}`}
+              style={{ marginTop: "auto", alignSelf: "flex-start", height: 54, padding: "0 24px", fontSize: 16 }}
+            >
+              Claim on WhatsApp
+            </a>
+          </article>
+          <article className={`${s.lift} ${s.reveal} ${s.stack}`} style={{ borderRadius: 40, background: "var(--night)", color: "var(--white)", padding: "clamp(24px, 4vw, 36px)", gap: 16, position: "relative", overflow: "hidden" }}>
+            <span className={s.float} aria-hidden="true" style={{ position: "absolute", right: -50, top: -50, width: 200, height: 200, borderRadius: "50%", border: "18px solid var(--night-2)" }} />
+            <span className={s.tag} style={{ background: "var(--night-2)", color: "var(--orange)" }}>
+              Always on
+            </span>
+            <h2 className={s.h3}>Free eye test slot</h2>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "#BDBFC8" }}>
+              Book a slot online and get a computerised eye check with a manual power confirmation. No obligation to buy.
+            </p>
+            <BookButton className={`${s.pill} ${s.pillOrange} ${s.btn}`} style={{ marginTop: "auto", alignSelf: "flex-start", height: 54, padding: "0 24px", fontSize: 16 }}>
+              Book free slot
+            </BookButton>
+          </article>
+        </section>
+
+        <section className={`${s.wrap} ${s.stack}`} style={{ paddingTop: 40, paddingBottom: 40, gap: 24 }}>
+          <h2 className={`${s.h2s} ${s.reveal}`}>More in-store offers</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+            {MORE_OFFERS.map((o) => (
+              <article key={o.title} className={`${s.card} ${s.lift} ${s.reveal} ${s.stack}`} style={{ padding: 28, gap: 12 }}>
+                <span className={s.tag} style={{ background: "var(--peach)", color: "var(--orange-deep)" }}>
+                  {o.tag}
+                </span>
+                <strong className={s.display} style={{ fontSize: 22 }}>
+                  {o.title}
+                </strong>
+                <span className={s.cardText}>{o.text}</span>
+                <a href={claimUrl(o.title)} target="_blank" rel="noreferrer" style={{ marginTop: "auto", fontSize: 15, fontWeight: 700, textDecoration: "none", padding: "8px 0" }}>
+                  Ask on WhatsApp →
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className={`${s.wrap} ${s.stack}`} style={{ paddingTop: 40, paddingBottom: 40, gap: 24 }}>
+          <h2 className={`${s.h2s} ${s.reveal}`}>How to claim</h2>
+          <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+            {STEPS.map((step) => (
+              <li key={step.n} className={`${s.card} ${s.lift} ${s.reveal} ${s.stack}`} style={{ padding: 28, gap: 12 }}>
+                <span
+                  className={s.display}
+                  aria-hidden="true"
+                  style={{ width: 56, height: 56, borderRadius: "50%", border: "5px solid var(--charcoal)", borderTopColor: "var(--orange)", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}
+                >
+                  {step.n}
+                </span>
+                <strong className={s.display} style={{ fontSize: 22 }}>
+                  {step.title}
+                </strong>
+                <span className={s.cardText}>{step.text}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className={s.wrap} style={{ paddingTop: 24, paddingBottom: 72 }}>
+          <div className={`${s.reveal}`} style={{ borderRadius: 32, background: "var(--white)", padding: "clamp(22px, 3vw, 32px)", display: "flex", flexDirection: "column", gap: 12 }}>
+            <h2 className={s.display} style={{ margin: 0, fontSize: 20 }}>
+              Offer terms
+            </h2>
+            <ul style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6, fontSize: 14, lineHeight: 1.6, color: "var(--muted)" }}>
+              {TERMS.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
+            </ul>
           </div>
         </section>
       </main>
-
-      <Footer />
-      <WhatsAppButton />
-    </>
+    </SiteShell>
   );
 }
