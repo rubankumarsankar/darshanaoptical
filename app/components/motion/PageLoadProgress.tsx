@@ -1,13 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 
+// Always rendered so server and client markup match; reduced-motion users
+// get it hidden by the media query in globals.css instead of an early return
+// (the server can't know the preference, so returning null broke hydration).
 export default function PageLoadProgress() {
   const pathname = usePathname();
-  const prefersReduced = useReducedMotion();
-
-  if (prefersReduced) return null;
 
   return (
     <div key={pathname} className="route-loader" aria-hidden="true">

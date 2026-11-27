@@ -1,30 +1,31 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { EASE_STANDARD } from "./lib/motion";
 
+// The same tree is rendered on server and client. Branching on
+// useReducedMotion() here caused a hydration mismatch, because the server
+// can't see the user's preference. MotionConfig "user" drops the slide for
+// reduced-motion users and keeps only the opacity fade.
 export default function Template({ children }: { children: React.ReactNode }) {
-  const prefersReduced = useReducedMotion();
   const pathname = usePathname();
 
-  if (prefersReduced) {
-    return <>{children}</>;
-  }
-
   return (
-    <motion.div
-      key={pathname}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{
-        duration: 0.36,
-        ease: EASE_STANDARD,
-      }}
-      className="flex-1 flex flex-col w-full"
-    >
-      {children}
-    </motion.div>
+    <MotionConfig reducedMotion="user">
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{
+          duration: 0.36,
+          ease: EASE_STANDARD,
+        }}
+        className="flex-1 flex flex-col w-full"
+      >
+        {children}
+      </motion.div>
+    </MotionConfig>
   );
 }

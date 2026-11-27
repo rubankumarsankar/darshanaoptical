@@ -28,7 +28,9 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com",
+      // Google Analytics 4 sends hits to all of these; with only
+      // *.google-analytics.com allowed, every page view was blocked.
+      "connect-src 'self' https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://www.google.com",
       "upgrade-insecure-requests",
     ].join("; "),
   },
