@@ -81,7 +81,11 @@
   flex-direction: column;
   gap: 24px;
   overflow-y: auto;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
 }
+.menu::-webkit-scrollbar { display: none; }
+
 
 .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px; text-decoration: none; }
 .brand span { font-family: var(--display); font-weight: 700; font-size: 18px; color: #fff; }
@@ -493,4 +497,11 @@ textarea.input { padding: 14px 18px; min-height: 96px; resize: vertical; }
   .menu, .tabBar, .moreSheet { display: none !important; }
   .shell { padding: 0; }
   .root { background: #fff; }
+}
+
+/* Short laptop screens: tighten the menu so it fits without scrolling. */
+@media (max-height: 820px) {
+  .menu { gap: 14px; padding: 16px 12px; }
+  .navList { gap: 2px; }
+  .navItem { min-height: 44px; }
 }
