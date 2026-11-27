@@ -374,7 +374,7 @@ function EditCustomer({ customer, onSaved, onCancel }: { customer: Detail['custo
       <h2 className={s.h3} style={{ fontSize: 20 }}>
         Change {customer.name}’s details
       </h2>
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
         <label className={s.field}>
           Name
           <input className={s.input} value={form.name} onChange={set('name')} required minLength={2} maxLength={255} />

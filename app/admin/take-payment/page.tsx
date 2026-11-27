@@ -160,7 +160,7 @@ function TakePayment() {
             </div>
             <div className={s.stack} style={{ gap: 12 }}>
               <h2 className={s.h3}>How much are they paying?</h2>
-              <div role="radiogroup" aria-label="Amount" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
+              <div role="radiogroup" aria-label="Amount" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))' }}>
                 <ChoiceCard radio selected={amount === 'full'} onSelect={() => setAmount('full')} title="Full" sub={inr(owed)} />
                 <ChoiceCard radio selected={amount === 'half'} onSelect={() => setAmount('half')} title="Half" sub={inr(payNow(owed, 'half'))} />
                 <ChoiceCard radio selected={amount === 'other'} onSelect={() => setAmount('other')} title="Other" sub="Type the amount" />

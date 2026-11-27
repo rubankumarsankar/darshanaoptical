@@ -85,7 +85,7 @@ export default function SimpleHome() {
             Find a bill →
           </Link>
         </div>
-        <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
+        <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))' }}>
           <BigActionTile primary href="/admin/sale" title="New sale" sub="Bill a customer in 4 easy steps" icon={<Plus {...ring} />} />
           <BigActionTile href="/admin/eye-test" title="Eye test" sub="Save a new prescription" icon={<Eye {...ring} />} />
           <BigActionTile href="/admin/take-payment" title="Take payment" sub="Customer paying a balance" icon={<CreditCard {...ring} />} />
@@ -94,7 +94,7 @@ export default function SimpleHome() {
       </section>
 
       {canSeeMoney(role) && data?.today && (
-        <section aria-label="Today" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <section aria-label="Today" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))' }}>
           <MoneyStat label="Sold today" value={inr(data.today.sold)} note={plural(data.today.bills, 'bill', 'bills')} />
           <MoneyStat label="Money received" value={inr(data.today.received)} note="Cash · UPI · Card" />
           <MoneyStat

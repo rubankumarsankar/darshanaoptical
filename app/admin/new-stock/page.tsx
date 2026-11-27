@@ -139,7 +139,7 @@ function NewStock() {
         {step === 0 && (
           <>
             <h2 className={s.h2}>Who sent it?</h2>
-            <div role="radiogroup" aria-label="Supplier" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+            <div role="radiogroup" aria-label="Supplier" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 10 }}>
               {(supplierData?.suppliers ?? [])
                 .filter((sp) => sp.status !== 'inactive')
                 .map((sp) => (
@@ -179,7 +179,7 @@ function NewStock() {
               <strong style={{ fontFamily: 'var(--display)', fontSize: 'clamp(32px, 5vw, 44px)', color: 'var(--orange)' }}>{inr(total)}</strong>
             </div>
             <h2 className={s.h3}>Did you pay them?</h2>
-            <div role="radiogroup" aria-label="Paid" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+            <div role="radiogroup" aria-label="Paid" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))' }}>
               <ChoiceCard radio selected={paid === 'full'} onSelect={() => setPaid('full')} title="Yes, paid in full" sub={inr(total)} />
               <ChoiceCard radio selected={paid === 'some'} onSelect={() => setPaid('some')} title="Paid some" sub="Type the amount" />
               <ChoiceCard radio selected={paid === 'none'} onSelect={() => setPaid('none')} title="Not yet" sub="Added to what you owe them" />
@@ -320,7 +320,7 @@ function NewSupplier({ onCreated, onCancel }: { onCreated: (s: Supplier) => void
   return (
     <form onSubmit={submit} className={s.stack} style={{ gap: 14, padding: 20, borderRadius: 22, background: 'var(--page)' }}>
       <strong style={{ fontSize: 18 }}>New supplier</strong>
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
         <label className={s.field}>
           Name
           <input className={`${s.input} ${s.inputOnPage}`} value={name} onChange={(e) => setName(e.target.value)} required maxLength={255} />

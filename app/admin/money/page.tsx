@@ -62,7 +62,7 @@ export default function MoneyPage() {
 
       <ErrorNote>{error}</ErrorNote>
 
-      <section aria-label="Totals" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+      <section aria-label="Totals" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))' }}>
         <MoneyStat label="Money in" value={loading && !data ? '…' : inr(data?.money_in)} note="Payments received" />
         <MoneyStat label="Money out" value={loading && !data ? '…' : inr(data?.money_out)} note="Expenses" />
         <MoneyStat warm label="You kept" value={loading && !data ? '…' : inr(data?.kept)} note="Money in − money out" />

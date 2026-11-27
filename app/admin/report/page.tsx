@@ -105,7 +105,7 @@ export default function MonthlyReportPage() {
             )}
           </section>
 
-          <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+          <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 20 }}>
             <section className={s.card} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <h2 className={s.h3}>What sold most</h2>
               <Bars rows={data.by_category} words={CATEGORY_WORDS} label="Sales by category" />

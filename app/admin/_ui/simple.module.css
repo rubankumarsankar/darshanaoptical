@@ -483,7 +483,7 @@ textarea.input { padding: 14px 18px; min-height: 96px; resize: vertical; }
 .error { padding: 14px 18px; border-radius: 18px; background: var(--danger-soft); color: var(--danger); font-size: 16px; font-weight: 600; margin: 0; }
 
 .bars { display: flex; flex-direction: column; gap: 12px; }
-.barRow { display: grid; grid-template-columns: minmax(110px, 160px) 1fr auto; align-items: center; gap: 12px; font-size: 16px; }
+.barRow { display: grid; grid-template-columns: minmax(0, 160px) minmax(40px, 1fr) auto; align-items: center; gap: 12px; font-size: 16px; }
 .barTrack { height: 18px; border-radius: 9px; background: var(--page); overflow: hidden; }
 .barFill { height: 100%; border-radius: 9px; background: var(--orange); }
 

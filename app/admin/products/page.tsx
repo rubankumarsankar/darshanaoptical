@@ -85,7 +85,7 @@ export default function ProductsPage() {
 
       <ErrorNote>{error}</ErrorNote>
 
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))' }}>
         {loading && !data && <EmptyState>Loading products…</EmptyState>}
         {data && shown.length === 0 && <EmptyState>{needle ? `Nothing matches “${q.trim()}”.` : 'Nothing here yet.'}</EmptyState>}
         {shown.map((p, i) => {

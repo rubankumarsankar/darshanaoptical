@@ -194,7 +194,7 @@ export default function ItemForm({ item, initialName = '', noOpeningStock, onSav
           </div>
         </div>
 
-        <div className={s.grid} style={{ flex: '1 1 320px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <div className={s.grid} style={{ flex: '1 1 320px', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))' }}>
           <label className={s.field}>
             Name
             <input className={s.input} value={v.name} onChange={set('name')} required maxLength={255} placeholder="e.g. Rectangle frame, black" />
@@ -237,7 +237,7 @@ export default function ItemForm({ item, initialName = '', noOpeningStock, onSav
       </div>
 
       {more ? (
-        <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))' }}>
           <label className={s.field}>
             <span>Model number {optional}</span>
             <input className={s.input} value={v.model} onChange={set('model')} maxLength={255} placeholder="e.g. RB2140" />

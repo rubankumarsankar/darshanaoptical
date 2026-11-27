@@ -40,7 +40,7 @@ export default function NewCustomerForm({ initial = '', onCreated, onCancel }: {
   return (
     <form onSubmit={submit} className={s.stack} style={{ gap: 14, padding: 20, borderRadius: 22, background: 'var(--page)' }}>
       <strong style={{ fontSize: 18 }}>New customer</strong>
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
         <label className={s.field}>
           Name
           <input className={`${s.input} ${s.inputOnPage}`} value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" required minLength={2} maxLength={255} />

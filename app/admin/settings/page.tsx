@@ -150,7 +150,7 @@ function ShopDetails() {
   return (
     <form onSubmit={submit} className={s.card} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <ShopLogo url={values.logo_url} onChange={(url) => setForm({ ...values, logo_url: url })} />
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))' }}>
         {SHOP_FIELDS.filter((f) => f.key !== 'logo_url').map((f) => (
           <Field key={f.key} label={f.label}>
             <input className={s.input} type={f.type ?? 'text'} value={values[f.key]} onChange={(e) => setForm({ ...values, [f.key]: e.target.value })} />
@@ -314,7 +314,7 @@ function Staff() {
         />
       )}
 
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))' }}>
         {data?.staff.map((m) => (
           <div key={m.id} className={s.card} style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: m.status === 'inactive' ? 0.6 : 1 }}>
             <div className={s.row} style={{ gap: 12, flexWrap: 'nowrap' }}>
@@ -389,7 +389,7 @@ function EditStaff({ member, isSelf, onCancel, onSaved }: { member: Member; isSe
     <form onSubmit={submit} className={`${s.card} ${s.up}`} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <h2 className={s.h3}>Change {member.name}</h2>
       <p className={s.help}>Signs in with {member.email}.</p>
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
         <Field label="Name">
           <input className={s.input} value={name} onChange={(e) => setName(e.target.value)} required maxLength={255} />
         </Field>
@@ -449,7 +449,7 @@ function AddStaff({ onCancel, onSaved }: { onCancel: () => void; onSaved: () => 
   return (
     <form onSubmit={submit} className={`${s.card} ${s.up}`} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <h2 className={s.h3}>Add a staff member</h2>
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))' }}>
         <Field label="Name">
           <input className={s.input} value={name} onChange={(e) => setName(e.target.value)} required maxLength={255} />
         </Field>
@@ -525,7 +525,7 @@ function BillsAndTax({ canEdit }: { canEdit: boolean }) {
         <Switch label="Add GST to bills" checked={v.tax_enabled} disabled={!canEdit} onChange={(on) => setForm({ ...v, tax_enabled: on })} />
         <strong>Add GST to bills</strong>
       </div>
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
         <Field label="GST %">
           <input className={s.input} type="number" min={0} max={100} step="0.01" value={v.tax_rate} disabled={!canEdit || !v.tax_enabled} onChange={(e) => setForm({ ...v, tax_rate: e.target.value })} />
         </Field>

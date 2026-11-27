@@ -386,7 +386,7 @@ function SaleWizard() {
             </div>
             <div className={s.stack} style={{ gap: 12 }}>
               <h2 className={s.h3}>How much are they paying now?</h2>
-              <div role="radiogroup" aria-label="Amount" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+              <div role="radiogroup" aria-label="Amount" className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))' }}>
                 <ChoiceCard radio selected={pay === 'full'} onSelect={() => setPay('full')} title="Full amount" sub={inr(totals.total)} />
                 <ChoiceCard radio selected={pay === 'half'} onSelect={() => setPay('half')} title="Advance (half)" sub={inr(payNow(totals.total, 'half'))} />
                 <ChoiceCard radio selected={pay === 'other'} onSelect={() => setPay('other')} title="Other amount" sub="Type how much" />
@@ -555,7 +555,7 @@ function ItemsStep({ products, cart, onAdd, onRemove, onQty, discount, onDiscoun
           <span className={s.srOnly}>Search items</span>
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, brand or code" />
         </label>
-        <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 10 }}>
+        <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(190px, 100%), 1fr))', gap: 10 }}>
           {shown.map((p) => {
             const left = p.category === 'service' ? Infinity : p.stock - inCart(p.id);
             const out = left <= 0;

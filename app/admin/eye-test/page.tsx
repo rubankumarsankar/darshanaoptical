@@ -243,7 +243,7 @@ function EyeTest() {
           <>
             <h2 className={s.h2}>{customer.name}’s eye power</h2>
             <p className={s.help}>Leave a box empty if it isn’t needed. Use minus for short sight, e.g. −1.75.</p>
-            <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+            <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 16 }}>
               <EyeCard title="Right eye" side={right} problems={rightProblems} onChange={setRight} />
               <EyeCard title="Left eye" side={left} problems={leftProblems} onChange={setLeft} />
             </div>

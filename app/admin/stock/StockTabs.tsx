@@ -111,7 +111,7 @@ export function Suppliers() {
       <ErrorNote>{error}</ErrorNote>
       {loading && !data && <EmptyState>Loading suppliers…</EmptyState>}
       {data && list.length === 0 && <EmptyState>No suppliers yet.</EmptyState>}
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))' }}>
         {list.map((sp) => {
           const tel = telLink(sp.phone);
           const wa = waLink(sp.phone, `Hello ${sp.name}, this is Darshana Optical.`);
@@ -191,7 +191,7 @@ function SupplierForm({ supplier, onSaved, onCancel }: { supplier?: Supplier; on
       <h2 className={s.h3} style={{ fontSize: 20 }}>
         {supplier ? `Change ${supplier.name}` : 'New supplier'}
       </h2>
-      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+      <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))' }}>
         <label className={s.field}>
           Name
           <input className={s.input} value={v.name} onChange={set('name')} required maxLength={255} />
