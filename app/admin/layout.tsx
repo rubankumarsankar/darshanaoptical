@@ -1,40 +1,21 @@
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google';
-import './admin.css';
+import s from './_ui/simple.module.css';
+import { fontVars } from './_ui/fonts';
 import AdminShell from './components/AdminShell';
 import { AuthProvider } from '@/app/lib/admin/auth-context';
 
-const manrope = Manrope({
-  subsets: ['latin'],
-  variable: '--font-manrope',
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-});
-
 export const metadata: Metadata = {
-  title: {
-    default: 'Darshana Optical — Admin',
-    template: '%s | Admin',
-  },
-  description: 'Darshana Optical internal management system',
+  title: { default: 'Darshana Optical — Admin', template: '%s | Admin' },
+  description: 'Darshana Optical shop admin',
   robots: { index: false, follow: false },
 };
 
+// Sign-in gating: proxy.ts rejects visitors without a valid cookie, AdminShell
+// waits for /auth/me before showing anything, and every API route re-checks
+// the session and role. This layout supplies the fonts, colours and menu.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={manrope.variable}
-      data-lenis-prevent
-      style={{
-        fontFamily: 'var(--font-manrope), sans-serif',
-        minHeight: '100dvh',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        background: '#0f172a',
-      }}
-    >
+    <div className={`${fontVars} ${s.root}`} data-lenis-prevent>
       <AuthProvider>
         <AdminShell>{children}</AdminShell>
       </AuthProvider>

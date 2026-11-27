@@ -4,8 +4,8 @@ import { useEffect, useState, type FormEvent } from 'react';
 import Image from 'next/image';
 import { initials, roleLabel } from '@/app/lib/admin/simple';
 import { forget, readRemembered, remember, type RememberedUser } from '@/app/lib/admin/remembered-users';
-import s from '../simple/_ui/simple.module.css';
-import { fontVars } from '../simple/_ui/fonts';
+import s from '../_ui/simple.module.css';
+import { fontVars } from '../_ui/fonts';
 
 // The "quick demo login" buttons that used to live here printed the seeded
 // admin, manager and staff passwords directly on the public sign-in page and
@@ -71,7 +71,7 @@ export default function LoginPage() {
     setError('');
     // Capture this before the cookie is set: the proxy may redirect this URL.
     const requested = new URLSearchParams(window.location.search).get('next');
-    const destination = requested?.startsWith('/admin/') && !requested.startsWith('//') ? requested : '/admin/simple';
+    const destination = requested?.startsWith('/admin/') && !requested.startsWith('//') ? requested : '/admin';
     try {
       const res = await fetch('/api/admin/auth/login', {
         method: 'POST',

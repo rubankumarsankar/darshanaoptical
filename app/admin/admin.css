@@ -1204,7 +1204,7 @@
 
 @media print {
   html, body { width: 100%; min-height: 0; background: white !important; }
-  body * { visibility: hidden !important; }
+  body:has(.adm-print-page) * { visibility: hidden !important; }
   .adm-print-page,
   .adm-print-page * { visibility: visible !important; }
   .adm-print-page {

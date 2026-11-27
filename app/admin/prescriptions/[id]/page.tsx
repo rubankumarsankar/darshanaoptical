@@ -1,5 +1,7 @@
 'use client';
 
+import '../../admin.css';
+
 import { use, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -58,8 +60,8 @@ export default function PrescriptionPage({ params }: { params: Promise<{ id: str
   return (
     <div className="adm-print-page adm-prescription-page" data-print-mode="prescription">
       <div className="adm-page-header adm-no-print">
-        <Link href="/admin/eye-tests" className="adm-btn adm-btn-ghost adm-btn-sm">
-          <ArrowLeft width={14} height={14} /> Eye Tests
+        <Link href="/admin/customers" className="adm-btn adm-btn-ghost adm-btn-sm">
+          <ArrowLeft width={14} height={14} /> Customers
         </Link>
         <div className="adm-prescription-screen-title">
           <div className="adm-page-title">Prescription</div>
@@ -69,7 +71,7 @@ export default function PrescriptionPage({ params }: { params: Promise<{ id: str
           <button type="button" onClick={() => window.print()} className="adm-btn adm-btn-secondary adm-btn-sm">
             <Printer width={13} height={13} /> Print prescription
           </button>
-          <Link href={`/admin/pos?customerId=${test.customer_id}`} className="adm-btn adm-btn-primary adm-btn-sm">
+          <Link href={`/admin/sale?customer=${encodeURIComponent(test.customer_id)}&eyeTest=${encodeURIComponent(test.id)}`} className="adm-btn adm-btn-primary adm-btn-sm">
             <ShoppingCart width={13} height={13} /> Start sale
           </Link>
         </div>

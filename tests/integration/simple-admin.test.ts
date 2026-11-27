@@ -588,6 +588,7 @@ describe('GET /api/admin/simple/money', () => {
 describe('GET /api/admin/simple/report', () => {
   beforeEach(() => {
     state.rows = [
+      [/GROUP BY i.status/, [{ status: 'paid', count: 40 }, { status: 'partially_paid', count: 2 }, { status: 'cancelled', count: 1 }]],
       [/FROM invoices i WHERE/, (p) => [{ total: p[0] === '2026-10' ? '100000.00' : '120000.00', bills: 42 }]],
       [/SUM\(amount\),0\) AS total FROM expenses/, (p) => [{ total: p[0] === '2026-10' ? '20000.00' : '30000.00' }]],
       [/FROM invoice_items/, [{ category: 'lens', total: '70000.00' }, { category: 'frame', total: '50000.00' }]],
@@ -600,7 +601,10 @@ describe('GET /api/admin/simple/report', () => {
     const body = await (await reportRoute.GET(req('GET', undefined, 'http://localhost/api/admin/simple/report?month=2026-11'))).json();
     expect(body).toMatchObject({ month: '2026-11', sold: 120000, bills: 42, spent: 30000, kept: 90000, change: { sold: 20, kept: 13 } });
     expect(body.by_category[0]).toEqual({ category: 'lens', total: 70000 });
-    for (const l of state.log.filter((x) => /FROM invoices i|JOIN invoices/.test(x.sql))) expect(l.sql).toMatch(/status <> 'cancelled'/);
+    expect(body.by_status).toEqual({ paid: 40, partially_paid: 2, cancelled: 1 });
+    // Totals skip cancelled bills; only the per-status count includes them, on purpose.
+    for (const l of state.log.filter((x) => /FROM invoices i|JOIN invoices/.test(x.sql) && !/GROUP BY i.status/.test(x.sql))) expect(l.sql).toMatch(/status <> 'cancelled'/);
+    expect(state.log.some((x) => /GROUP BY i.status/.test(x.sql))).toBe(true);
   });
 
   it.each(["2026-11' OR 1=1", '2026-13', '2999-01'])('never puts a bad or future month (%s) in a query', async (month) => {

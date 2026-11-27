@@ -37,15 +37,15 @@ export interface NavEntry {
 }
 
 const NAV: readonly NavEntry[] = [
-  { id: 'home', label: 'Home', href: '/admin/simple' },
-  { id: 'sale', label: 'New sale', href: '/admin/simple/sale' },
-  { id: 'bills', label: 'Bills', href: '/admin/simple/bills' },
-  { id: 'bookings', label: 'Bookings', href: '/admin/simple/bookings' },
-  { id: 'customers', label: 'Customers', href: '/admin/simple/customers' },
-  { id: 'orders', label: 'Orders', href: '/admin/simple/orders' },
-  { id: 'products', label: 'Products', href: '/admin/simple/products' },
-  { id: 'stock', label: 'Stock', href: '/admin/simple/stock' },
-  { id: 'money', label: 'Money', href: '/admin/simple/money' },
+  { id: 'home', label: 'Home', href: '/admin' },
+  { id: 'sale', label: 'New sale', href: '/admin/sale' },
+  { id: 'bills', label: 'Bills', href: '/admin/bills' },
+  { id: 'bookings', label: 'Bookings', href: '/admin/bookings' },
+  { id: 'customers', label: 'Customers', href: '/admin/customers' },
+  { id: 'orders', label: 'Orders', href: '/admin/orders' },
+  { id: 'products', label: 'Products', href: '/admin/products' },
+  { id: 'stock', label: 'Stock', href: '/admin/stock' },
+  { id: 'money', label: 'Money', href: '/admin/money' },
 ];
 
 /** Left-menu items the role may see. Staff lose Money. */
@@ -61,14 +61,14 @@ export function tabsFor(role: Role | null | undefined): NavEntry[] {
 
 /** Which nav entry a pathname belongs to. */
 export function activeNav(pathname: string): NavEntry['id'] | 'settings' | null {
-  if (pathname === '/admin/simple') return 'home';
-  if (pathname.startsWith('/admin/simple/settings')) return 'settings';
-  if (pathname.startsWith('/admin/simple/eye-test')) return 'customers';
+  if (pathname === '/admin') return 'home';
+  if (pathname.startsWith('/admin/settings')) return 'settings';
+  if (pathname.startsWith('/admin/eye-test')) return 'customers';
   // Take payment is open to every role, so it highlights Orders (where hand-over
   // sends people to pay) rather than Money, which staff can't see.
-  if (pathname.startsWith('/admin/simple/take-payment')) return 'orders';
-  if (pathname.startsWith('/admin/simple/new-stock')) return 'stock';
-  if (pathname.startsWith('/admin/simple/report')) return 'money';
+  if (pathname.startsWith('/admin/take-payment')) return 'orders';
+  if (pathname.startsWith('/admin/new-stock')) return 'stock';
+  if (pathname.startsWith('/admin/report')) return 'money';
   const hit = NAV.find((n) => n.id !== 'home' && pathname.startsWith(n.href));
   return hit?.id ?? null;
 }
@@ -83,7 +83,8 @@ export function inr(value: number | string | null | undefined): string {
   const n = Number(value ?? 0);
   const safe = Number.isFinite(n) ? n : 0;
   const hasPaise = Math.round(safe * 100) % 100 !== 0;
-  return `₹${safe.toLocaleString('en-IN', { minimumFractionDigits: hasPaise ? 2 : 0, maximumFractionDigits: 2 })}`;
+  const text = Math.abs(safe).toLocaleString('en-IN', { minimumFractionDigits: hasPaise ? 2 : 0, maximumFractionDigits: 2 });
+  return safe < 0 ? `−₹${text}` : `₹${text}`;
 }
 
 export function initials(name: string | null | undefined): string {

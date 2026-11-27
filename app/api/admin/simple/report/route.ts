@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     query(`SELECT COALESCE(SUM(i.total),0) AS total, COUNT(*) AS bills FROM invoices i WHERE ${IST_MONTH} = ? AND i.status <> 'cancelled'`, [m]) as Promise<any[]>;
   const spent = (m: string) => query("SELECT COALESCE(SUM(amount),0) AS total FROM expenses WHERE DATE_FORMAT(expense_date,'%Y-%m') = ?", [m]) as Promise<any[]>;
 
-  const [[sold], [soldBefore], [out], [outBefore], byCategory, byExpense] = await Promise.all([
+  const [[sold], [soldBefore], [out], [outBefore], byCategory, byExpense, byStatus] = await Promise.all([
     sales(month),
     sales(before),
     spent(month),
@@ -40,6 +40,8 @@ export async function GET(request: Request) {
       "SELECT category, COALESCE(SUM(amount),0) AS total FROM expenses WHERE DATE_FORMAT(expense_date,'%Y-%m') = ? GROUP BY category ORDER BY total DESC",
       [month],
     ) as Promise<any[]>,
+    // How many bills were paid, part paid, unpaid or cancelled this month.
+    query(`SELECT i.status, COUNT(*) AS count FROM invoices i WHERE ${IST_MONTH} = ? GROUP BY i.status`, [month]) as Promise<any[]>,
   ]);
 
   const soldNow = money(Number(sold?.total ?? 0));
@@ -59,5 +61,6 @@ export async function GET(request: Request) {
     },
     by_category: (byCategory as any[]).map((r) => ({ category: r.category, total: money(Number(r.total)) })),
     by_expense: (byExpense as any[]).map((r) => ({ category: r.category, total: money(Number(r.total)) })),
+    by_status: Object.fromEntries((byStatus as any[]).map((r) => [r.status, Number(r.count)])),
   });
 }

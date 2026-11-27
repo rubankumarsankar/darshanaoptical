@@ -49,7 +49,7 @@ describe('proxy admin gate', () => {
 
   it('sends a signed-in user away from the login page', () => {
     const res = proxy(request('/admin/login', { token: validToken() }));
-    expect(location(res)!.pathname).toBe('/admin/simple');
+    expect(location(res)!.pathname).toBe('/admin');
   });
 
   it('sends a signed-in user from login to a validated deep link', () => {

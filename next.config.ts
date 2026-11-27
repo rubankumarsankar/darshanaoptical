@@ -50,6 +50,31 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // The old admin screens were replaced by the task-based admin. Send old
+  // bookmarks and links to the screen that does the same job now.
+  async redirects() {
+    const to = (source: string, destination: string) => ({ source, destination, permanent: false });
+    return [
+      to("/admin/dashboard", "/admin"),
+      to("/admin/pos", "/admin/sale"),
+      to("/admin/counter", "/admin/sale"),
+      to("/admin/invoices", "/admin/bills"),
+      to("/admin/invoices/:id", "/admin/bills/:id"),
+      to("/admin/payments", "/admin/take-payment"),
+      to("/admin/eye-tests", "/admin/eye-test"),
+      to("/admin/eye-tests/new", "/admin/eye-test"),
+      to("/admin/customers/new", "/admin/customers"),
+      to("/admin/customers/:id", "/admin/customers?q=:id"),
+      to("/admin/inventory", "/admin/stock"),
+      to("/admin/purchases", "/admin/stock?tab=deliveries"),
+      to("/admin/suppliers", "/admin/stock?tab=suppliers"),
+      to("/admin/expenses", "/admin/money"),
+      to("/admin/reports", "/admin/report"),
+      to("/admin/staff", "/admin/settings?tab=staff"),
+      to("/admin/audit", "/admin/settings?tab=activity"),
+      to("/admin/products/:shelf(frames|lenses|sunglasses)", "/admin/products"),
+    ];
+  },
   async headers() {
     return [
       {

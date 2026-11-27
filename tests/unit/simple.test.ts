@@ -55,16 +55,16 @@ describe('simple admin role visibility', () => {
   });
 
   it('maps paths to the right menu item', () => {
-    expect(activeNav('/admin/simple')).toBe('home');
-    expect(activeNav('/admin/simple/sale')).toBe('sale');
-    expect(activeNav('/admin/simple/orders')).toBe('orders');
-    expect(activeNav('/admin/simple/settings/staff')).toBe('settings');
-    expect(activeNav('/admin/simple/new-stock')).toBe('stock');
-    expect(activeNav('/admin/simple/report')).toBe('money');
-    expect(activeNav('/admin/simple/bills')).toBe('bills');
-    expect(activeNav('/admin/simple/products')).toBe('products');
+    expect(activeNav('/admin')).toBe('home');
+    expect(activeNav('/admin/sale')).toBe('sale');
+    expect(activeNav('/admin/orders')).toBe('orders');
+    expect(activeNav('/admin/settings/staff')).toBe('settings');
+    expect(activeNav('/admin/new-stock')).toBe('stock');
+    expect(activeNav('/admin/report')).toBe('money');
+    expect(activeNav('/admin/bills')).toBe('bills');
+    expect(activeNav('/admin/products')).toBe('products');
     // Payment is open to staff, so it must not light up the Money item.
-    expect(activeNav('/admin/simple/take-payment')).toBe('orders');
+    expect(activeNav('/admin/take-payment')).toBe('orders');
   });
 });
 
@@ -95,6 +95,7 @@ describe('formatting helpers', () => {
     expect(inr('1499.5')).toBe('₹1,499.50');
     expect(inr(undefined)).toBe('₹0');
     expect(inr('nonsense')).toBe('₹0');
+    expect(inr(-350)).toBe('−₹350');
   });
 
   it('rounds money to paise', () => {
