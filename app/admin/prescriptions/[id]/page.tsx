@@ -7,7 +7,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
 import AdminLoader from '../../components/AdminLoader';
-import { ArrowLeft, Printer, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Printer, ShoppingCart } from 'lucide-react';
+import s from '../../_ui/simple.module.css';
+import { EmptyState, WhatsAppButton } from '../../_ui/parts';
 
 const FALLBACK_SHOP = {
   shop_name: 'Darshana Optical',
@@ -49,7 +51,16 @@ export default function PrescriptionPage({ params }: { params: Promise<{ id: str
   }, [autoPrint, ready]);
 
   if (loading || settingsLoading) return <AdminLoader label="Preparing prescription" />;
-  if (!test) return <div className="adm-document-error">Prescription not found.</div>;
+  if (!test) return <EmptyState>This prescription could not be found.</EmptyState>;
+
+  const power = (sph: string | null, cyl: string | null, axis: string | null, add: string | null) =>
+    [sph && `SPH ${sph}`, cyl && `CYL ${cyl}`, axis && `Axis ${axis}`, add && `ADD ${add}`].filter(Boolean).join(', ') || 'no power';
+  const whatsappText = [
+    `Hello ${test.customer_name}, here is your prescription from ${shop.shop_name} (${formatDate(test.test_date)}).`,
+    `Right eye: ${power(test.re_sph, test.re_cyl, test.re_axis, test.re_add)}`,
+    `Left eye: ${power(test.le_sph, test.le_cyl, test.le_axis, test.le_add)}`,
+    test.recommendation ? `We suggest: ${test.recommendation}.` : '',
+  ].filter(Boolean).join('\n');
 
   const rows = [
     { eye: 'Right eye', short: 'OD', values: [test.re_sph, test.re_cyl, test.re_axis, test.re_add, test.re_pd] },
@@ -59,21 +70,27 @@ export default function PrescriptionPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="adm-print-page adm-prescription-page" data-print-mode="prescription">
-      <div className="adm-page-header adm-no-print">
-        <Link href="/admin/customers" className="adm-btn adm-btn-ghost adm-btn-sm">
-          <ArrowLeft width={14} height={14} /> Customers
+      <div className="adm-no-print" style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
+        <Link href={`/admin/customers?q=${encodeURIComponent(test.customer_phone ?? test.customer_name)}`} style={{ fontSize: 16, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <ArrowLeft width={18} height={18} /> {test.customer_name}
         </Link>
-        <div className="adm-prescription-screen-title">
-          <div className="adm-page-title">Prescription</div>
-          <div className="adm-page-sub">{test.customer_name} · {formatDate(test.test_date)}</div>
+        <div>
+          <h1 className={s.h1}>Prescription</h1>
+          <p className={s.sub}>
+            {test.customer_name} · tested {formatDate(test.test_date)}
+            {test.tested_by ? ` by ${test.tested_by}` : ''}
+          </p>
         </div>
-        <div className="adm-prescription-actions">
-          <button type="button" onClick={() => window.print()} className="adm-btn adm-btn-secondary adm-btn-sm">
-            <Printer width={13} height={13} /> Print prescription
-          </button>
-          <Link href={`/admin/sale?customer=${encodeURIComponent(test.customer_id)}&eyeTest=${encodeURIComponent(test.id)}`} className="adm-btn adm-btn-primary adm-btn-sm">
-            <ShoppingCart width={13} height={13} /> Start sale
+        <div className={s.row} style={{ gap: 10 }}>
+          <Link href={`/admin/sale?customer=${encodeURIComponent(test.customer_id)}&eyeTest=${encodeURIComponent(test.id)}`} className={`${s.btn} ${s.btnPrimary}`}>
+            <ShoppingCart width={18} height={18} /> Start sale with this power
           </Link>
+          <button type="button" onClick={() => window.print()} className={`${s.btn} ${s.btnDark}`}>
+            <Printer width={18} height={18} /> Print prescription
+          </button>
+          <WhatsAppButton phone={test.customer_phone} text={whatsappText} className={`${s.btn} ${s.btnGreen}`}>
+            <MessageCircle width={18} height={18} /> Send on WhatsApp
+          </WhatsAppButton>
         </div>
       </div>
 
