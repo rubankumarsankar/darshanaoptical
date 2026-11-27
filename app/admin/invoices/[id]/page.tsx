@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -65,6 +65,30 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       router.replace(`/admin/invoices/${encodeURIComponent(invoiceNumber)}`);
     }
   }, [data?.invoice?.invoice_number, id, router]);
+
+  // "Print bill" from the simple admin links here with ?print=invoice. Read the
+  // flag once on arrival: the redirect above rewrites the URL without it.
+  const [autoPrint] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('print') === 'invoice');
+  const autoPrinted = useRef(false);
+  useEffect(() => {
+    if (!autoPrint || autoPrinted.current || !data?.invoice) return;
+    autoPrinted.current = true;
+    // The print-mode attribute must be on the page before the dialog opens.
+    const show = window.setTimeout(() => setPrintMode('invoice'), 0);
+    let printed = false;
+    const open = window.setTimeout(() => {
+      printed = true;
+      window.print();
+      setPrintMode(null);
+    }, 120);
+    return () => {
+      window.clearTimeout(show);
+      window.clearTimeout(open);
+      // Cancelled before it ran (e.g. Strict Mode's effect replay): allow a retry,
+      // but never print twice.
+      if (!printed) autoPrinted.current = false;
+    };
+  }, [autoPrint, data?.invoice]);
 
   if (error) {
     router.replace('/admin/invoices');
@@ -148,7 +172,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       <article className="adm-card adm-print-sheet print-section print-invoice adm-bill-sheet">
         <header className="adm-bill-letterhead">
           <div className="adm-bill-brand">
-            <div className="adm-bill-logo"><Image src="/logo.png" alt="Darshana Optical logo" width={64} height={64} priority /></div>
+            <div className="adm-bill-logo"><Image src={settings?.logo_url || '/logo.png'} alt="Darshana Optical logo" width={64} height={64} priority unoptimized={/^https?:/.test(settings?.logo_url ?? '')} style={{ objectFit: 'contain' }} /></div>
             <div><h1>{settings?.shop_name || 'Darshana Optical'}</h1><p>{settings?.tagline || 'Quality eye care for a better life'}</p></div>
           </div>
           <div className="adm-bill-shop">
@@ -156,6 +180,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
             <span>{[settings?.city || 'Harur', settings?.state || 'Tamil Nadu', settings?.pincode || '636903'].filter(Boolean).join(', ')}</span>
             <span>{settings?.phone || '88705 71536'} | {settings?.email || 'darshanaoptical31@gmail.com'}</span>
             {settings?.gst && <span>GSTIN: {settings.gst}</span>}
+            {settings?.opening_hours && <span>Open {settings.opening_hours}</span>}
           </div>
         </header>
 

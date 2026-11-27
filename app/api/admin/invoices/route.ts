@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server';
 import { query, withTransaction } from '@/app/lib/db';
-import { requireSession, type Role } from '@/app/lib/admin/session';
+import { requireSession } from '@/app/lib/admin/session';
+import { discountCap } from '@/app/lib/admin/simple';
 import { validate, invoiceCreateSchema } from '@/app/lib/admin/validation';
 import { nextSequence } from '@/app/lib/admin/sequence';
 import { randomUUID } from 'crypto';
 
-function maxDiscountFor(role: Role, settings: any): number {
-  const raw = role === 'admin' ? settings?.max_discount_admin ?? 100
-    : role === 'manager' ? settings?.max_discount_manager ?? 15
-    : settings?.max_discount_staff ?? 5;
-  const value = Number(raw);
-  return Number.isFinite(value) ? Math.min(Math.max(value, 0), 100) : 0;
-}
 
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -81,7 +75,7 @@ export async function POST(request: Request) {
       if (invoiceDiscount > subtotal) throw new Error('Discount cannot be greater than the subtotal.');
       const allDiscounts = money(resolved.reduce((sum, item) => sum + item.itemDiscount, 0) + invoiceDiscount);
       const effectivePercent = gross > 0 ? (allDiscounts / gross) * 100 : 0;
-      const cap = maxDiscountFor(session.role, settings);
+      const cap = discountCap(session.role, settings);
       if (effectivePercent > cap + 0.001) {
         const failure: any = new Error(`Discount of ${effectivePercent.toFixed(1)}% exceeds the ${cap}% limit for your role.`);
         failure.statusCode = 403;

@@ -20,11 +20,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (isLoading) return;
     if (!user && !isPublic) router.replace('/admin/login');
-    if (user && isPublic) router.replace('/admin/dashboard');
+    if (user && isPublic) router.replace('/admin/simple');
   }, [user, isLoading, isPublic, router]);
 
   if (isLoading) return <AdminLoader label="Opening admin workspace" fullScreen />;
   if (isPublic || !user) return <>{children}</>;
+  // The simple admin brings its own menu and layout.
+  if (pathname.startsWith('/admin/simple')) return <>{children}</>;
 
   return (
     <div className="admin-root">

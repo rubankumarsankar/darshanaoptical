@@ -28,17 +28,34 @@ export async function PUT(request: Request) {
   // Merge only the validated keys over the current row.
   const s = { ...existing, ...parsed.data };
 
+  // Shop hours and logo live in columns added by `npm run db:migrate:shop-details`.
+  // Until that has run they are left out of the UPDATE, so saving other
+  // settings keeps working on a database that hasn't been migrated yet.
+  const extra: string[] = [];
+  const extraValues: any[] = [];
+  for (const column of ['opening_hours', 'logo_url'] as const) {
+    if (column in existing) {
+      extra.push(`${column}=?`);
+      extraValues.push(s[column] || null);
+    } else if (parsed.data[column]) {
+      return NextResponse.json(
+        { error: 'Shop hours and logo need a one-time database update. Run: npm run db:migrate:shop-details' },
+        { status: 409 },
+      );
+    }
+  }
+
   await query(
     `UPDATE shop_settings SET
        shop_name=?,tagline=?,phone=?,whatsapp=?,email=?,notification_to=?,notification_cc=?,notification_bcc=?,address=?,city=?,state=?,pincode=?,gst=?,
        invoice_prefix=?,customer_id_prefix=?,low_stock_threshold=?,tax_enabled=?,tax_rate=?,
-       invoice_footer=?,invoice_terms=?,max_discount_admin=?,max_discount_manager=?,max_discount_staff=?
+       invoice_footer=?,invoice_terms=?,max_discount_admin=?,max_discount_manager=?,max_discount_staff=?${extra.length ? ',' + extra.join(',') : ''}
      WHERE id=1`,
     [s.shop_name, s.tagline || null, s.phone, s.whatsapp || null, s.email,
      s.notification_to || null, s.notification_cc || null, s.notification_bcc || null,
      s.address, s.city, s.state, s.pincode, s.gst || null,
      s.invoice_prefix, s.customer_id_prefix, s.low_stock_threshold ?? 5, s.tax_enabled ? 1 : 0, s.tax_rate ?? 0,
-     s.invoice_footer || null, s.invoice_terms || null, s.max_discount_admin ?? 100, s.max_discount_manager ?? 15, s.max_discount_staff ?? 5]
+     s.invoice_footer || null, s.invoice_terms || null, s.max_discount_admin ?? 100, s.max_discount_manager ?? 15, s.max_discount_staff ?? 5, ...extraValues]
   );
 
   await query(

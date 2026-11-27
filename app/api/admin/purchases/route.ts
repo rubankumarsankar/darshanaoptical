@@ -4,6 +4,7 @@ import { requireRole } from '@/app/lib/admin/session';
 import { validate, purchaseCreateSchema } from '@/app/lib/admin/validation';
 import { nextSequence } from '@/app/lib/admin/sequence';
 import { randomUUID } from 'crypto';
+import { money } from '@/app/lib/admin/simple';
 
 export async function GET(request: Request) {
   const { error } = await requireRole('admin', 'manager');
@@ -34,9 +35,9 @@ export async function POST(request: Request) {
   const total = b.items.reduce((s: number, i: any) => {
     const qty = i.quantity ?? i.qty ?? 1;
     const price = i.purchase_price ?? i.unit_cost ?? 0;
-    return s + price * qty;
+    return money(s + money(price * qty));
   }, 0);
-  const paid = b.amount_paid ?? b.paid ?? 0;
+  const paid = money(b.amount_paid ?? b.paid ?? 0);
 
   // Paying more than the bill would leave a negative balance and credit the
   // supplier's account by the difference.
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const balance = total - paid;
+  const balance = money(total - paid);
   const status = balance <= 0 ? 'paid' : paid > 0 ? 'partially_paid' : 'pending';
 
   const year = new Date().getFullYear();
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
       const productCode = product.product_code;
       const qty = item.quantity;
       const price = item.purchase_price ?? item.unit_cost ?? 0;
-      const itemTotal = price * qty;
+      const itemTotal = money(price * qty);
 
       await tx.query(
         `INSERT INTO purchase_items (id,purchase_id,product_id,product_name,product_code,quantity,purchase_price,total)

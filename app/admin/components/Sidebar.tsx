@@ -121,6 +121,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           );
         })}
 
+        {/* Back to the task-based admin */}
+        <div className="adm-nav-section">
+          <Link href="/admin/simple" className="adm-nav-item" onClick={onClose}>
+            <ChevronRight {...iconSize} />
+            Simple version
+          </Link>
+        </div>
+
         {/* Logout */}
         <div className="adm-nav-section adm-nav-logout">
           <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
@@ -32,6 +32,19 @@ export default function PrescriptionPage({ params }: { params: Promise<{ id: str
   const { data: settingsData, loading: settingsLoading } = useAdminFetch<{ settings: any }>('/api/admin/settings');
   const test = data?.eyeTest;
   const shop = { ...FALLBACK_SHOP, ...(settingsData?.settings ?? {}) };
+
+  // "Print prescription" in the simple admin links here with ?print=1.
+  const [autoPrint] = useState(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('print') === '1');
+  const printed = useRef(false);
+  const ready = !!test && !settingsLoading;
+  useEffect(() => {
+    if (!autoPrint || !ready || printed.current) return;
+    const t = window.setTimeout(() => {
+      printed.current = true;
+      window.print();
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [autoPrint, ready]);
 
   if (loading || settingsLoading) return <AdminLoader label="Preparing prescription" />;
   if (!test) return <div className="adm-document-error">Prescription not found.</div>;
@@ -65,7 +78,7 @@ export default function PrescriptionPage({ params }: { params: Promise<{ id: str
       <article className="adm-card adm-print-sheet print-section print-prescription adm-rx-sheet">
         <header className="adm-rx-letterhead">
           <div className="adm-rx-brand">
-            <div className="adm-rx-logo"><Image src="/logo.png" alt="Darshana Optical logo" width={64} height={64} priority /></div>
+            <div className="adm-rx-logo"><Image src={shop.logo_url || '/logo.png'} alt="Darshana Optical logo" width={64} height={64} priority unoptimized={/^https?:/.test(shop.logo_url ?? '')} style={{ objectFit: 'contain' }} /></div>
             <div>
               <h1>{shop.shop_name}</h1>
               <p>{shop.tagline}</p>

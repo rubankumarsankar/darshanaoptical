@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z, ZodSchema } from 'zod';
+import { OPTICS, type OpticalField } from './simple';
 
 /**
  * Validates `data` against `schema`. Returns `{ data }` on success or
@@ -235,6 +236,11 @@ export const settingsUpdateSchema = z.object({
   max_discount_admin: z.coerce.number().min(0).max(100).optional(),
   max_discount_manager: z.coerce.number().min(0).max(100).optional(),
   max_discount_staff: z.coerce.number().min(0).max(100).optional(),
+  opening_hours: z.string().trim().max(255).optional().nullable(),
+  // Our own uploads (a site path) or an https image address — never javascript: or data: URLs.
+  logo_url: z.string().trim().max(2000)
+    .refine((v) => v === '' || /^\/(?!\/)[\w\-./]+$/.test(v) || /^https:\/\/[^\s"'<>]+$/.test(v), 'logo must be an uploaded image or an https address')
+    .optional().nullable(),
 });
 
 export const invoiceItemSchema = z.object({
@@ -310,4 +316,57 @@ export const expenseCreateSchema = z.object({
   payment_method: paymentMethod,
   description: z.string().trim().min(1).max(5000),
   reference: z.string().trim().max(255).optional().nullable(),
+});
+
+// ─── Simple admin: eye test ───────────────────────────────────────────────────
+// Stricter than eyeTestCreateSchema (which the full admin's free-text form
+// uses): every power is a real number in optical steps, so a typo like "-17.3"
+// or an axis of 200 is refused instead of being printed on a prescription.
+
+/** Accepts '', null or a number in [min, max] that is a multiple of `step`; returns the stored text or null. */
+function opticalValue(min: number, max: number, step: number, label: string, signed = true) {
+  return z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? null : typeof v === 'string' ? Number(v.trim().replace(/^\+/, '')) : v),
+    z.number({ error: `${label} must be a number` })
+      .min(min, `${label} must be between ${min} and ${max}`)
+      .max(max, `${label} must be between ${min} and ${max}`)
+      .refine((n) => Math.abs(n / step - Math.round(n / step)) < 1e-9, `${label} goes up in steps of ${step}`)
+      .transform((n) => (signed ? `${n > 0 ? '+' : n < 0 ? '-' : ''}${Math.abs(n).toFixed(2)}` : String(n)))
+      .nullable(),
+  );
+}
+
+const optical = (field: OpticalField) => {
+  const r = OPTICS[field];
+  return opticalValue(r.min, r.max, r.step, r.label, r.signed);
+};
+
+const eyeSide = {
+  sph: optical('sph'),
+  cyl: optical('cyl'),
+  axis: optical('axis'),
+  add: optical('add'),
+  pd: optical('pd'),
+  va: z.string().trim().max(20).regex(/^[0-9A-Za-z/ .+-]*$/, 'VA may contain only numbers, letters and /').optional().nullable(),
+};
+
+const eyeSchema = z
+  .object(eyeSide)
+  .superRefine((eye, ctx) => {
+    // A cylinder without an axis can't be made into a lens.
+    if (eye.cyl && Number(eye.cyl) !== 0 && eye.axis === null) {
+      ctx.addIssue({ code: 'custom', path: ['axis'], message: 'Axis is needed when there is a cylinder' });
+    }
+  });
+
+export const SIMPLE_RECOMMENDATIONS = ['single_vision', 'progressive', 'bifocal', 'contact_lenses', 'no_change'] as const;
+
+export const simpleEyeTestSchema = z.object({
+  customer_id: z.string().trim().min(1).max(36),
+  booking_id: z.coerce.number().int().positive().optional().nullable(),
+  right: eyeSchema,
+  left: eyeSchema,
+  recommendation: z.enum(SIMPLE_RECOMMENDATIONS).optional().nullable(),
+  note: z.string().trim().max(2000).optional().nullable(),
+  next_checkup: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'next check-up must be a date').optional().nullable(),
 });

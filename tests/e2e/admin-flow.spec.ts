@@ -17,7 +17,10 @@ async function login(page: Page, role: Role) {
   await page.locator('#admin-email').fill(account.email);
   await page.locator('#admin-password').fill(account.password);
   await page.locator('#admin-login-submit').click();
-  await expect(page).toHaveURL(/\/admin\/(dashboard|pos)/, { timeout: 25_000 });
+  // Sign-in lands on the simple admin; this suite exercises the full version.
+  await expect(page).toHaveURL(/\/admin\/simple/, { timeout: 25_000 });
+  await page.goto('/admin/dashboard');
+  await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 25_000 });
 }
 
 test.describe('authentication and protected eye-test APIs', () => {

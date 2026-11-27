@@ -269,6 +269,8 @@ CREATE TABLE IF NOT EXISTS shop_settings (
   max_discount_admin   INT          DEFAULT 100,
   max_discount_manager INT          DEFAULT 15,
   max_discount_staff   INT          DEFAULT 5,
+  opening_hours        VARCHAR(255) DEFAULT 'Monday to Sunday, 9:30 AM – 9:00 PM',
+  logo_url             VARCHAR(2000),
   updated_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 

@@ -32,7 +32,9 @@ export async function loginAs(page: Page, email: string, pass: string) {
   await page.locator('#admin-password').fill(pass);
   await page.locator('#admin-login-submit').click();
 
-  await expect(page).toHaveURL(/\/admin\/dashboard/, { timeout: 15_000 });
+  // Sign-in lands on the simple admin; these suites exercise the full version.
+  await expect(page).toHaveURL(/\/admin\/simple/, { timeout: 15_000 });
+  await page.goto('/admin/dashboard');
   await page.waitForSelector('.adm-sidebar', { timeout: 15_000 });
 }
 

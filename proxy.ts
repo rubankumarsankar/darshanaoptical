@@ -60,7 +60,7 @@ export function proxy(request: NextRequest) {
       url.pathname = destination.pathname;
       url.search = destination.search;
     } else {
-      url.pathname = '/admin/dashboard';
+      url.pathname = '/admin/simple';
       url.search = '';
     }
     return NextResponse.redirect(url);
