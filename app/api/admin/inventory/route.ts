@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { shopDate } from '@/app/lib/admin/date';
 
@@ -8,7 +8,7 @@ import { shopDate } from '@/app/lib/admin/date';
 // Returns current stock plus, for the chosen period, how much of each product
 // came in and how much went out — the "how many arrived vs how many sold"
 // question the stock screen is really there to answer. Defaults to this month.
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -56,3 +56,5 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ products: withTotals, movements, period: { from, to } });
 }
+
+export const GET = withDb(GETHandler);

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 
-export async function GET() {
+async function GETHandler() {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -27,3 +27,5 @@ export async function GET() {
     },
   });
 }
+
+export const GET = withDb(GETHandler);

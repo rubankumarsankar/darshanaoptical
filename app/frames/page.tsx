@@ -3,6 +3,7 @@ import SiteShell from "../components/site/SiteShell";
 import PageHero from "../components/site/PageHero";
 import FramesBrowser from "../components/site/frames/FramesBrowser";
 import ShapeGuide from "../components/site/frames/ShapeGuide";
+import SunglassesShowcase from "../components/site/frames/SunglassesShowcase";
 
 function FloatingGlasses() {
   return (
@@ -46,6 +47,7 @@ export default function FramesPage() {
       />
       <main>
         <FramesBrowser />
+        <SunglassesShowcase />
         <ShapeGuide />
       </main>
     </SiteShell>

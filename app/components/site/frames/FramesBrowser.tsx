@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import s from "../site.module.css";
-import FrameGlyph from "../FrameGlyph";
-import { FRAMES, WHATSAPP_URL, formatPrice, type FrameStyle } from "../data";
+import Image from "next/image";
+import { FRAMES, formatPrice, type FrameStyle } from "../data";
+import { useShopContact } from "../ShopContact";
 
 const CATEGORIES = [
   { label: "Men", icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" },
@@ -25,10 +26,11 @@ const SORTS: readonly { id: Sort; label: string }[] = [
   { id: "high", label: "Price ↓" },
 ];
 
-const askUrl = (model: string) =>
-  `${WHATSAPP_URL}?text=${encodeURIComponent(`Hello Darshana Optical, I'd like to know more about frame ${model}.`)}`;
+const askUrl = (whatsappUrl: string, model: string) =>
+  `${whatsappUrl}?text=${encodeURIComponent(`Hello Darshana Optical, I'd like to know more about frame ${model}.`)}`;
 
 export default function FramesBrowser() {
+  const shop = useShopContact();
   const [category, setCategory] = useState<Category>("Men");
   const [shape, setShape] = useState<Shape>("All");
   const [sort, setSort] = useState<Sort>("new");
@@ -86,7 +88,7 @@ export default function FramesBrowser() {
         </div>
         <p aria-live="polite" style={{ margin: 0, padding: "16px 20px", borderRadius: 20, background: "var(--white)", fontSize: 15, lineHeight: 1.6, color: "var(--ink-soft)" }}>
           <strong>{category} frames:</strong> our full range is in store. Below are our latest models, or{" "}
-          <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" style={{ fontWeight: 700 }}>
+          <a href={shop.whatsappUrl} target="_blank" rel="noreferrer" style={{ fontWeight: 700 }}>
             ask on WhatsApp
           </a>{" "}
           for photos of more.
@@ -119,11 +121,7 @@ export default function FramesBrowser() {
               style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}
             >
               <span className={s.frameStage} style={{ height: 190, borderRadius: 24 }}>
-                <span
-                  className={s.arc}
-                  style={{ position: "absolute", width: 250, height: 250, borderRadius: "50%", border: "2px solid transparent", borderTopColor: "var(--orange)", borderRightColor: "var(--orange)" }}
-                />
-                <FrameGlyph style={m.style} width={200} height={92} />
+                <Image src={m.image} alt={`${m.style} frame in ${m.color.toLowerCase()}, model ${m.model}`} fill sizes="(max-width: 600px) 90vw, 300px" style={{ objectFit: "cover" }} />
                 <span style={{ position: "absolute", left: 12, top: 12, padding: "5px 12px", borderRadius: 999, background: "var(--white)", fontSize: 12, fontWeight: 700 }}>
                   {m.model}
                 </span>
@@ -138,7 +136,7 @@ export default function FramesBrowser() {
                 </span>
               </span>
               <a
-                href={askUrl(m.model)}
+                href={askUrl(shop.whatsappUrl, m.model)}
                 target="_blank"
                 rel="noreferrer"
                 className={`${s.pill} ${s.btn}`}

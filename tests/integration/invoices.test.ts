@@ -39,6 +39,7 @@ vi.mock('@/app/lib/db', () => {
     return [];
   };
   return {
+    withDb: (fn: any) => fn,
     query: vi.fn(async (sql: string, params: any[] = []) => {
       if (/FROM users WHERE id/.test(sql)) return state.user ? [state.user] : [];
       if (/FROM shop_settings/.test(sql)) return [state.settings];

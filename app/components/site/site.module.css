@@ -15,6 +15,7 @@
   --orange-ink: #b83e00;
   --orange-deep: #8a2e00;
   --peach: #ffe7d9;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --display: var(--font-outfit), "Outfit", system-ui, sans-serif;
 
   font-family: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
@@ -106,26 +107,55 @@
 .tint { animation: tint 6s ease-in-out infinite; }
 .glare { animation: glare 2.8s ease-in-out infinite; }
 
-/* Scroll-driven reveal. Browsers without view timelines run it with a 0s
-   duration, which lands straight on the visible end state.
-   The range ends inside the "entry" phase on purpose: every element, even
-   the last one on the page, scrolls fully into view at the bottom, so the
-   fade always completes. Ending at "cover 26%" left sections near the page
-   bottom stuck half-faded because the page ran out of scroll first. */
-.reveal {
-  animation: up linear both;
-  animation-timeline: view();
-  animation-range: entry 0% entry 70%;
+/* Reveal on scroll (see RevealOnScroll.tsx): a one-time fade-up with a soft
+   blur-to-sharp, staggered across cards that arrive together. Only hidden once
+   <html data-reveal> is set, so content always shows without JavaScript; the
+   fallback animation shows anything the script never reached after 3s. */
+:global(html[data-reveal]) .reveal {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0) scale(0.985);
+  filter: blur(6px);
+  transition:
+    opacity 0.9s var(--ease-out),
+    transform 0.9s var(--ease-out),
+    filter 0.9s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+  animation: revealFallback 0.6s var(--ease-out) 3s forwards;
 }
+:global(html[data-reveal]) .reveal[data-shown] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  animation: none;
+  /* Keep hover lifts smooth once revealed. */
+  transition:
+    opacity 0.9s var(--ease-out),
+    transform 0.9s var(--ease-out),
+    filter 0.9s var(--ease-out),
+    box-shadow 0.55s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+/* After the reveal finishes, hand transitions back to quick hover effects. */
+:global(html[data-reveal]) .reveal[data-done] { transition: transform 0.55s var(--ease-out), box-shadow 0.55s var(--ease-out); transition-delay: 0ms; }
+@keyframes revealFallback { to { opacity: 1; transform: none; filter: none; } }
 
-.lift { transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.4s; }
-.lift:hover { transform: translateY(-8px); box-shadow: 0 30px 60px rgba(31, 32, 36, 0.16); }
+/* Hover lift: quick to rise, soft to settle. */
+.lift {
+  transition:
+    transform 0.55s var(--ease-out),
+    box-shadow 0.55s var(--ease-out),
+    opacity 0.9s var(--ease-out),
+    filter 0.9s var(--ease-out);
+  will-change: transform;
+}
+.lift:hover { transform: translate3d(0, -6px, 0); box-shadow: 0 24px 50px rgba(31, 32, 36, 0.14); }
 
 .arc { transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .lens:hover .arc { transform: rotate(200deg); }
 
-.btn { transition: transform 0.2s; }
-.btn:hover { transform: translateY(-2px); }
+.btn { transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out), background-color 0.25s, color 0.25s; }
+.btn:hover { transform: translate3d(0, -2px, 0); }
+.btn:active { transform: scale(0.97); transition-duration: 0.1s; }
 
 @media (prefers-reduced-motion: reduce) {
   .root *,
@@ -1129,3 +1159,108 @@
 .prose { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; font-size: 16px; line-height: 1.7; color: var(--ink-soft); }
 .prose h2 { margin: 0 0 6px; font-family: var(--display); font-size: 24px; line-height: 1.2; color: var(--ink); }
 .prose p { margin: 0; }
+
+/* ─── Booking popup ─────────────────────────────────────────────────────── */
+.bookOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(16, 16, 20, 0.55);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  backdrop-filter: blur(12px) saturate(120%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: bookFade 0.2s ease-out;
+}
+.bookCenter {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  box-sizing: border-box;
+}
+.bookPanel {
+  position: relative;
+  width: 100%;
+  max-width: 1080px;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.6fr);
+  border-radius: 36px;
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  outline: none;
+  animation: bookRise 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.bookAside {
+  background: var(--night);
+  color: var(--white);
+  padding: 40px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.bookForm {
+  padding: 40px 36px 36px;
+  min-width: 0;
+}
+.bookClose {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 1001;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.bookClose:hover { transform: scale(1.06); background: var(--paper); }
+.bookClose:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+.bookPerks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: #d4d5db; }
+
+/* Tablet: stack, intro becomes a short header. */
+@media (max-width: 860px) {
+  .bookCenter { padding: 20px; align-items: flex-start; }
+  .bookPanel { grid-template-columns: 1fr; max-width: 680px; }
+  .bookAside { padding: 28px 28px 24px; gap: 10px; }
+}
+/* Phone: a full-screen sheet. */
+@media (max-width: 600px) {
+  .bookOverlay { background: var(--white); }
+  .bookCenter { padding: 0; min-height: 100%; }
+  .bookPanel { border-radius: 0; box-shadow: none; min-height: 100dvh; align-content: start; }
+  .bookAside { padding: 22px 76px 20px 20px; }
+  .bookAsideLede, .bookPerks { display: none; }
+  .bookForm { padding: 22px 18px 32px; }
+  .bookClose { top: 12px; right: 12px; width: 46px; height: 46px; }
+}
+@keyframes bookFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bookRise { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .bookOverlay, .bookPanel { animation: none; }
+}
+
+/* "Developed by" credit in the footer: a small white badge so the dark logo reads on the dark footer. */
+.footerBase { align-items: center; }
+.footerBase a.devCredit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #5e606a;
+  font-size: 12px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.footerBase a.devCredit:hover { color: #5e606a; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); }

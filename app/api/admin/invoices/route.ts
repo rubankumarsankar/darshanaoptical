@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { discountCap } from '@/app/lib/admin/simple';
 import { validate, invoiceCreateSchema } from '@/app/lib/admin/validation';
@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
   const { searchParams } = new URL(request.url);
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ invoices: await query(sql, params) });
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
   const parsed = validate(invoiceCreateSchema, await request.json());
@@ -138,3 +138,6 @@ export async function POST(request: Request) {
   const invoiceItems = await query('SELECT * FROM invoice_items WHERE invoice_id = ?', [id]);
   return NextResponse.json({ invoice, items: invoiceItems, invoice_number }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

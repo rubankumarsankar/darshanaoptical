@@ -3,13 +3,13 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Mail, MessageCircle, Printer, Search } from 'lucide-react';
+import { ChevronRight, Mail, MessageCircle, Printer, Search } from 'lucide-react';
 import { useAuth } from '@/app/lib/admin/auth-context';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
 import { adminPost, adminPut } from '@/app/lib/admin/api';
 import { canSeeMoney, inr, periodRange, shopDay, shortDate, waLink, type Period } from '@/app/lib/admin/simple';
 import s from '../_ui/simple.module.css';
-import { EmptyState, ErrorNote, PageHead, StatusTag } from '../_ui/parts';
+import { EmptyState, ErrorNote, MoneyStat, PageHead, StatusTag } from '../_ui/parts';
 
 interface Bill {
   id: string;
@@ -90,6 +90,10 @@ function Bills() {
       show === 'all' ? true : show === 'owing' ? b.status !== 'cancelled' && Number(b.balance) > 0 : show === 'paid' ? b.status === 'paid' : b.status === 'cancelled',
     )
     .slice(0, 80);
+  // Totals for what's on screen; cancelled bills don't count as money.
+  const activeBills = bills.filter((b) => b.status !== 'cancelled');
+  const sum = (k: 'total' | 'paid' | 'balance') => activeBills.reduce((n, b) => n + Number(b[k] || 0), 0);
+  const owingCount = activeBills.filter((b) => Number(b.balance) > 0).length;
 
   const email = async (b: Bill) => {
     setEmailing(b.id);
@@ -172,6 +176,15 @@ function Bills() {
         </div>
       )}
 
+      {canCancel && data && activeBills.length > 0 && (
+        <div className={s.grid} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))' }}>
+          <MoneyStat label="Bills" value={String(activeBills.length)} note={when === 'any' ? 'Shown below' : WHEN.find((w) => w.id === when)?.label} />
+          <MoneyStat label="Billed" value={inr(sum('total'))} />
+          <MoneyStat label="Collected" value={inr(sum('paid'))} />
+          <MoneyStat label="Still to collect" value={inr(sum('balance'))} note={owingCount ? `${owingCount} bill${owingCount === 1 ? '' : 's'}` : 'All paid'} warm={sum('balance') > 0} />
+        </div>
+      )}
+
       <ErrorNote>{error}</ErrorNote>
       {note && (
         <p role="status" className={note.ok ? undefined : s.error} style={note.ok ? { margin: 0, color: 'var(--success-text)', fontWeight: 700 } : undefined}>
@@ -187,43 +200,51 @@ function Bills() {
           const wa = waLink(b.customer_phone, billText(b));
           const ref = encodeURIComponent(b.invoice_number.toLowerCase());
           const live = b.status !== 'cancelled';
+          const owes = live && Number(b.balance) > 0;
           return (
-            <div key={b.id} className={s.attention} style={{ padding: '14px 18px' }}>
-              <Link href={`/admin/bills/${ref}`} style={{ flex: '1 1 240px', minWidth: 0, textDecoration: 'none', color: 'var(--ink)' }}>
-                <strong style={{ display: 'block', fontSize: 18 }}>{b.invoice_number}</strong>
-                <span className={s.muted} style={{ fontSize: 15 }}>
-                  {b.customer_name} · {b.customer_phone} · {shortDate(b.created_at)}
+            <div key={b.id} className={s.attention} style={{ padding: '12px 14px 12px 18px', gap: 14, opacity: live ? 1 : 0.65, borderLeft: `5px solid ${owes ? 'var(--orange)' : live ? 'var(--success)' : '#C9C7C0'}` }}>
+              <Link href={`/admin/bills/${ref}`} className={s.tap} style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', color: 'var(--ink)' }} aria-label={`Open bill ${b.invoice_number}`}>
+                <span style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <strong style={{ fontSize: 17, letterSpacing: '.01em' }}>{b.invoice_number}</strong>
+                    <StatusTag tone={st.tone}>{st.label}</StatusTag>
+                  </span>
+                  <span className={s.muted} style={{ display: 'block', fontSize: 15, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <strong style={{ color: 'var(--ink)', fontWeight: 600 }}>{b.customer_name}</strong> · {b.customer_phone} · {shortDate(b.created_at)}
+                  </span>
                 </span>
+                <span style={{ textAlign: 'right', flex: 'none' }}>
+                  <strong style={{ display: 'block', fontFamily: 'var(--display)', fontSize: 22, textDecoration: live ? undefined : 'line-through' }}>{inr(b.total)}</strong>
+                  {owes ? (
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--orange-deep)' }}>Owes {inr(b.balance)}</span>
+                  ) : (
+                    live && <span className={s.muted} style={{ fontSize: 14 }}>Fully paid</span>
+                  )}
+                </span>
+                <ChevronRight size={20} color="#8A8C95" aria-hidden style={{ flex: 'none' }} />
               </Link>
-              <span style={{ textAlign: 'right' }}>
-                <strong style={{ display: 'block', fontFamily: 'var(--display)', fontSize: 22 }}>{inr(b.total)}</strong>
-                {live && Number(b.balance) > 0 && (
-                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--orange-deep)' }}>Owes {inr(b.balance)}</span>
-                )}
-              </span>
-              <StatusTag tone={st.tone}>{st.label}</StatusTag>
-              <span className={s.row} style={{ gap: 8 }}>
-                {live && Number(b.balance) > 0 && (
-                  <Link href={`/admin/take-payment?customer=${encodeURIComponent(b.customer_id)}`} className={`${s.btn} ${s.btnPrimary}`} style={{ minHeight: 48 }}>
+              <span className={s.row} style={{ gap: 6, flex: 'none' }}>
+                {owes && (
+                  <Link href={`/admin/take-payment?customer=${encodeURIComponent(b.customer_id)}`} className={`${s.btn} ${s.btnPrimary}`} style={{ minHeight: 46 }}>
                     Take payment
                   </Link>
                 )}
-                <Link href={`/admin/bills/${ref}?print=invoice`} className={`${s.btn} ${s.btnDark}`} style={{ minHeight: 48 }} aria-label={`Print bill ${b.invoice_number}`}>
-                  <Printer size={18} aria-hidden /> Print
+                <Link href={`/admin/bills/${ref}?print=invoice`} className={s.iconBtn} style={{ color: 'var(--ink)' }} title="Print" aria-label={`Print bill ${b.invoice_number}`}>
+                  <Printer size={19} aria-hidden />
                 </Link>
                 {wa && live && (
-                  <a href={wa} target="_blank" rel="noreferrer" className={`${s.btn} ${s.btnGreen}`} style={{ minHeight: 48 }} aria-label={`Send bill ${b.invoice_number} on WhatsApp`}>
-                    <MessageCircle size={18} aria-hidden /> WhatsApp
+                  <a href={wa} target="_blank" rel="noreferrer" className={s.iconBtn} style={{ background: 'var(--success-soft, #E3F4EC)', color: 'var(--success)' }} title="Send on WhatsApp" aria-label={`Send bill ${b.invoice_number} on WhatsApp`}>
+                    <MessageCircle size={19} aria-hidden />
                   </a>
                 )}
                 {live && (
-                  <button type="button" className={`${s.btn} ${s.btnLight}`} style={{ minHeight: 48 }} disabled={emailing === b.id} onClick={() => email(b)} aria-label={`Email bill ${b.invoice_number}`}>
-                    <Mail size={18} aria-hidden /> {emailing === b.id ? 'Sending…' : 'Email'}
+                  <button type="button" className={s.iconBtn} disabled={emailing === b.id} onClick={() => email(b)} title="Email" aria-label={`Email bill ${b.invoice_number}`}>
+                    {emailing === b.id ? <span style={{ fontSize: 12 }}>…</span> : <Mail size={19} aria-hidden />}
                   </button>
                 )}
                 {live && canCancel && (
-                  <button type="button" className={`${s.btn} ${s.btnSoft}`} style={{ minHeight: 48 }} onClick={() => setCancelling(b)} aria-label={`Cancel bill ${b.invoice_number}`}>
-                    Cancel bill
+                  <button type="button" onClick={() => setCancelling(b)} aria-label={`Cancel bill ${b.invoice_number}`} style={{ border: 0, background: 'none', font: 'inherit', fontSize: 14, fontWeight: 600, color: 'var(--danger)', padding: '0 8px', minHeight: 46, cursor: 'pointer' }}>
+                    Cancel
                   </button>
                 )}
               </span>

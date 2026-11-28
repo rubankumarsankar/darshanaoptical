@@ -6,6 +6,7 @@ import { ImagePlus, X } from 'lucide-react';
 import { adminPost, adminPut } from '@/app/lib/admin/api';
 import s from './simple.module.css';
 import { ErrorNote } from './parts';
+import { brandSuggestions, matchBrand } from '@/app/lib/admin/brands';
 
 export type ItemCategory = 'frame' | 'lens' | 'sunglass' | 'accessory' | 'service';
 
@@ -23,6 +24,8 @@ export interface ItemValues {
   purchase_price: string | number;
   mrp?: string | number | null;
   low_stock_threshold: number;
+  /** Current count, when editing. */
+  stock?: number;
   image_url?: string | null;
   description?: string | null;
   status?: 'active' | 'inactive';
@@ -43,6 +46,8 @@ interface ItemFormProps {
   initialName?: string;
   /** Hide "how many are in the shop now" (e.g. when a delivery will add the stock). */
   noOpeningStock?: boolean;
+  /** Brands already used in the shop, for suggestions and consistent spelling. */
+  knownBrands?: readonly string[];
   onSaved: (saved: { id: string; name: string; product_code: string; purchase_price: string | number; category: ItemCategory }) => void;
   onCancel: () => void;
 }
@@ -54,7 +59,7 @@ const num = (v: string | number | null | undefined) => (v === null || v === unde
  * management-only, gives new items a code when none is typed, and writes the
  * audit log. Photos go through the existing image upload.
  */
-export default function ItemForm({ item, initialName = '', noOpeningStock, onSaved, onCancel }: ItemFormProps) {
+export default function ItemForm({ item, initialName = '', noOpeningStock, knownBrands = [], onSaved, onCancel }: ItemFormProps) {
   const editing = !!item?.id;
   const [v, setV] = useState({
     product_code: item?.product_code ?? '',
@@ -73,6 +78,10 @@ export default function ItemForm({ item, initialName = '', noOpeningStock, onSav
   });
   const [category, setCategory] = useState<ItemCategory>(item?.category ?? 'frame');
   const [opening, setOpening] = useState('0');
+  // Editing: the count can be corrected here; the difference is saved as a stock adjustment.
+  const startStock = Math.max(0, Number(item?.stock ?? 0));
+  const [stockCount, setStockCount] = useState(String(startStock));
+  const stockChanged = stockCount !== '' && Math.round(Number(stockCount)) !== startStock;
   const [active, setActive] = useState(item?.status !== 'inactive');
   const [more, setMore] = useState(editing && !!(item?.model || item?.color || item?.size || item?.material || item?.description));
   const [busy, setBusy] = useState(false);
@@ -102,26 +111,37 @@ export default function ItemForm({ item, initialName = '', noOpeningStock, onSav
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    setBusy(true);
     setError('');
+    const selling = Number(v.selling_price) || 0;
+    if (v.mrp !== '' && Number(v.mrp) < selling) {
+      setError('The selling price is more than the MRP. Check both prices.');
+      return;
+    }
+    setBusy(true);
     const body = {
-      name: v.name.trim(),
-      brand: v.brand.trim(),
+      name: v.name.trim().replace(/\s+/g, ' '),
+      brand: matchBrand(v.brand, knownBrands),
       category,
       model: v.model.trim() || null,
       color: v.color.trim() || null,
       size: v.size.trim() || null,
       material: v.material.trim() || null,
-      selling_price: Number(v.selling_price) || 0,
+      selling_price: selling,
       purchase_price: Number(v.purchase_price) || 0,
-      ...(v.mrp !== '' ? { mrp: Number(v.mrp) || 0 } : {}),
+      // Empty MRP: a new item takes the selling price; an edit clears the old MRP.
+      ...(v.mrp !== '' ? { mrp: Number(v.mrp) || 0 } : editing ? { mrp: null } : {}),
       low_stock_threshold: Math.max(0, Math.round(Number(v.low_stock_threshold) || 0)),
       image_url: v.image_url.trim() || null,
       description: v.description.trim() || null,
     };
     try {
       if (editing) {
-        const res = await adminPut<{ product: any }>(`/api/admin/products/${encodeURIComponent(item!.id!)}`, { ...body, status: active ? 'active' : 'inactive' });
+        const adjust = category !== 'service' && !noOpeningStock && stockChanged ? Math.max(0, Math.round(Number(stockCount))) - startStock : 0;
+        const res = await adminPut<{ product: any }>(`/api/admin/products/${encodeURIComponent(item!.id!)}`, {
+          ...body,
+          status: active ? 'active' : 'inactive',
+          ...(adjust !== 0 ? { stock_adjustment: adjust, adjustment_reason: `Count corrected in Products (${startStock} → ${startStock + adjust})` } : {}),
+        });
         onSaved(res.product ?? { ...body, id: item!.id!, product_code: item!.product_code ?? '' });
       } else {
         const res = await adminPost<{ product: any }>('/api/admin/products', {
@@ -133,7 +153,7 @@ export default function ItemForm({ item, initialName = '', noOpeningStock, onSav
       }
     } catch (err: any) {
       const msg = String(err.message ?? '');
-      setError(/Duplicate|product_code/i.test(msg) ? 'That product code is already used. Leave it empty to get one automatically.' : msg || 'The item could not be saved.');
+      setError(/Duplicate entry/i.test(msg) ? 'That product code is already used. Leave it empty to get one automatically.' : msg || 'The item could not be saved.');
     } finally {
       setBusy(false);
     }
@@ -194,14 +214,19 @@ export default function ItemForm({ item, initialName = '', noOpeningStock, onSav
           </div>
         </div>
 
-        <div className={s.grid} style={{ flex: '1 1 320px', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))' }}>
-          <label className={s.field}>
+        <div className={s.grid} style={{ flex: '1 1 320px', gridTemplateColumns: 'repeat(auto-fill, minmax(min(190px, 100%), 1fr))', alignItems: 'end' }}>
+          <label className={s.field} style={{ gridColumn: '1 / -1' }}>
             Name
             <input className={s.input} value={v.name} onChange={set('name')} required maxLength={255} placeholder="e.g. Rectangle frame, black" />
           </label>
           <label className={s.field}>
             Brand
-            <input className={s.input} value={v.brand} onChange={set('brand')} required maxLength={255} placeholder="e.g. Titan" />
+            <input className={s.input} value={v.brand} onChange={set('brand')} required maxLength={255} placeholder="Pick or type a brand" list="item-brands" autoComplete="off" />
+            <datalist id="item-brands">
+              {brandSuggestions(knownBrands, category).map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
           </label>
           <label className={s.field}>
             Selling price ₹
@@ -215,22 +240,38 @@ export default function ItemForm({ item, initialName = '', noOpeningStock, onSav
             <span>Cost price ₹ {optional}</span>
             <input className={s.input} type="number" inputMode="decimal" min={0} step="0.01" value={v.purchase_price} onChange={set('purchase_price')} />
           </label>
-          {category !== 'service' && (
+          {category !== 'service' && !noOpeningStock && (
             <label className={s.field}>
-              Warn me when only this many are left
-              <input className={s.input} type="number" inputMode="numeric" min={0} step={1} value={v.low_stock_threshold} onChange={set('low_stock_threshold')} />
+              <span>
+                In the shop now
+                {editing && stockChanged && (
+                  <span className={s.muted} style={{ fontWeight: 500, fontSize: 14 }}>
+                    {' '}
+                    (was {startStock})
+                  </span>
+                )}
+              </span>
+              <input
+                className={s.input}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                value={editing ? stockCount : opening}
+                onChange={(e) => (editing ? setStockCount(e.target.value) : setOpening(e.target.value))}
+              />
             </label>
           )}
-          {!editing && !noOpeningStock && category !== 'service' && (
-            <label className={s.field}>
-              How many are in the shop now
-              <input className={s.input} type="number" inputMode="numeric" min={0} step={1} value={opening} onChange={(e) => setOpening(e.target.value)} />
+          {category !== 'service' && (
+            <label className={s.field} title="We warn you when stock falls to this number">
+              Low stock alert at
+              <input className={s.input} type="number" inputMode="numeric" min={0} step={1} value={v.low_stock_threshold} onChange={set('low_stock_threshold')} />
             </label>
           )}
           {!editing && (
             <label className={s.field}>
               <span>Product code {optional}</span>
-              <input className={s.input} value={v.product_code} onChange={set('product_code')} maxLength={50} placeholder="Made for you if empty" />
+              <input className={s.input} value={v.product_code} onChange={set('product_code')} maxLength={50} placeholder="Made for you if empty, e.g. FR-0012" />
             </label>
           )}
         </div>

@@ -2,10 +2,10 @@ import s from "../components/site/site.module.css";
 import SiteShell from "../components/site/SiteShell";
 import PageHero from "../components/site/PageHero";
 import BookButton from "../components/site/BookButton";
-import { WHATSAPP_URL } from "../components/site/data";
+import { ShopLink } from "../components/site/ShopContact";
 
-const claimUrl = (offer: string) =>
-  `${WHATSAPP_URL}?text=${encodeURIComponent(`Hello Darshana Optical, I'd like to know more about the "${offer}" offer.`)}`;
+// WhatsApp number comes from Admin › Settings through ShopLink.
+const claimText = (offer: string) => `Hello Darshana Optical, I'd like to know more about the "${offer}" offer.`;
 
 const MORE_OFFERS = [
   { tag: "Best value", title: "Complete eyewear package", text: "Selected premium frame and anti-reflective lens combinations at special in-store package pricing." },
@@ -91,15 +91,14 @@ export default function OffersPage() {
               </span>
             </div>
             <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--muted)" }}>*See offer terms below.</p>
-            <a
-              href={claimUrl("Computer glasses from ₹1,499")}
-              target="_blank"
-              rel="noreferrer"
+            <ShopLink
+              kind="whatsapp"
+              message={claimText("Computer glasses from ₹1,499")}
               className={`${s.pill} ${s.pillDark} ${s.btn}`}
               style={{ marginTop: "auto", alignSelf: "flex-start", height: 54, padding: "0 24px", fontSize: 16 }}
             >
               Claim on WhatsApp
-            </a>
+            </ShopLink>
           </article>
           <article className={`${s.lift} ${s.reveal} ${s.stack}`} style={{ borderRadius: 40, background: "var(--night)", color: "var(--white)", padding: "clamp(24px, 4vw, 36px)", gap: 16, position: "relative", overflow: "hidden" }}>
             <span className={s.float} aria-hidden="true" style={{ position: "absolute", right: -50, top: -50, width: 200, height: 200, borderRadius: "50%", border: "18px solid var(--night-2)" }} />
@@ -128,9 +127,9 @@ export default function OffersPage() {
                   {o.title}
                 </strong>
                 <span className={s.cardText}>{o.text}</span>
-                <a href={claimUrl(o.title)} target="_blank" rel="noreferrer" style={{ marginTop: "auto", fontSize: 15, fontWeight: 700, textDecoration: "none", padding: "8px 0" }}>
+                <ShopLink kind="whatsapp" message={claimText(o.title)} style={{ marginTop: "auto", fontSize: 15, fontWeight: 700, textDecoration: "none", padding: "8px 0" }}>
                   Ask on WhatsApp →
-                </a>
+                </ShopLink>
               </article>
             ))}
           </div>

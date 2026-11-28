@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { validate } from '@/app/lib/admin/validation';
 
@@ -11,7 +11,7 @@ import { validate } from '@/app/lib/admin/validation';
 // lens_ordered, in_process), ready for pickup, and recently handed over. Each
 // ready order says whether the customer has been told; that is recorded as a
 // NOTIFY_READY audit entry rather than a new column, so no schema change.
-export async function GET() {
+async function GETHandler() {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -54,7 +54,7 @@ const notifySchema = z.object({ invoice_id: z.string().trim().min(1).max(36) });
 
 // POST /api/admin/simple/orders — record that the "glasses are ready" WhatsApp
 // message was sent, so Home stops asking.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -71,3 +71,6 @@ export async function POST(request: Request) {
   );
   return NextResponse.json({ ok: true }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

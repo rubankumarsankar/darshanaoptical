@@ -1,4 +1,5 @@
 import tls from 'node:tls';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import mysql, { Connection, ConnectionOptions } from 'mysql2/promise';
 
 // ─── CLOUDFLARE WORKERS TLS SHIM ─────────────────────────────────────────────
@@ -51,9 +52,41 @@ async function createDbConnection(): Promise<Connection> {
   return mysql.createConnection(getConnectionOptions());
 }
 
+// ─── ONE CONNECTION PER REQUEST ──────────────────────────────────────────────
+// Opening a TLS connection to TiDB costs ~300 ms; a query on an open one ~80 ms.
+// A global pool can't be used (a Worker isolate serves unrelated requests and
+// Cloudflare rejects I/O objects crossing request contexts), so each request
+// gets its own connection, opened on first use and closed when it finishes.
+const requestDb = new AsyncLocalStorage<{ conn?: Promise<Connection> }>();
+
+/**
+ * Wraps a route handler so every `query()` in that request shares one
+ * connection. Transactions still use their own connection.
+ */
+export function withDb<A extends unknown[], R>(handler: (...args: A) => Promise<R>): (...args: A) => Promise<R> {
+  return (...args: A) => {
+    const scope: { conn?: Promise<Connection> } = {};
+    return requestDb.run(scope, async () => {
+      try {
+        return await handler(...args);
+      } finally {
+        if (scope.conn) {
+          const conn = await scope.conn.catch(() => null);
+          await conn?.end().catch(() => {});
+        }
+      }
+    });
+  };
+}
+
 export async function query<T = any>(sql: string, params?: any[]): Promise<T> {
-  // A Worker isolate can serve unrelated requests. Reusing a global Node pool
-  // can carry an I/O object across request contexts, which Cloudflare rejects.
+  const scope = requestDb.getStore();
+  if (scope) {
+    scope.conn ??= createDbConnection();
+    const [results] = await (await scope.conn).execute(sql, params);
+    return results as T;
+  }
+  // Outside a wrapped handler (scripts, server components): one connection per query.
   const connection = await createDbConnection();
   try {
     const [results] = await connection.execute(sql, params);

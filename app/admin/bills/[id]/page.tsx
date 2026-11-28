@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { useAdminFetch } from '@/app/lib/admin/useAdminFetch';
 import { adminPost, adminPut } from '@/app/lib/admin/api';
 import AdminLoader from '../../_ui/AdminLoader';
-import TablePagination from '../../_ui/TablePagination';
 import { ArrowLeft, Printer, Plus, CheckCircle, X, FileText, ClipboardList, Mail } from 'lucide-react';
 
 function fmt(n: number) { return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -121,39 +120,21 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
   };
 
   return (
-    <div className="adm-print-page" data-print-mode={printMode ?? undefined} style={{ maxWidth: 820 }}>
-      <div className="adm-no-print" style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
+    <div className="adm-print-page" data-print-mode={printMode ?? undefined} style={{ maxWidth: 1260 }}>
+      <div className="adm-no-print" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
         <Link href="/admin/bills" style={{ fontSize: 16, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <ArrowLeft width={18} height={18} /> Bills
         </Link>
-        <div>
+        <div className={s.row} style={{ gap: 12, alignItems: 'center' }}>
           <h1 className={s.h1}>Bill {invoice.invoice_number}</h1>
-          <p className={s.sub}>{invoice.customer_name} · {fmtDate(invoice.created_at)}</p>
+          <span className={`adm-badge ${STATUS_COLORS[invoice.status]}`}>{STATUS_LABELS[invoice.status]}</span>
+          {invoice.order_status && <span className={`adm-badge ${STATUS_COLORS[invoice.order_status]}`}>Order: {STATUS_LABELS[invoice.order_status]}</span>}
         </div>
-        <div className={s.row} style={{ gap: 10 }}>
-          {Number(invoice.balance) > 0 && invoice.status !== 'cancelled' && (
-            <Link href={`/admin/take-payment?customer=${encodeURIComponent(invoice.customer_id)}`} className={`${s.btn} ${s.btnPrimary}`}>
-              <Plus width={18} height={18} /> Take payment
-            </Link>
-          )}
-          <button type="button" onClick={() => printDocument('invoice')} className={`${s.btn} ${s.btnDark}`}><Printer width={18} height={18} /> Print bill</button>
-          <button type="button" onClick={() => printDocument('jobcard')} className={`${s.btn} ${s.btnLight}`}><ClipboardList width={18} height={18} /> Job card for the lab</button>
-          {eyeTest && <button type="button" onClick={() => printDocument('prescription')} className={`${s.btn} ${s.btnLight}`}><FileText width={18} height={18} /> Prescription</button>}
-          <button type="button" onClick={handleEmailBill} disabled={emailing || !customerEmail} title={customerEmail ? `Send to ${customerEmail}` : 'Add an email to the customer first'} className={`${s.btn} ${s.btnLight}`}>
-            <Mail width={18} height={18} /> {emailing ? 'Sending…' : customerEmail ? 'Email bill' : 'No email on file'}
-          </button>
-        </div>
+        <p className={s.sub}>{invoice.customer_name} · {invoice.customer_phone} · {fmtDate(invoice.created_at)}</p>
       </div>
 
-      {emailResult && <div className="adm-no-print" style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 8, background: emailResult.type === 'success' ? '#f0fdf4' : '#fef2f2', color: emailResult.type === 'success' ? '#15803d' : '#dc2626', fontSize: 13 }}>{emailResult.message}</div>}
-
-      {/* Status Row */}
-      <div className="adm-no-print" style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-        <span className={`adm-badge ${STATUS_COLORS[invoice.status]}`}>{STATUS_LABELS[invoice.status]}</span>
-        {invoice.order_status && <span className={`adm-badge ${STATUS_COLORS[invoice.order_status]}`}>Order: {STATUS_LABELS[invoice.order_status]}</span>}
-        {invoice.delivered_at && <span style={{ fontSize: 12, color: '#64748b' }}>Delivered: {new Date(invoice.delivered_at).toLocaleDateString('en-IN')}</span>}
-      </div>
-
+      <div className="adm-bill-layout">
+      <div className="adm-bill-main">
       <article className="adm-card adm-print-sheet print-section print-invoice adm-bill-sheet">
         <header className="adm-bill-letterhead">
           <div className="adm-bill-brand">
@@ -243,30 +224,66 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         <div className="adm-job-notes"><strong>Work notes</strong><p>{invoice.notes || '________________________________________________________________'}</p></div>
       </section>
 
-      {/* Payments */}
-      {payments.length > 0 && (
-        <div className="adm-card adm-no-print">
-          <div className="adm-card-header"><span className="adm-card-title">Payment History</span></div>
-          <div className="adm-table-wrap" style={{ border: 0, borderRadius: 0, boxShadow: 'none' }}>
-          <table className="adm-table">
-            <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Received By</th><th>Notes</th></tr></thead>
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p.id}>
-                  <td style={{ fontSize: 12.5 }}>{fmtDate(p.payment_date)}</td>
-                  <td style={{ fontWeight: 700, color: '#16a34a' }}>{fmt(p.amount)}</td>
-                  <td style={{ textTransform: 'capitalize', color: '#64748b' }}>{p.method}</td>
-                  <td style={{ color: '#64748b' }}>{p.received_by}</td>
-                  <td style={{ color: '#94a3b8', fontSize: 12.5 }}>{p.notes ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-          <TablePagination />
-        </div>
-      )}
+      </div>
 
+      <aside className="adm-no-print adm-bill-side">
+        <div className={s.card} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <span className={s.muted} style={{ fontSize: 14, fontWeight: 600 }}>Bill total</span>
+          <strong style={{ fontFamily: 'var(--display)', fontSize: 36, lineHeight: 1, textDecoration: invoice.status === 'cancelled' ? 'line-through' : undefined }}>{fmt(invoice.total)}</strong>
+          <div style={{ height: 8, borderRadius: 99, background: 'var(--page)', overflow: 'hidden' }} aria-hidden>
+            <div style={{ height: '100%', width: `${Math.min(100, Number(invoice.total) > 0 ? (Number(invoice.paid) / Number(invoice.total)) * 100 : 100)}%`, background: Number(invoice.balance) > 0 ? 'var(--orange)' : 'var(--success)' }} />
+          </div>
+          <div className={s.row} style={{ justifyContent: 'space-between', fontSize: 15 }}>
+            <span>Paid <strong>{fmt(invoice.paid)}</strong></span>
+            <span style={{ color: Number(invoice.balance) > 0 ? 'var(--orange-deep)' : 'var(--success-text)', fontWeight: 700 }}>
+              {Number(invoice.balance) > 0 ? `Owes ${fmt(invoice.balance)}` : 'Fully paid'}
+            </span>
+          </div>
+          {Number(invoice.balance) > 0 && invoice.status !== 'cancelled' && (
+            <Link href={`/admin/take-payment?customer=${encodeURIComponent(invoice.customer_id)}`} className={`${s.btn} ${s.btnPrimary}`} style={{ width: '100%' }}>
+              <Plus width={18} height={18} /> Take payment
+            </Link>
+          )}
+          {invoice.delivered_at && <span className={s.muted} style={{ fontSize: 14 }}>Delivered {new Date(invoice.delivered_at).toLocaleDateString('en-IN')}</span>}
+        </div>
+
+        <div className={s.card} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span style={{ fontWeight: 700 }}>Print or send</span>
+          <button type="button" onClick={() => printDocument('invoice')} className={`${s.btn} ${s.btnDark}`} style={{ width: '100%' }}><Printer width={18} height={18} /> Print bill</button>
+          <button type="button" onClick={() => printDocument('jobcard')} className={`${s.btn} ${s.btnLight}`} style={{ width: '100%' }}><ClipboardList width={18} height={18} /> Job card for the lab</button>
+          {eyeTest && <button type="button" onClick={() => printDocument('prescription')} className={`${s.btn} ${s.btnLight}`} style={{ width: '100%' }}><FileText width={18} height={18} /> Prescription</button>}
+          <button type="button" onClick={handleEmailBill} disabled={emailing || !customerEmail} title={customerEmail ? `Send to ${customerEmail}` : 'Add an email to the customer first'} className={`${s.btn} ${s.btnLight}`} style={{ width: '100%' }}>
+            <Mail width={18} height={18} /> {emailing ? 'Sending…' : customerEmail ? 'Email bill' : 'No email on file'}
+          </button>
+          {emailResult && <p role="status" style={{ margin: 0, fontSize: 14, fontWeight: 600, color: emailResult.type === 'success' ? 'var(--success-text)' : 'var(--danger)' }}>{emailResult.message}</p>}
+        </div>
+
+        <div className={s.card} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span style={{ fontWeight: 700 }}>Payments</span>
+          {payments.length === 0 ? (
+            <span className={s.muted} style={{ fontSize: 15 }}>No payments yet.</span>
+          ) : (
+            <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {payments.map((pay) => (
+                <li key={pay.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 16, background: 'var(--page)' }}>
+                  <CheckCircle width={20} height={20} color="var(--success)" style={{ flex: 'none', marginTop: 2 }} aria-hidden />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span className={s.row} style={{ justifyContent: 'space-between', gap: 8 }}>
+                      <strong>{fmt(pay.amount)}</strong>
+                      <span style={{ fontSize: 13, fontWeight: 700, textTransform: 'capitalize' }}>{pay.method}</span>
+                    </span>
+                    <span className={s.muted} style={{ display: 'block', fontSize: 13 }}>
+                      {fmtDate(pay.payment_date)} · {pay.received_by}
+                    </span>
+                    {pay.notes && <span className={s.muted} style={{ display: 'block', fontSize: 13 }}>{pay.notes}</span>}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </aside>
+      </div>
       {/* Payment Modal */}
     </div>
   );

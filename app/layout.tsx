@@ -6,6 +6,9 @@ import PageLoadProgress from "./components/motion/PageLoadProgress";
 import { BookingProvider } from "./components/booking/BookingContext";
 import BookingModal from "./components/booking/BookingModal";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { getShopContact } from "./lib/shop-contact.server";
+import { ShopContactProvider } from "./components/site/ShopContact";
+import RevealOnScroll from "./components/motion/RevealOnScroll";
 import LocalBusinessSchema from "./components/seo/LocalBusinessSchema";
 import MobileActionDock from "./components/layout/MobileActionDock";
 
@@ -90,28 +93,41 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Built into the page; the provider refreshes it from Settings in the browser.
+  const contact = await getShopContact();
   return (
     <html
       lang="en"
       className={`${manrope.variable} h-full antialiased scroll-smooth`}
       data-scroll-behavior="smooth"
+      // data-reveal is set by the inline script before React loads.
+      suppressHydrationWarning
     >
       <head>
-        <LocalBusinessSchema />
+        {/* Turn on scroll reveals before first paint (not for reduced motion); RevealOnScroll does the rest. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "if('IntersectionObserver' in window&&!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.dataset.reveal='on'",
+          }}
+        />
+        <LocalBusinessSchema contact={contact} />
       </head>
       <body className="min-h-full flex flex-col">
         <PageLoadProgress />
         <SmoothScroll />
+        <RevealOnScroll />
+        <ShopContactProvider initial={contact}>
         <BookingProvider>
           {children}
           <BookingModal />
           <MobileActionDock />
         </BookingProvider>
+        </ShopContactProvider>
       </body>
       <GoogleAnalytics gaId="G-10ZFZ1TVTY" />
     </html>

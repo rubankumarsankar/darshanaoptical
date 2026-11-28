@@ -6,6 +6,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('@/app/lib/db', () => ({
+  withDb: (fn: any) => fn,
   query: vi.fn(async () => [state.settings]),
 }));
 

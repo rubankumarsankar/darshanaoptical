@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { validate, purchaseCreateSchema } from '@/app/lib/admin/validation';
 import { nextSequence } from '@/app/lib/admin/sequence';
 import { randomUUID } from 'crypto';
 import { money } from '@/app/lib/admin/simple';
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireRole('admin', 'manager');
   if (error) return error;
   const { searchParams } = new URL(request.url);
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 }
 
 // Purchases raise stock and supplier balances — management only.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
   const parsed = validate(purchaseCreateSchema, await request.json());
@@ -112,3 +112,6 @@ export async function POST(request: Request) {
   const [row] = await query('SELECT * FROM purchases WHERE id = ?', [id]) as any[];
   return NextResponse.json({ purchase: row, purchase_number }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

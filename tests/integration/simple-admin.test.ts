@@ -33,6 +33,7 @@ vi.mock('@/app/lib/db', () => {
     return /^\s*(UPDATE|INSERT|DELETE)/i.test(sql) ? { affectedRows: 1 } : [];
   };
   return {
+    withDb: (fn: any) => fn,
     query: vi.fn(run(false)),
     withTransaction: vi.fn(async (fn: any) => {
       const mark = state.log.length;
@@ -137,15 +138,11 @@ describe('simple admin endpoints require a session and the right role', () => {
 describe('GET /api/admin/simple/home', () => {
   beforeEach(() => {
     state.rows = [
-      [/order_status IN .* expected_date < \?/, [{ count: 3 }]],
+      // All the attention counts come back from one query.
+      [/AS late[\s\S]*AS booked[\s\S]*NOTIFY_READY[\s\S]*AS low[\s\S]*AS messages/, [{ late: 3, booked: 2, ready: 4, low: 5, messages: 2 }]],
       [/status = 'confirmed'/, [{ id: 7, name: 'Sneha Pillai', preferred_time: '04:00 PM' }]],
-      [/status = 'pending'/, [{ count: 2 }]],
-      [/NOTIFY_READY/, [{ count: 4 }]],
-      [/stock <= low_stock_threshold/, [{ count: 5 }]],
-      [/FROM inquiries WHERE status = 'new'/, [{ count: 2 }]],
-      [/SUM\(total\)/, [{ total: '48250.00', count: 14 }]],
-      [/FROM payments/, [{ total: '39800.00' }]],
-      [/SUM\(balance\)/, [{ total: '126700.00', customers: 12 }]],
+      // Today's money, also one query.
+      [/AS sold[\s\S]*AS bills[\s\S]*AS received[\s\S]*AS owed[\s\S]*AS owing_customers/, [{ sold: '48250.00', bills: 14, received: '39800.00', owed: '126700.00', owing_customers: 12 }]],
     ];
   });
 

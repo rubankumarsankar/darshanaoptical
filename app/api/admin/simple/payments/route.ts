@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
-import { withTransaction } from '@/app/lib/db';
+import { withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { validate } from '@/app/lib/admin/validation';
 import { allocatePayment, inr, money } from '@/app/lib/admin/simple';
@@ -19,7 +19,7 @@ const schema = z.object({
 // (FOR UPDATE) and re-read inside one transaction, the total owed is worked out
 // from those locked rows, and anything above it is refused — the same rules as
 // PUT /api/admin/invoices/[id] add_payment, applied across several bills at once.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -69,3 +69,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message ?? 'The payment could not be saved.' }, { status: err.status ?? 400 });
   }
 }
+
+export const POST = withDb(POSTHandler);

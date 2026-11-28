@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole, requireSession } from '@/app/lib/admin/session';
 import { validate, settingsUpdateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
 // Readable by any signed-in user — the POS and invoice screens need the shop
 // details, tax rate and discount caps to render.
-export async function GET() {
+async function GETHandler() {
   const { error } = await requireSession();
   if (error) return error;
   const [settings] = (await query('SELECT * FROM shop_settings WHERE id=1')) as any[];
@@ -15,7 +15,7 @@ export async function GET() {
 
 // Admin only: these values include GST details and the discount ceilings that
 // the invoice route enforces, so staff must not be able to raise their own cap.
-export async function PUT(request: Request) {
+async function PUTHandler(request: Request) {
   const { session, error } = await requireRole('admin');
   if (error) return error;
 
@@ -66,3 +66,6 @@ export async function PUT(request: Request) {
   const [updated] = (await query('SELECT * FROM shop_settings WHERE id=1')) as any[];
   return NextResponse.json({ settings: updated });
 }
+
+export const GET = withDb(GETHandler);
+export const PUT = withDb(PUTHandler);

@@ -14,6 +14,7 @@ vi.mock('next/headers', () => ({
 }));
 
 vi.mock('@/app/lib/db', () => ({
+  withDb: (fn: any) => fn,
   query: vi.fn(async (sql: string) => (/FROM users WHERE id/.test(sql) && state.user ? [state.user] : [])),
   withTransaction: vi.fn(),
   getDbPool: vi.fn(),

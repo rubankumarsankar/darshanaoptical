@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { z } from 'zod';
 import { validate } from '@/app/lib/admin/validation';
@@ -10,7 +10,7 @@ import { randomUUID } from 'crypto';
 // Website enquiries were previously write-only: the public forms saved into
 // `appointments` and `inquiries`, but nothing in the admin panel could read them
 // back, so the shop only ever saw the notification email. This surfaces both.
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -42,7 +42,7 @@ const ALLOWED: Record<string, string[]> = {
 };
 
 // PUT /api/admin/bookings — move a booking or enquiry along its workflow.
-export async function PUT(request: Request) {
+async function PUTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -73,3 +73,6 @@ export async function PUT(request: Request) {
   const [row] = (await query(`SELECT * FROM ${table} WHERE id = ?`, [id])) as any[];
   return NextResponse.json({ [kind]: row });
 }
+
+export const GET = withDb(GETHandler);
+export const PUT = withDb(PUTHandler);

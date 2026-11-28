@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import type { AdminUser, Role } from './types';
+import { clearAdminFetchCache } from './useAdminFetch';
 
 // ─── Auth Context ─────────────────────────────────────────────────────────────
 
@@ -110,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    clearAdminFetchCache();
     await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
     setUser(null);
   }, []);

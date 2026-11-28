@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
-import { withTransaction } from '@/app/lib/db';
+import { withTransaction, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { validate } from '@/app/lib/admin/validation';
 
@@ -24,7 +24,7 @@ const schema = z.object({
 // Management only, like the existing product stock adjustment. Each tap is one
 // locked transaction: re-read the count, refuse to go below zero, then write
 // the new count, a typed stock_movements row and an audit entry together.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
 
@@ -65,3 +65,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message ?? 'The stock could not be changed.' }, { status: err.status ?? 400 });
   }
 }
+
+export const POST = withDb(POSTHandler);

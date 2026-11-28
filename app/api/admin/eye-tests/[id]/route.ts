@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { eyeTestUpdateSchema, validate } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireSession();
   if (error) return error;
   const { id } = await params;
@@ -13,7 +13,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return NextResponse.json({ eyeTest: row });
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function PUTHandler(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireSession();
   if (error) return error;
   const { id } = await params;
@@ -44,3 +44,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const [updated] = await query('SELECT * FROM eye_tests WHERE id = ?', [id]) as any[];
   return NextResponse.json({ eyeTest: updated });
 }
+
+export const GET = withDb(GETHandler);
+export const PUT = withDb(PUTHandler);

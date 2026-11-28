@@ -1,3 +1,4 @@
+import { withDb } from '@/app/lib/db';
 import { NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
 import { sendAppointmentConfirmation } from "@/app/lib/mailer";
@@ -5,7 +6,7 @@ import { appointmentSchema } from "@/app/lib/public-validation";
 import { clientIp, isSubmissionThrottled } from "@/app/lib/admin/rate-limit";
 import { safeEqual } from "@/app/lib/admin/session-token";
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   try {
     // Open to the internet with no captcha, so cap how often one address can post.
     if (await isSubmissionThrottled("appointment", clientIp(request))) {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const secret = request.headers.get("x-admin-secret");
   const expected = process.env.ADMIN_API_SECRET;
   if (!secret || !expected || !safeEqual(secret, expected)) {
@@ -76,3 +77,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Server error." }, { status: 500 });
   }
 }
+
+export const POST = withDb(POSTHandler);
+export const GET = withDb(GETHandler);

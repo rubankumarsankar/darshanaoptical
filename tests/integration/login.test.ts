@@ -16,6 +16,7 @@ const db = vi.hoisted(() => ({
 }));
 
 vi.mock('@/app/lib/db', () => ({
+  withDb: (fn: any) => fn,
   query: vi.fn(async (sql: string, params: any[] = []) => {
     if (db.error) throw db.error;
     if (/SELECT locked_until/.test(sql)) {

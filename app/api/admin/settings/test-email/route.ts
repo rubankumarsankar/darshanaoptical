@@ -1,8 +1,9 @@
+import { withDb } from '@/app/lib/db';
 import { NextResponse } from 'next/server';
 import { requireRole } from '@/app/lib/admin/session';
 import { sendTestNotification } from '@/app/lib/mailer';
 
-export async function POST() {
+async function POSTHandler() {
   const { error } = await requireRole('admin');
   if (error) return error;
 
@@ -24,3 +25,5 @@ export async function POST() {
     );
   }
 }
+
+export const POST = withDb(POSTHandler);

@@ -5,7 +5,7 @@ import PageHero from "../components/site/PageHero";
 import BookButton from "../components/site/BookButton";
 import Faq, { type FaqItem } from "../components/site/Faq";
 import SymptomCheck from "../components/site/eye-testing/SymptomCheck";
-import { PHONE_DISPLAY, PHONE_TEL } from "../components/site/data";
+import { ShopLink, ShopText } from "../components/site/ShopContact";
 
 const STEPS = [
   { n: "01", title: "Quick history", text: "Tell us about your work, screen time and any trouble you have seeing.", time: "About 2 min" },
@@ -73,9 +73,9 @@ export default function EyeTestingPage() {
             <BookButton className={`${s.pill} ${s.pillOrange} ${s.btn}`} style={{ height: 58, padding: "0 28px", fontSize: 17 }}>
               Book a free test slot
             </BookButton>
-            <a href={PHONE_TEL} className={`${s.pill} ${s.btn} ${s.heroSecondary}`} style={{ height: 58 }}>
-              Call {PHONE_DISPLAY}
-            </a>
+            <ShopLink kind="tel" className={`${s.pill} ${s.btn} ${s.heroSecondary}`} style={{ height: 58 }}>
+              Call <ShopText field="phone" />
+            </ShopLink>
           </>
         }
         art={<FocusingChart />}

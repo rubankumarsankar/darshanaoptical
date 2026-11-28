@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole, requireSession } from '@/app/lib/admin/session';
 import { validate, customerPathRefSchema, customerUpdateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
@@ -20,7 +20,7 @@ async function findCustomer(ref: string) {
 }
 
 // GET /api/admin/customers/[id]
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -41,7 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 // PUT /api/admin/customers/[id]
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function PUTHandler(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -87,7 +87,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 // prescription history, and left their invoices orphaned (invoices have no
 // foreign key back to customers). Marking the row inactive hides the customer
 // from the active list while keeping the billing and prescription record intact.
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function DELETEHandler(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireRole('admin');
   if (error) return error;
 
@@ -106,3 +106,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   );
   return NextResponse.json({ success: true });
 }
+
+export const GET = withDb(GETHandler);
+export const PUT = withDb(PUTHandler);
+export const DELETE = withDb(DELETEHandler);

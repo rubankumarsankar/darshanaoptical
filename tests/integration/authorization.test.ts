@@ -24,7 +24,7 @@ vi.mock('@/app/lib/db', () => {
     return [];
   });
   const withTransaction = vi.fn(async (fn: any) => fn({ query: vi.fn(async () => []) }));
-  return { query, withTransaction, getDbPool: vi.fn() };
+  return { query, withTransaction, withDb: (fn: any) => fn, getDbPool: vi.fn() };
 });
 
 // ─── Route handlers under test ────────────────────────────────────────────────

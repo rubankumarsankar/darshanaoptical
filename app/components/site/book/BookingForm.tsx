@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
 import s from "../site.module.css";
-import { MAPS_URL, PHONE_DISPLAY, WHATSAPP_URL } from "../data";
+import { useShopContact } from "../ShopContact";
 
 const TIME_ZONE = "Asia/Kolkata";
 const SLOTS = ["10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"] as const;
@@ -50,6 +50,7 @@ function slotMinutes(slot: string) {
 }
 
 export default function BookingForm() {
+  const shop = useShopContact();
   // Dates depend on the clock, so the server renders none (null) and the
   // client fills them in after hydration, keeping both first renders equal.
   const minuteStamp = useSyncExternalStore(subscribeToMinute, currentMinute, () => null);
@@ -105,7 +106,7 @@ export default function BookingForm() {
   };
 
   if (status === "done") {
-    const whatsapp = `${WHATSAPP_URL}?text=${encodeURIComponent(`Hello Darshana Optical, I booked online: ${summary}. Name: ${name}, phone: ${phone}.`)}`;
+    const whatsapp = `${shop.whatsappUrl}?text=${encodeURIComponent(`Hello Darshana Optical, I booked online: ${summary}. Name: ${name}, phone: ${phone}.`)}`;
     return (
       <div role="status" style={{ padding: "40px 10px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 18 }}>
         <span style={{ position: "relative", width: 110, height: 110, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -120,10 +121,10 @@ export default function BookingForm() {
           You&apos;re booked!
         </h2>
         <p className={`${s.up} ${s.d1}`} style={{ margin: 0, maxWidth: 420, fontSize: 16, lineHeight: 1.6, color: "var(--muted)" }}>
-          {summary}. We&apos;ll call you shortly to confirm. See you at Salem Bypass Road, opposite Vasanth &amp; Co.
+          {summary}. We&apos;ll call you shortly to confirm. See you at {shop.street}.
         </p>
         <div className={`${s.up} ${s.d2}`} style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-          <a href={MAPS_URL} target="_blank" rel="noreferrer" className={`${s.pill} ${s.pillDark} ${s.btn}`} style={{ height: 50, padding: "0 20px", fontSize: 14, borderRadius: 16 }}>
+          <a href={shop.mapsUrl} target="_blank" rel="noreferrer" className={`${s.pill} ${s.pillDark} ${s.btn}`} style={{ height: 50, padding: "0 20px", fontSize: 14, borderRadius: 16 }}>
             Get directions
           </a>
           <a href={whatsapp} target="_blank" rel="noreferrer" className={`${s.pill} ${s.btn}`} style={{ height: 50, padding: "0 20px", fontSize: 14, borderRadius: 16, background: "#0F7A50", color: "#FFFFFF" }}>
@@ -235,7 +236,7 @@ export default function BookingForm() {
 
       {status === "error" && (
         <p role="alert" className={s.formError} style={{ margin: 0 }}>
-          {slot ? `We couldn't save your booking. Check your connection and try again, or call ${PHONE_DISPLAY}.` : "Pick a time for your visit."}
+          {slot ? `We couldn't save your booking. Check your connection and try again, or call ${shop.phone}.` : "Pick a time for your visit."}
         </p>
       )}
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { createSessionToken, buildSessionCookieOptions } from '@/app/lib/admin/session';
 import { hashPassword, verifyPassword } from '@/app/lib/admin/password';
 import { checkLoginAllowed, clearLoginAttempts, clientIp, recordLoginFailure } from '@/app/lib/admin/rate-limit';
@@ -27,7 +27,7 @@ function isDatabaseError(error: unknown): boolean {
   );
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const ip = clientIp(request);
   let email = '';
   let body: unknown;
@@ -112,3 +112,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Server error.' }, { status: 500 });
   }
 }
+
+export const POST = withDb(POSTHandler);

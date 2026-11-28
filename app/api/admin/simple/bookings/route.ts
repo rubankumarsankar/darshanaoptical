@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { shopDate } from '@/app/lib/admin/date';
 import { validate } from '@/app/lib/admin/validation';
@@ -14,7 +14,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 // Eye-test bookings for one day (website bookings included, since they land in
 // the same table), plus how many are booked on each of the next three days for
 // the day tabs. Signed-in staff only — unlike the public form's x-admin-secret GET.
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -66,7 +66,7 @@ const createSchema = z.object({
 });
 
 // POST /api/admin/simple/bookings — "+ Add booking" at the counter or by phone.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -91,3 +91,6 @@ export async function POST(request: Request) {
   });
   return NextResponse.json({ booking: { id, name: b.name, phone: b.phone, time, type: b.type || 'Eye Testing', status: 'pending' } }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

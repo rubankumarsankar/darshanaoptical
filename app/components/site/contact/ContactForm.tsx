@@ -2,12 +2,13 @@
 
 import { useState, type FormEvent } from "react";
 import s from "../site.module.css";
-import { PHONE_DISPLAY, WHATSAPP_URL } from "../data";
+import { useShopContact } from "../ShopContact";
 
 const TOPICS = ["Eye Test", "Frames", "Lenses", "Order status"] as const;
 type Topic = (typeof TOPICS)[number];
 
 export default function ContactForm() {
+  const shop = useShopContact();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -31,7 +32,7 @@ export default function ContactForm() {
     }
   };
 
-  const whatsappFollowUp = `${WHATSAPP_URL}?text=${encodeURIComponent(
+  const whatsappFollowUp = `${shop.whatsappUrl}?text=${encodeURIComponent(
     `Hello Darshana Optical, I just sent a message from your website.\nName: ${name}\nTopic: ${topic}\n${message}`,
   )}`;
 
@@ -50,7 +51,7 @@ export default function ContactForm() {
           Message sent
         </strong>
         <span className={`${s.up} ${s.d1}`} style={{ maxWidth: 360, fontSize: 16, lineHeight: 1.6, color: "var(--muted)" }}>
-          Thanks! We&apos;ll get back to you soon. For anything urgent, call {PHONE_DISPLAY}.
+          Thanks! We&apos;ll get back to you soon. For anything urgent, call {shop.phone}.
         </span>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
           <a href={whatsappFollowUp} target="_blank" rel="noreferrer" className={`${s.pill} ${s.pillOrange} ${s.btn}`} style={{ height: 48, padding: "0 20px", fontSize: 15 }}>
@@ -122,7 +123,7 @@ export default function ContactForm() {
       </label>
       {status === "error" && (
         <p role="alert" className={s.formError} style={{ margin: 0 }}>
-          We couldn&apos;t send your message. Check your connection and try again, or call {PHONE_DISPLAY}.
+          We couldn&apos;t send your message. Check your connection and try again, or call {shop.phone}.
         </p>
       )}
       <button

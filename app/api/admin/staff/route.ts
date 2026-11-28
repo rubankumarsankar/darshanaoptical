@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { hashPassword, validatePasswordStrength } from '@/app/lib/admin/password';
 import { validate, staffCreateSchema, staffUpdateSchema } from '@/app/lib/admin/validation';
@@ -7,14 +7,14 @@ import { randomUUID } from 'crypto';
 
 const SELECT_FIELDS = 'id,name,email,role,phone,status,joined_at,last_active';
 
-export async function GET() {
+async function GETHandler() {
   const { error } = await requireRole('admin');
   if (error) return error;
   const rows = await query(`SELECT ${SELECT_FIELDS} FROM users ORDER BY role, name`);
   return NextResponse.json({ staff: rows });
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireRole('admin');
   if (error) return error;
 
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   return NextResponse.json({ staff: row }, { status: 201 });
 }
 
-export async function PUT(request: Request) {
+async function PUTHandler(request: Request) {
   const { session, error } = await requireRole('admin');
   if (error) return error;
 
@@ -115,3 +115,7 @@ export async function PUT(request: Request) {
   const [row] = (await query(`SELECT ${SELECT_FIELDS} FROM users WHERE id=?`, [b.id])) as any[];
   return NextResponse.json({ staff: row });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);
+export const PUT = withDb(PUTHandler);

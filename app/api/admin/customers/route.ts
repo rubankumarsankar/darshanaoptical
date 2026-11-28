@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { nextSequence } from '@/app/lib/admin/sequence';
 import { customerCreateSchema, validate } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
 // GET /api/admin/customers
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 }
 
 // POST /api/admin/customers
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -66,3 +66,6 @@ export async function POST(request: Request) {
   const [newCustomer] = await query('SELECT * FROM customers WHERE id = ?', [id]) as any[];
   return NextResponse.json({ customer: newCustomer }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

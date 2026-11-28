@@ -2,13 +2,14 @@ import s from "../components/site/site.module.css";
 import SiteShell from "../components/site/SiteShell";
 import PageHero from "../components/site/PageHero";
 import LensFinder from "../components/site/lenses/LensFinder";
+import LensArt from "../components/site/LensArt";
 
 const TYPES = [
-  { title: "Screen-use lenses", text: "Made for long mobile and computer use, with blue cut options to reduce digital eye strain.", bestFor: "Office work, students, gaming", background: "#E4EEFF" },
-  { title: "Sun-changing lenses", text: "Clear indoors and darken automatically when you step into sunlight.", bestFor: "Two-wheeler riders, outdoor work", background: "#EEF0F2", effect: "tint" },
-  { title: "Night driving lenses", text: "Reduce headlight glare so night roads look calmer and clearer.", bestFor: "Drivers, late commutes", background: "#FFF3D6", effect: "glare" },
-  { title: "Thin & light lenses", text: "High-index lenses that stay slim and light even at high power.", bestFor: "High prescriptions", background: "#F3F2EE" },
-  { title: "Progressive lenses", text: "One pair for all distances, with no visible line.", bestFor: "Reading plus distance needs", background: "#FFE7D9" },
+  { title: "Screen-use lenses", text: "Made for long mobile and computer use, with blue cut options to reduce digital eye strain.", bestFor: "Office work, students, gaming", background: "#E4EEFF", kind: "screen" },
+  { title: "Sun-changing lenses", text: "Clear indoors and darken automatically when you step into sunlight.", bestFor: "Two-wheeler riders, outdoor work", background: "#EEF0F2", effect: "tint", kind: "sun" },
+  { title: "Night driving lenses", text: "Reduce headlight glare so night roads look calmer and clearer.", bestFor: "Drivers, late commutes", background: "#FFF3D6", effect: "glare", kind: "night" },
+  { title: "Thin & light lenses", text: "High-index lenses that stay slim and light even at high power.", bestFor: "High prescriptions", background: "#F3F2EE", kind: "thin" },
+  { title: "Progressive lenses", text: "One pair for all distances, with no visible line.", bestFor: "Reading plus distance needs", background: "#FFE7D9", kind: "progressive" },
 ] as const;
 
 const BRANDS = [
@@ -57,13 +58,7 @@ export default function LensesPage() {
           <div className={s.stack} style={{ gap: 14 }}>
             {TYPES.map((t) => (
               <div key={t.title} className={`${s.card} ${s.lift} ${s.reveal}`} style={{ padding: "22px 28px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
-                <span
-                  aria-hidden="true"
-                  className={`${s.lensDisc} ${"effect" in t && t.effect === "tint" ? s.tint : ""}`}
-                  style={{ width: 104, height: 104, borderWidth: 8, flex: "none", background: t.background }}
-                >
-                  {"effect" in t && t.effect === "glare" && <span className={`${s.glareStripe} ${s.glare}`} style={{ width: 22 }} />}
-                </span>
+                <LensArt kind={t.kind} size={112} />
                 <span className={s.stack} style={{ flex: "1 1 260px", gap: 6 }}>
                   <strong className={s.display} style={{ fontSize: 24 }}>
                     {t.title}

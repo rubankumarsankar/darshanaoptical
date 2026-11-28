@@ -1,9 +1,12 @@
-export default function LocalBusinessSchema() {
+import type { ShopContact } from "@/app/lib/shop-contact";
+
+export default function LocalBusinessSchema({ contact }: { contact: ShopContact }) {
+  const telephone = contact.tel.replace("tel:", "");
   const schema = {
     "@context": "https://schema.org",
     "@type": "Optician",
     "@id": "https://darshanaoptical.com/#business",
-    name: "Darshana Optical",
+    name: contact.name,
     alternateName: [
       "Darshana Opticals",
       "Darshana Optical Harur",
@@ -13,17 +16,17 @@ export default function LocalBusinessSchema() {
     image: "https://darshanaoptical.com/images/og-darshana-optical.jpg",
     logo: "https://darshanaoptical.com/logo.png",
     url: "https://darshanaoptical.com/",
-    telephone: "+918870571536",
-    email: "darshanado@gmail.com",
+    telephone,
+    email: contact.email,
     priceRange: "₹₹",
     description:
       "Optical shop in Harur offering computerised eye tests, prescription glasses, spectacle frames, progressive lenses and sunglasses.",
     address: {
       "@type": "PostalAddress",
-      streetAddress: "Tvk nagar, salem bypass road, Vasanth & co opposite",
-      addressLocality: "Harur",
-      addressRegion: "Tamil Nadu",
-      postalCode: "636903",
+      streetAddress: contact.street,
+      addressLocality: contact.city,
+      addressRegion: contact.state,
+      postalCode: contact.pincode,
       addressCountry: "IN",
     },
     geo: {
@@ -58,7 +61,7 @@ export default function LocalBusinessSchema() {
     availableLanguage: ["English", "Tamil"],
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+918870571536",
+      telephone,
       contactType: "customer service",
       availableLanguage: ["English", "Tamil"],
     },

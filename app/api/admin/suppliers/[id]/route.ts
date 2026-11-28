@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { validate, supplierUpdateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 // The suppliers screen has always posted here from its edit dialog, but the
 // route did not exist, so saving an edit failed with a 404. Same permissions as
 // the collection route: management only.
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function PUTHandler(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
 
@@ -38,3 +38,5 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const [updated] = (await query('SELECT * FROM suppliers WHERE id = ?', [id])) as any[];
   return NextResponse.json({ supplier: updated });
 }
+
+export const PUT = withDb(PUTHandler);

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { sendAppointmentConfirmation, sendInquiryNotification } from '@/app/lib/mailer';
 import { sendInvoiceEmail } from '@/app/lib/invoice-mailer';
@@ -8,7 +8,7 @@ function addresses(value: unknown): string[] {
   return String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean);
 }
 
-export async function POST() {
+async function POSTHandler() {
   const { error } = await requireRole('admin');
   if (error) return error;
 
@@ -63,3 +63,5 @@ export async function POST() {
     }, { status: 502 });
   }
 }
+
+export const POST = withDb(POSTHandler);

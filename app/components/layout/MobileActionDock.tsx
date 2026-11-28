@@ -4,8 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheck, Home, MessageCircle, Phone } from "lucide-react";
 import { useBooking } from "../booking/BookingContext";
+import { useShopContact } from "../site/ShopContact";
 
 export default function MobileActionDock() {
+  const shop = useShopContact();
   const pathname = usePathname();
   const { openBooking } = useBooking();
 
@@ -17,7 +19,7 @@ export default function MobileActionDock() {
         <Home aria-hidden="true" />
         <span>Home</span>
       </Link>
-      <a href="tel:+918870571536">
+      <a href={shop.tel}>
         <Phone aria-hidden="true" />
         <span>Call</span>
       </a>
@@ -25,7 +27,7 @@ export default function MobileActionDock() {
         <CalendarCheck aria-hidden="true" />
         <span>Book</span>
       </button>
-      <a href="https://wa.me/918870571536" target="_blank" rel="noreferrer">
+      <a href={shop.whatsappUrl} target="_blank" rel="noreferrer">
         <MessageCircle aria-hidden="true" />
         <span>WhatsApp</span>
       </a>

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { shopDate } from '@/app/lib/admin/date';
 
 // GET aggregated dashboard KPIs
-export async function GET() {
+async function GETHandler() {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -38,3 +38,5 @@ export async function GET() {
     inventory_value: totalProducts.inventory_value,
   });
 }
+
+export const GET = withDb(GETHandler);

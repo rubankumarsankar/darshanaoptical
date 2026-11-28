@@ -1,5 +1,6 @@
 import nodemailer, { Transporter } from "nodemailer";
 import { query } from "@/app/lib/db";
+import { getShopContact } from "@/app/lib/shop-contact.server";
 
 export function escapeHtml(value: unknown): string {
   return String(value ?? '')
@@ -91,15 +92,19 @@ export async function sendTestNotification(): Promise<TestEmailResult> {
 
 // ─── Shared Store Metadata ───────────────────────────────────────────────────
 
-const STORE_INFO = {
-  name: "Darshana Optical",
-  phone: "+91 88705 71536",
-  phoneRaw: "918870571536",
-  email: "darshanaoptical31@gmail.com",
-  address: "Tvk Nagar, Salem Bypass Road, opposite Vasanth & Co, Harur, Tamil Nadu – 636 903",
-  mapsUrl: "https://maps.app.goo.gl/JCxKCYiuk4wPpQrh9",
-  websiteUrl: "https://darshanaoptical.com",
-};
+/** The shop's details for emails, read from Admin › Settings each time one is sent. */
+async function storeInfo() {
+  const c = await getShopContact();
+  return {
+    name: escapeHtml(c.name),
+    phone: escapeHtml(c.phone),
+    phoneRaw: c.whatsappNumber,
+    tel: c.tel,
+    email: escapeHtml(c.email),
+    address: escapeHtml(`${c.address}, ${c.state}`),
+    websiteUrl: 'https://darshanaoptical.com',
+  };
+}
 
 function formatDate(dateStr?: string | null): string {
   if (!dateStr) return "As soon as possible";
@@ -145,6 +150,7 @@ export async function sendAppointmentConfirmation(
   if (!transporter) return;
   const ownerEmail = process.env.SMTP_FROM!.trim();
   const recipients = await getNotificationRecipients(ownerEmail);
+  const STORE_INFO = await storeInfo();
   const dateDisplay = escapeHtml(formatDate(data.preferredDate));
   const timeDisplay = escapeHtml(data.preferredTime || "Flexible");
   const safe = {
@@ -307,7 +313,7 @@ export async function sendAppointmentConfirmation(
                       📍 <strong>Address:</strong> ${STORE_INFO.address}
                     </p>
                     <p style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.5;">
-                      📞 <strong>Phone:</strong> <a href="tel:${STORE_INFO.phone}" style="color:#fc5a06;text-decoration:none;font-weight:600;">${STORE_INFO.phone}</a>
+                      📞 <strong>Phone:</strong> <a href="${STORE_INFO.tel}" style="color:#fc5a06;text-decoration:none;font-weight:600;">${STORE_INFO.phone}</a>
                     </p>
 
                     <table width="100%" cellpadding="0" cellspacing="0">
@@ -366,6 +372,7 @@ export async function sendInquiryNotification(
   if (!transporter) return;
   const ownerEmail = process.env.SMTP_FROM!.trim();
   const recipients = await getNotificationRecipients(ownerEmail);
+  const STORE_INFO = await storeInfo();
   const safe = {
     name: escapeHtml(data.name),
     phone: escapeHtml(data.phone),
@@ -490,7 +497,7 @@ export async function sendInquiryNotification(
                       Need immediate optical advice or looking for a specific frame? Feel free to call us directly:
                     </p>
                     <p style="margin:0 0 20px;font-size:13px;color:#334155;line-height:1.5;">
-                      📞 <strong>Phone:</strong> <a href="tel:${STORE_INFO.phone}" style="color:#fc5a06;text-decoration:none;font-weight:600;">${STORE_INFO.phone}</a><br />
+                      📞 <strong>Phone:</strong> <a href="${STORE_INFO.tel}" style="color:#fc5a06;text-decoration:none;font-weight:600;">${STORE_INFO.phone}</a><br />
                       📍 <strong>Address:</strong> ${STORE_INFO.address}
                     </p>
 

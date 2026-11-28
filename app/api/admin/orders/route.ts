@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 
-export async function GET() {
+async function GETHandler() {
   const { error } = await requireSession();
   if (error) return error;
   const rows = await query(
@@ -12,3 +12,5 @@ export async function GET() {
   );
   return NextResponse.json({ orders: rows });
 }
+
+export const GET = withDb(GETHandler);

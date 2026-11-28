@@ -10,7 +10,29 @@
 
 import type { TxQuery } from '@/app/lib/db';
 
-export type SequenceName = 'invoice' | 'purchase' | 'customer';
+export type SequenceName = 'invoice' | 'purchase' | 'customer' | `product-${ProductCategory}`;
+
+type ProductCategory = 'frame' | 'lens' | 'sunglass' | 'accessory' | 'service';
+
+/** Product code prefix per category: FR-0001, LN-0001, SG-0001, AC-0001, SV-0001. */
+export const PRODUCT_CODE_PREFIX: Record<ProductCategory, string> = {
+  frame: 'FR', lens: 'LN', sunglass: 'SG', accessory: 'AC', service: 'SV',
+};
+
+export const formatProductCode = (category: ProductCategory, n: number) =>
+  `${PRODUCT_CODE_PREFIX[category]}-${String(n).padStart(4, '0')}`;
+
+/**
+ * Next free product code for a category, e.g. FR-0007. Skips any number a
+ * hand-typed code already uses. MUST be called inside `withTransaction`.
+ */
+export async function nextProductCode(tx: TxQuery, category: ProductCategory): Promise<string> {
+  for (;;) {
+    const code = formatProductCode(category, await nextSequence(tx, `product-${category}`));
+    const [taken] = (await tx.query('SELECT id FROM products WHERE product_code = ?', [code])) as any[];
+    if (!taken) return code;
+  }
+}
 
 /**
  * Reserves and returns the next value for `name`.

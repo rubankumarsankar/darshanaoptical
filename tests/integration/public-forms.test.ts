@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('@/app/lib/db', () => ({
+  withDb: (fn: any) => fn,
   query: vi.fn(async (sql: string, params: any[] = []) => {
     if (state.failDb) throw new Error('ER_NO_SUCH_TABLE: secret internal detail');
     if (/INSERT INTO login_attempts/.test(sql)) {

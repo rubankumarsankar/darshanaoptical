@@ -101,7 +101,7 @@ function Customers() {
       <ErrorNote>{error}</ErrorNote>
 
       <div className={s.row} style={{ alignItems: 'flex-start', gap: 20 }}>
-        <ul aria-label="Customers" className={s.stack} style={{ flex: '1 1 340px', gap: 10, margin: 0, padding: 0, listStyle: 'none', minWidth: 0 }}>
+        <ul aria-label="Customers" className={s.stack} style={{ flex: '3 1 240px', gap: 10, margin: 0, padding: 0, listStyle: 'none', minWidth: 0 }}>
           {loading && !data && <EmptyState>Loading…</EmptyState>}
           {data && list.length === 0 && <EmptyState>{debounced ? `No one found for “${debounced}”.` : 'No customers yet.'}</EmptyState>}
           {list.map((c) => (
@@ -123,7 +123,7 @@ function Customers() {
           ))}
         </ul>
 
-        <section ref={detailRef} aria-label="Customer details" style={{ flex: '1 1 380px', minWidth: 0, scrollMarginTop: 16 }}>
+        <section ref={detailRef} aria-label="Customer details" style={{ flex: '7 1 560px', minWidth: 0, scrollMarginTop: 16 }}>
           {selected ? (
             <CustomerDetail
               key={selected}

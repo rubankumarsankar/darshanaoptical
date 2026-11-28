@@ -1,20 +1,17 @@
 import Link from "next/link";
 import s from "./site.module.css";
+import LensArt from "./LensArt";
 import BookButton from "./BookButton";
-import FrameGlyph from "./FrameGlyph";
+import Image from "next/image";
+import { ShopLink, ShopText } from "./ShopContact";
 import {
   BRANDS,
-  EMAIL,
   EYE_CHART,
   FRAMES,
   LENSES,
-  MAPS_URL,
   MAP_EMBED_URL,
-  PHONE_DISPLAY,
-  PHONE_TEL,
   SERVICES,
   TEST_STEPS,
-  WHATSAPP_URL,
   formatPrice,
 } from "./data";
 
@@ -121,13 +118,7 @@ export function Lenses() {
       <div className={s.grid} style={{ gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16 }}>
         {LENSES.map((lens) => (
           <div key={lens.title} className={`${s.card} ${s.lensCard} ${s.lift} ${s.reveal}`}>
-            <span
-              aria-hidden="true"
-              className={`${s.lensDisc} ${lens.effect === "tint" ? s.tint : ""}`}
-              style={{ background: lens.background }}
-            >
-              {lens.effect === "glare" && <span className={`${s.glareStripe} ${s.glare}`} />}
-            </span>
+            <LensArt kind={lens.kind} size={150} />
             <span className={s.cardTitle} style={{ fontSize: 20 }}>
               {lens.title}
             </span>
@@ -146,9 +137,9 @@ export function LatestFrames() {
     <section className={`${s.wrap} ${s.stack}`} style={{ gap: 32 }}>
       <div className={`${s.headRow} ${s.reveal}`}>
         <h2 className={s.h2}>Latest frames</h2>
-        <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" style={{ fontSize: 16, fontWeight: 700, textDecoration: "none", padding: "10px 0" }}>
+        <ShopLink kind="whatsapp" style={{ fontSize: 16, fontWeight: 700, textDecoration: "none", padding: "10px 0" }}>
           Ask about a frame on WhatsApp →
-        </a>
+        </ShopLink>
       </div>
       <div className={s.grid} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))" }}>
         {FRAMES.map((frame) => (
@@ -158,19 +149,7 @@ export function LatestFrames() {
             style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}
           >
             <span className={s.frameStage} style={{ height: 180, borderRadius: 24 }}>
-              <span
-                className={s.arc}
-                style={{
-                  position: "absolute",
-                  width: 240,
-                  height: 240,
-                  borderRadius: "50%",
-                  border: "2px solid transparent",
-                  borderTopColor: "var(--orange)",
-                  borderRightColor: "var(--orange)",
-                }}
-              />
-              <FrameGlyph style={frame.style} width={190} height={88} />
+              <Image src={frame.image} alt={`${frame.style} frame in ${frame.color.toLowerCase()}, model ${frame.model}`} fill sizes="(max-width: 600px) 90vw, 300px" style={{ objectFit: "cover" }} />
               <span
                 style={{
                   position: "absolute",
@@ -259,15 +238,12 @@ export function Review() {
         <span className={s.display} style={{ fontSize: "clamp(36px, 4vw, 44px)", lineHeight: 1.05, color: "var(--orange)" }}>
           Trusted by families across Harur.
         </span>
-        <a
-          href={MAPS_URL}
-          target="_blank"
-          rel="noreferrer"
+        <ShopLink kind="maps"
           className={`${s.pill} ${s.pillWhite} ${s.btn}`}
           style={{ alignSelf: "flex-start", height: 50, padding: "0 22px", fontSize: 15 }}
         >
           Read all reviews
-        </a>
+        </ShopLink>
       </div>
     </section>
   );
@@ -281,7 +257,7 @@ export function Visit() {
         <div className={s.stack} style={{ gap: 10 }}>
           <address className={s.infoTile} style={{ fontStyle: "normal" }}>
             <strong>Address</strong>
-            Tvk Nagar, Salem Bypass Road, opposite Vasanth &amp; Co, Harur 636903
+            <ShopText field="address" />
           </address>
           <div className={s.infoTile}>
             <strong>Hours</strong>
@@ -289,19 +265,19 @@ export function Visit() {
           </div>
           <div className={s.infoTile}>
             <strong>Phone &amp; email</strong>
-            <a href={PHONE_TEL}>{PHONE_DISPLAY}</a> · <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+            <ShopLink kind="tel"><ShopText field="phone" /></ShopLink> · <ShopLink kind="email" />
           </div>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className={`${s.pill} ${s.pillOrange} ${s.btn}`} style={{ height: 54, padding: "0 24px", fontSize: 16 }}>
+          <ShopLink kind="whatsapp" className={`${s.pill} ${s.pillOrange} ${s.btn}`} style={{ height: 54, padding: "0 24px", fontSize: 16 }}>
             WhatsApp us
-          </a>
-          <a href={PHONE_TEL} className={`${s.pill} ${s.pillDark} ${s.btn}`} style={{ height: 54, padding: "0 24px", fontSize: 16 }}>
+          </ShopLink>
+          <ShopLink kind="tel" className={`${s.pill} ${s.pillDark} ${s.btn}`} style={{ height: 54, padding: "0 24px", fontSize: 16 }}>
             Call now
-          </a>
-          <a href={MAPS_URL} target="_blank" rel="noreferrer" className={`${s.pill} ${s.pillOutline} ${s.btn}`} style={{ height: 54, padding: "0 24px", fontSize: 16 }}>
+          </ShopLink>
+          <ShopLink kind="maps" className={`${s.pill} ${s.pillOutline} ${s.btn}`} style={{ height: 54, padding: "0 24px", fontSize: 16 }}>
             Get directions
-          </a>
+          </ShopLink>
         </div>
       </div>
       <div className={`${s.mapCard} ${s.reveal}`}>

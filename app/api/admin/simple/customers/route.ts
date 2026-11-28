@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 
 // GET /api/admin/simple/customers?q=
@@ -7,7 +7,7 @@ import { requireSession } from '@/app/lib/admin/session';
 // Customer search with what each person still owes, in one query, so the list
 // can show "Owes ₹X" without a request per row. Active customers only, most
 // recent visit first.
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -44,3 +44,5 @@ export async function GET(request: Request) {
     })),
   });
 }
+
+export const GET = withDb(GETHandler);

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 
 // GET /api/admin/simple/dues?q=&customer=
@@ -7,7 +7,7 @@ import { requireSession } from '@/app/lib/admin/session';
 // Customers who still owe money, largest balance first — the first step of
 // "Take payment". Front-desk staff collect payments too, so this is open to
 // every role; it lists per-customer balances only, never shop totals.
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -48,3 +48,5 @@ export async function GET(request: Request) {
     })),
   });
 }
+
+export const GET = withDb(GETHandler);

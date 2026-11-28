@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireRole, requireSession } from '@/app/lib/admin/session';
 import { randomUUID } from 'crypto';
 import { productCreateSchema, validate } from '@/app/lib/admin/validation';
+import { nextProductCode } from '@/app/lib/admin/sequence';
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   // Any signed-in user may browse the catalogue — the POS needs it.
   const { error } = await requireSession();
   if (error) return error;
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
 }
 
 // Creating stock sets purchase and selling prices — management only.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
   const parsed = validate(productCreateSchema, await request.json());
@@ -37,13 +38,19 @@ export async function POST(request: Request) {
   const cat = b.category;
 
   const id = randomUUID();
-  const code = b.product_code || `${cat.toUpperCase().slice(0,2)}-${Date.now().toString().slice(-6)}`;
+  if (b.product_code) {
+    const [taken] = await query('SELECT id FROM products WHERE product_code = ?', [b.product_code]) as any[];
+    if (taken) return NextResponse.json({ error: `Product code ${b.product_code} is already used. Leave it empty to get one automatically.` }, { status: 409 });
+  }
+  let code = b.product_code ?? '';
   const purchase_price = b.purchase_price;
   const selling_price = b.selling_price;
   const stock = b.stock;
   const low_stock_threshold = b.low_stock_threshold;
 
   await withTransaction(async (tx) => {
+    // Next number in this category's sequence (FR-0001, FR-0002…), locked so two tills never share one.
+    if (!code) code = await nextProductCode(tx, cat);
     await tx.query(
       `INSERT INTO products (id,product_code,name,brand,model,category,color,size,material,
        purchase_price,selling_price,mrp,stock,low_stock_threshold,image_url,description,status)
@@ -60,3 +67,6 @@ export async function POST(request: Request) {
   const [row] = await query('SELECT * FROM products WHERE id = ?', [id]) as any[];
   return NextResponse.json({ product: row }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

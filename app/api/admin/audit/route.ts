@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   // The trail records who changed prices, cancelled bills and edited staff —
   // management only, matching the sidebar which never showed staff this link.
   const { error } = await requireRole('admin', 'manager');
@@ -20,3 +20,5 @@ export async function GET(request: Request) {
   sql += ' ORDER BY created_at DESC LIMIT 500';
   return NextResponse.json({ logs: await query(sql, params) });
 }
+
+export const GET = withDb(GETHandler);

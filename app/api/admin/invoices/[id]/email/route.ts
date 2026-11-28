@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { invoicePathRefSchema } from '@/app/lib/admin/validation';
 import { renderInvoiceEmail, sendInvoiceEmail } from '@/app/lib/invoice-mailer';
@@ -19,7 +19,7 @@ async function loadInvoiceEmailData(value: string) {
   return { invoice, items, settings: settings ?? {} };
 }
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireSession();
   if (error) return error;
   const { id } = await params;
@@ -31,7 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   });
 }
 
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function POSTHandler(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -59,3 +59,6 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

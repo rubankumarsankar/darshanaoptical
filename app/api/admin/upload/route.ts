@@ -1,3 +1,4 @@
+import { withDb } from '@/app/lib/db';
 import { NextResponse } from 'next/server';
 import { requireRole } from '@/app/lib/admin/session';
 import { uploadToR2, deleteFromR2ByUrl } from '@/app/lib/r2';
@@ -63,7 +64,7 @@ function badFormat() {
   );
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   // Uploads feed the product catalogue, which only management can edit.
   const { error } = await requireRole('admin', 'manager');
   if (error) return error;
@@ -117,7 +118,7 @@ export async function POST(request: Request) {
 }
 
 // DELETE /api/admin/upload?url=<object url> — removes an image
-export async function DELETE(request: Request) {
+async function DELETEHandler(request: Request) {
   const { error } = await requireRole('admin', 'manager');
   if (error) return error;
 
@@ -152,3 +153,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Failed to delete image.' }, { status: 500 });
   }
 }
+
+export const POST = withDb(POSTHandler);
+export const DELETE = withDb(DELETEHandler);

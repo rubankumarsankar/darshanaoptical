@@ -14,6 +14,7 @@ vi.mock('next/headers', () => ({
 }));
 
 vi.mock('@/app/lib/db', () => ({
+  withDb: (fn: any) => fn,
   query: vi.fn(async (sql: string, params: any[] = []) => {
     if (/FROM users WHERE id/.test(sql)) return state.user ? [state.user] : [];
     if (/FROM appointments WHERE id/.test(sql)) return state.appointments.filter((a) => a.id === params[0]);

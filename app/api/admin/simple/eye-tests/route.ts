@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { shopDate } from '@/app/lib/admin/date';
 import { insertEyeTest } from '@/app/lib/admin/eye-tests';
@@ -21,7 +21,7 @@ const RECOMMENDATION_TEXT: Record<string, string> = {
 // the customer's name and phone read from the database rather than the
 // browser, and — when the test came from a booking — that booking marked
 // completed in the same transaction.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -68,3 +68,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message ?? 'The eye test could not be saved.' }, { status: err.status ?? 400 });
   }
 }
+
+export const POST = withDb(POSTHandler);

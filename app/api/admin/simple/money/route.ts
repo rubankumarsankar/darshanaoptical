@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { shopDate } from '@/app/lib/admin/date';
 import { money, periodRange, type Period } from '@/app/lib/admin/simple';
@@ -11,7 +11,7 @@ const PERIODS: readonly Period[] = ['today', 'week', 'month'];
 // Money in = payments received in the period (refund rows are negative, so a
 // cancelled sale nets out). Money out = expenses. You kept = in − out. Plus the
 // customers who still owe, largest first.
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireRole('admin', 'manager');
   if (error) return error;
 
@@ -55,3 +55,5 @@ export async function GET(request: Request) {
     expenses: (expenseRows as any[]).map((r) => ({ id: r.id, date: r.expense_date, category: r.category, amount: Number(r.amount), method: r.payment_method, description: r.description, by: r.created_by })),
   });
 }
+
+export const GET = withDb(GETHandler);

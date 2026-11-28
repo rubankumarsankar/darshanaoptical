@@ -3,7 +3,7 @@ import Link from "next/link";
 import s from "../components/site/site.module.css";
 import SiteShell from "../components/site/SiteShell";
 import BookingForm from "../components/site/book/BookingForm";
-import { WHATSAPP_URL } from "../components/site/data";
+import { ShopLink } from "../components/site/ShopContact";
 
 const PERKS = ["Computerised testing", "Near & distance check", "No obligation to buy"] as const;
 
@@ -43,15 +43,12 @@ export default function BookPage() {
               </li>
             ))}
           </ul>
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noreferrer"
+          <ShopLink kind="whatsapp"
             className={s.pill}
             style={{ alignSelf: "flex-start", height: 48, padding: "0 18px", borderRadius: 14, background: "#0F7A50", color: "#FFFFFF", fontSize: 14 }}
           >
             Prefer WhatsApp?
-          </a>
+          </ShopLink>
         </div>
 
         <section

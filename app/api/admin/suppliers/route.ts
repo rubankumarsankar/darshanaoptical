@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { validate, supplierCreateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireRole('admin', 'manager');
   if (error) return error;
   const { searchParams } = new URL(request.url);
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ suppliers: await query(sql, params) });
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
   const parsed = validate(supplierCreateSchema, await request.json());
@@ -35,3 +35,6 @@ export async function POST(request: Request) {
   const [row] = await query('SELECT * FROM suppliers WHERE id = ?', [id]) as any[];
   return NextResponse.json({ supplier: row }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { expenseCreateSchema, validate } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireRole('admin', 'manager');
   if (error) return error;
   const { searchParams } = new URL(request.url);
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ expenses: await query(sql, params) });
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
 
@@ -54,3 +54,6 @@ export async function POST(request: Request) {
   const [row] = await query('SELECT * FROM expenses WHERE id = ?', [id]) as any[];
   return NextResponse.json({ expense: row }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

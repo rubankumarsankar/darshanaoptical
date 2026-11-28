@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import s from "./site.module.css";
-import FrameGlyph from "./FrameGlyph";
+import Image from "next/image";
 import {
   BUDGETS,
   BUDGET_SPLIT,
@@ -91,7 +91,7 @@ export default function FrameFinder() {
               // Keyed by face + budget too, so the entry animation replays on every filter change.
               <article key={`${face}-${budget}-${m.model}`} className={`${s.matchCard} ${s.up} ${s.lift}`}>
                 <span className={s.frameStage} style={{ height: 120 }}>
-                  <FrameGlyph style={m.style} width={150} height={70} />
+                  <Image src={m.image} alt={`${m.style} frame in ${m.color.toLowerCase()}`} fill sizes="200px" style={{ objectFit: "cover" }} />
                 </span>
                 <span className={s.frameMeta}>
                   <span>

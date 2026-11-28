@@ -320,7 +320,7 @@
 .adm-bill-items tr:last-child td { border-bottom: 0; }
 .adm-bill-items td:first-child,.adm-bill-items td:nth-child(2),.adm-bill-items td:nth-child(3) { text-align: left; }
 .adm-bill-items td:first-child { color: #92938c; }
-.adm-bill-items td:nth-child(3) { font-family: ui-monospace, monospace; }
+.adm-bill-items td:nth-child(3) { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .adm-bill-items td:last-child { color: #242521; font-weight: 800; }
 .adm-bill-items td strong { display: block; color: #30312d; font-size: 11px; }
 .adm-bill-items td span { display: block; margin-top: 3px; color: #92938c; font-size: 9px; text-transform: capitalize; }
@@ -468,3 +468,15 @@
 /* Optical-lens loading state shared by admin screens. */
 
 /* Keep the sign-in surface inside narrow phone and split-screen viewports. */
+
+/* Bill page: invoice on the left, totals and actions on the right. */
+.adm-bill-layout { display: grid; grid-template-columns: minmax(0, 820px) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.adm-bill-main { min-width: 0; }
+.adm-bill-side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 1100px) {
+  .adm-bill-layout { grid-template-columns: minmax(0, 1fr); }
+  .adm-bill-side { position: static; order: -1; }
+}
+@media print {
+  .adm-bill-layout { display: block; }
+}

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { eyeTestCreateSchema, validate } from '@/app/lib/admin/validation';
 import { insertEyeTest } from '@/app/lib/admin/eye-tests';
 
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireSession();
   if (error) return error;
 
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ eyeTests: rows });
 }
 
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireSession();
   if (error) return error;
 
@@ -59,3 +59,6 @@ export async function POST(request: Request) {
   const [row] = await query('SELECT * FROM eye_tests WHERE id = ?', [id]) as any[];
   return NextResponse.json({ eyeTest: row }, { status: 201 });
 }
+
+export const GET = withDb(GETHandler);
+export const POST = withDb(POSTHandler);

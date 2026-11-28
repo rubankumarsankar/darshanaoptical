@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/app/lib/db';
+import { query, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { shopDate } from '@/app/lib/admin/date';
 import { money, percentChange, previousMonth } from '@/app/lib/admin/simple';
@@ -11,7 +11,7 @@ const IST_MONTH = "DATE_FORMAT(CONVERT_TZ(i.created_at,'+00:00','+05:30'),'%Y-%m
 // One month in plain numbers: what was sold (cancelled bills excluded, as in
 // the existing reports), what was spent, what was kept, the change against the
 // month before, and both broken down by category.
-export async function GET(request: Request) {
+async function GETHandler(request: Request) {
   const { error } = await requireRole('admin', 'manager');
   if (error) return error;
 
@@ -64,3 +64,5 @@ export async function GET(request: Request) {
     by_status: Object.fromEntries((byStatus as any[]).map((r) => [r.status, Number(r.count)])),
   });
 }
+
+export const GET = withDb(GETHandler);

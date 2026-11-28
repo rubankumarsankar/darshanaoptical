@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import s from "./site.module.css";
 import BookButton from "./BookButton";
-import { EMAIL, PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL } from "./data";
+
+import { ShopLink, ShopText } from "./ShopContact";
 
 const EXPLORE = [
   { href: "/eye-testing", label: "Eye testing" },
@@ -38,9 +39,9 @@ export default function SiteFooter({ cta = true }: { cta?: boolean }) {
               <BookButton className={`${s.pill} ${s.pillInk} ${s.btn}`} style={{ height: 56, padding: "0 26px", fontSize: 16 }}>
                 Book eye test
               </BookButton>
-              <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className={`${s.pill} ${s.pillWhite} ${s.btn}`} style={{ height: 56, padding: "0 26px", fontSize: 16 }}>
+              <ShopLink kind="whatsapp" className={`${s.pill} ${s.pillWhite} ${s.btn}`} style={{ height: 56, padding: "0 26px", fontSize: 16 }}>
                 WhatsApp us
-              </a>
+              </ShopLink>
             </div>
           </div>
         </div>
@@ -53,9 +54,9 @@ export default function SiteFooter({ cta = true }: { cta?: boolean }) {
               Quality eye care. Stylish eyewear. Better vision for a better life.
             </p>
             <address className={s.footerContact}>
-              Tvk Nagar, Salem Bypass Road, opposite Vasanth &amp; Co, Harur 636903
+              <ShopText field="address" />
               <br />
-              <a href={PHONE_TEL}>{PHONE_DISPLAY}</a> · <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
+              <ShopLink kind="tel"><ShopText field="phone" /></ShopLink> · <ShopLink kind="email" />
             </address>
           </div>
           <nav aria-label="Explore" className={s.footerNav}>
@@ -81,6 +82,11 @@ export default function SiteFooter({ cta = true }: { cta?: boolean }) {
             <Link href="/privacy-policy">Privacy policy</Link>
             <Link href="/terms-conditions">Terms &amp; conditions</Link>
           </span>
+          {/* Developer credit: the logo is the link, no web address shown. */}
+          <a href="https://dynava.in/" target="_blank" rel="noopener" aria-label="Designed and developed by Dynava" className={s.devCredit}>
+            <span>Developed by</span>
+            <Image src="/images/dynava-logo.png" alt="Dynava" width={1650} height={314} sizes="92px" style={{ width: 92, height: "auto" }} />
+          </a>
         </div>
       </div>
     </footer>

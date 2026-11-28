@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireRole } from '@/app/lib/admin/session';
 import { validate, stockInSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
@@ -10,7 +10,7 @@ import { randomUUID } from 'crypto';
 // accounts, bill numbers, part-payments, outstanding balances). Use this for the
 // everyday "a box of frames came in today" case; use /purchases when the money
 // side actually has to be tracked.
-export async function POST(request: Request) {
+async function POSTHandler(request: Request) {
   const { session, error } = await requireRole('admin', 'manager');
   if (error) return error;
 
@@ -56,3 +56,5 @@ export async function POST(request: Request) {
   const [updated] = (await query('SELECT * FROM products WHERE id = ?', [b.product_id])) as any[];
   return NextResponse.json({ product: updated, received: b.quantity }, { status: 201 });
 }
+
+export const POST = withDb(POSTHandler);

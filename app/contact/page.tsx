@@ -2,36 +2,34 @@ import s from "../components/site/site.module.css";
 import SiteShell from "../components/site/SiteShell";
 import SiteHeader from "../components/site/SiteHeader";
 import ContactForm from "../components/site/contact/ContactForm";
-import { EMAIL, MAPS_URL, MAP_EMBED_URL, PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL } from "../components/site/data";
+import { MAP_EMBED_URL } from "../components/site/data";
 import Link from "next/link";
+import { ShopLink, ShopText } from "../components/site/ShopContact";
 
 type Tone = "dark" | "light" | "orange";
 
-const WAYS: readonly { title: string; text: string; href: string; icon: string; tone: Tone; external?: boolean }[] = [
+// Address, phone and email come from Admin › Settings through ShopLink.
+const WAYS: readonly { title: string; kind: "maps" | "tel" | "whatsapp" | "email"; text?: string; icon: string; tone: Tone }[] = [
   {
     title: "Visit",
-    text: "Tvk Nagar, Salem Bypass Road, opposite Vasanth & Co, Harur 636903",
-    href: MAPS_URL,
+    kind: "maps",
     icon: "M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
     tone: "dark",
-    external: true,
   },
   {
     title: "Call",
-    text: PHONE_DISPLAY,
-    href: PHONE_TEL,
+    kind: "tel",
     icon: "M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z",
     tone: "light",
   },
   {
     title: "WhatsApp",
     text: "Chat with us for frame photos, prices and bookings",
-    href: WHATSAPP_URL,
+    kind: "whatsapp",
     icon: "M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z",
     tone: "orange",
-    external: true,
   },
-  { title: "Email", text: EMAIL, href: `mailto:${EMAIL}`, icon: "M3 5h18v14H3zM3 6l9 7 9-7", tone: "light" },
+  { title: "Email", kind: "email", icon: "M3 5h18v14H3zM3 6l9 7 9-7", tone: "light" },
 ];
 
 const TONES: Record<Tone, { box: string; color: string; icoBg: string; icoColor: string; text: string }> = {
@@ -76,10 +74,9 @@ export default function ContactPage() {
           {WAYS.map((w) => {
             const t = TONES[w.tone];
             return (
-              <a
+              <ShopLink
                 key={w.title}
-                href={w.href}
-                {...(w.external ? { target: "_blank", rel: "noreferrer" } : {})}
+                kind={w.kind}
                 className={`${s.lift} ${s.reveal}`}
                 style={{ textDecoration: "none", borderRadius: 32, padding: 26, display: "flex", flexDirection: "column", gap: 14, background: t.box, color: t.color }}
               >
@@ -91,8 +88,10 @@ export default function ContactPage() {
                 <strong className={s.display} style={{ fontSize: 22 }}>
                   {w.title}
                 </strong>
-                <span style={{ fontSize: 15, lineHeight: 1.55, color: t.text, overflowWrap: "anywhere" }}>{w.text}</span>
-              </a>
+                <span style={{ fontSize: 15, lineHeight: 1.55, color: t.text, overflowWrap: "anywhere" }}>
+                  {w.text ?? <ShopText field={w.kind === "tel" ? "phone" : w.kind === "email" ? "email" : "address"} />}
+                </span>
+              </ShopLink>
             );
           })}
         </section>
@@ -103,15 +102,13 @@ export default function ContactPage() {
           </div>
           <div className={`${s.mapCard} ${s.reveal}`} style={{ minHeight: 460 }}>
             <iframe title="Darshana Optical on Google Maps" src={MAP_EMBED_URL} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
-            <a
-              href={MAPS_URL}
-              target="_blank"
-              rel="noreferrer"
+            <ShopLink
+              kind="maps"
               className={`${s.pill} ${s.pillDark} ${s.btn}`}
               style={{ position: "absolute", right: 20, bottom: 20, height: 50, padding: "0 20px", fontSize: 15 }}
             >
               Open in Google Maps
-            </a>
+            </ShopLink>
           </div>
         </section>
       </main>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import s from "../site.module.css";
 
-type Category = "Store" | "Eye Testing" | "Frames" | "Customers" | "Behind the Scenes";
+type Category = "Store" | "Eye Testing" | "Frames" | "Behind the Scenes";
 
 interface Photo {
   title: string;
@@ -12,6 +12,8 @@ interface Photo {
   src: string;
   /** Portrait photos span two rows; wide ones two columns. */
   shape?: "tall" | "wide";
+  /** CSS object-position for the tile crop. */
+  focus?: string;
 }
 
 const PHOTOS: readonly Photo[] = [
@@ -21,23 +23,21 @@ const PHOTOS: readonly Photo[] = [
   { title: "Multi-zone progressive optics", category: "Behind the Scenes", src: "/images/lens-progressive.jpg", shape: "wide" },
   { title: "Crizal® spectacle showcase", category: "Store", src: "/images/store-crizal.jpg", shape: "tall" },
   { title: "Varilux® XR Series™ progressives & sunglasses", category: "Store", src: "/images/store-varilux.jpg", shape: "tall" },
-  { title: "Designer eyewear collection", category: "Frames", src: "/images/frame-1.jpg" },
-  { title: "Matte aviator & metal frames", category: "Frames", src: "/images/frame-2.jpg" },
+  { title: "Matte black full-rim frames", category: "Frames", src: "/images/frame-1.jpg", focus: "50% 90%" },
+  { title: "Gunmetal titanium aviator", category: "Frames", src: "/images/frame-2.jpg", focus: "50% 90%" },
   { title: "Blue cut digital eyewear display", category: "Store", src: "/images/store-bluecut.jpg", shape: "tall" },
   { title: "Kodak lenses & Swiss Lens showcase", category: "Store", src: "/images/store-kodak-swiss.jpg", shape: "tall" },
   { title: "AR-810A auto refractometer", category: "Eye Testing", src: "/images/store-refractometer.jpg", shape: "tall" },
   { title: "Examination chair & trial unit", category: "Eye Testing", src: "/images/store-testing-chair.jpg", shape: "tall" },
-  { title: "Bold tortoise acetate frames", category: "Frames", src: "/images/frame-3.jpg" },
-  { title: "TR90 featherlight series", category: "Frames", src: "/images/frame-4.jpg" },
-  { title: "Executive wayfarer collection", category: "Frames", src: "/images/frame-5.jpg" },
-  { title: "Rose gold eyewear", category: "Frames", src: "/images/frame-6.jpg" },
-  { title: "Men's styling & fit", category: "Customers", src: "/images/avatar-1.jpg" },
-  { title: "Women's designer prescription", category: "Customers", src: "/images/avatar-2.jpg" },
-  { title: "Senior progressive lens fit", category: "Customers", src: "/images/avatar-3.jpg" },
-  { title: "Computer glasses", category: "Customers", src: "/images/avatar-4.jpg" },
+  { title: "Tortoise acetate square frames", category: "Frames", src: "/images/frame-3.jpg", focus: "50% 90%" },
+  { title: "Silver titanium round frames", category: "Frames", src: "/images/frame-4.jpg", focus: "50% 90%" },
+  { title: "Brown acetate wayfarer", category: "Frames", src: "/images/frame-5.jpg", focus: "50% 90%" },
+  { title: "Crystal clear transparent frames", category: "Frames", src: "/images/frame-6.jpg", focus: "50% 90%" },
+  { title: "Gold round polarised sunglasses", category: "Frames", src: "/images/cat-premium.jpg", focus: "50% 90%" },
+  { title: "Classic UV400 sunglasses", category: "Frames", src: "/images/cat-sunglasses.jpg" },
 ];
 
-const FILTERS: readonly ("All" | Category)[] = ["All", "Store", "Frames", "Eye Testing", "Customers", "Behind the Scenes"];
+const FILTERS: readonly ("All" | Category)[] = ["All", "Store", "Frames", "Eye Testing", "Behind the Scenes"];
 
 function ArrowIcon({ dir }: { dir: "left" | "right" }) {
   return (
@@ -114,7 +114,7 @@ export default function GalleryGrid() {
             }}
             className={`${s.tile} ${s.up} ${photo.shape === "tall" ? s.tall : photo.shape === "wide" ? s.wide : ""}`}
           >
-            <Image src={photo.src} alt="" fill loading={i < 3 ? "eager" : "lazy"} sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 400px" />
+            <Image src={photo.src} alt="" fill loading={i < 3 ? "eager" : "lazy"} sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 400px" style={{ objectFit: "cover", objectPosition: photo.focus ?? "50% 50%" }} />
             <span className={s.tileShade} />
             <span className={s.tileRing} />
             <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: 22, display: "flex", flexDirection: "column", gap: 4, color: "var(--white)" }}>

@@ -18,6 +18,7 @@ let now = Date.UTC(2026, 0, 1, 12, 0, 0);
 const advance = (ms: number) => { now += ms; };
 
 vi.mock('@/app/lib/db', () => ({
+  withDb: (fn: any) => fn,
   query: vi.fn(async (sql: string, params: any[] = []) => {
     if (sql.includes('SELECT locked_until')) {
       const row = table.get(params[0]);

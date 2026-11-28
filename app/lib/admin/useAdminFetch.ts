@@ -9,6 +9,21 @@ interface FetchState<T> {
   error: string | null;
 }
 
+// Last response per URL, kept in memory for this tab only. Revisiting a page
+// shows it straight away while a fresh copy loads (stale-while-revalidate).
+const responseCache = new Map<string, unknown>();
+const CACHE_LIMIT = 60;
+
+/** Forget every cached response, e.g. on sign-out, so the next user never sees it. */
+export function clearAdminFetchCache() {
+  responseCache.clear();
+}
+
+const fullUrlOf = (url: string, paramsKey: string) => {
+  const query = paramsKey ? new URLSearchParams(JSON.parse(paramsKey)).toString() : '';
+  return query ? `${url}?${query}` : url;
+};
+
 /**
  * useAdminFetch — drop-in replacement for getStore().
  * Fetches data from an admin API route and keeps it fresh.
@@ -20,22 +35,24 @@ export function useAdminFetch<T>(
   url: string | null,
   options?: { params?: Record<string, string>; skip?: boolean }
 ) {
-  const [state, setState] = useState<FetchState<T>>({ data: null, loading: !!url, error: null });
-  const abortRef = useRef<AbortController | null>(null);
-  const abortTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const requestKeyRef = useRef<string | null>(null);
-  const inFlightRef = useRef<Promise<void> | null>(null);
-
   // Callers pass `params` as a fresh object literal on every render, so the
   // dependency has to be its serialised value. Extracted to a variable because
   // the lint rule requires dependency arrays to hold plain expressions.
   const skip = options?.skip ?? false;
   const paramsKey = options?.params ? JSON.stringify(options.params) : '';
 
+  const [state, setState] = useState<FetchState<T>>(() => {
+    const cached = url ? (responseCache.get(fullUrlOf(url, paramsKey)) as T | undefined) : undefined;
+    return { data: cached ?? null, loading: !!url, error: null };
+  });
+  const abortRef = useRef<AbortController | null>(null);
+  const abortTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestKeyRef = useRef<string | null>(null);
+  const inFlightRef = useRef<Promise<void> | null>(null);
+
   const fetchData = useCallback(async () => {
     if (!url || skip) return;
-    const query = paramsKey ? new URLSearchParams(JSON.parse(paramsKey)).toString() : '';
-    const fullUrl = query ? `${url}?${query}` : url;
+    const fullUrl = fullUrlOf(url, paramsKey);
 
     // Reuse the request when Strict Mode immediately replays this effect.
     if (requestKeyRef.current === fullUrl && inFlightRef.current) {
@@ -48,7 +65,9 @@ export function useAdminFetch<T>(
     requestKeyRef.current = fullUrl;
 
     const request = (async () => {
-      setState((s) => ({ ...s, loading: true, error: null }));
+      // Show the cached copy for this URL (if any) while the fresh one loads.
+      const cached = responseCache.get(fullUrl) as T | undefined;
+      setState((s) => ({ data: cached ?? s.data, loading: true, error: null }));
       try {
         const res = await fetch(fullUrl, { signal: ctrl.signal });
         if (!res.ok) {
@@ -60,6 +79,9 @@ export function useAdminFetch<T>(
           throw new Error(j.error ?? `HTTP ${res.status}`);
         }
         const json = await res.json();
+        responseCache.delete(fullUrl);
+        responseCache.set(fullUrl, json);
+        if (responseCache.size > CACHE_LIMIT) responseCache.delete(responseCache.keys().next().value!);
         setState({ data: json as T, loading: false, error: null });
       } catch (err: any) {
         if (err.name === 'AbortError') return;

@@ -22,7 +22,8 @@
     "db:migrate:security": "node db/migrate_security.mjs",
     "db:migrate:email-settings": "node db/migrate_email_settings.mjs",
     "db:migrate:invoice-tax": "node db/migrate_invoice_tax.mjs",
-    "db:migrate:shop-details": "node db/migrate_shop_details.mjs"
+    "db:migrate:shop-details": "node db/migrate_shop_details.mjs",
+    "db:migrate:product-codes": "node db/migrate_product_codes.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",

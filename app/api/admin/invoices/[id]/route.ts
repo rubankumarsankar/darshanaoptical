@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query, withTransaction } from '@/app/lib/db';
+import { query, withTransaction, withDb } from '@/app/lib/db';
 import { requireSession } from '@/app/lib/admin/session';
 import { validate, invoicePathRefSchema, invoiceUpdateSchema } from '@/app/lib/admin/validation';
 import { randomUUID } from 'crypto';
@@ -19,7 +19,7 @@ async function findInvoice(ref: string) {
   return invoice;
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function GETHandler(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireSession();
   if (error) return error;
   const { id: value } = await params;
@@ -42,7 +42,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return NextResponse.json({ invoice, items, payments, settings: settings ?? {}, eyeTest: eyeTest ?? null, customerEmail: customer?.email ?? null });
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function PUTHandler(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await requireSession();
   if (error) return error;
   const { id: value } = await params;
@@ -199,3 +199,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   ]);
   return NextResponse.json({ invoice: updated, items, payments });
 }
+
+export const GET = withDb(GETHandler);
+export const PUT = withDb(PUTHandler);

@@ -4,8 +4,10 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-
 import { X } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { useEffect, useRef, useState } from "react";
+import { useShopContact } from "../site/ShopContact";
 
 export default function WhatsAppButton() {
+  const shop = useShopContact();
   const [visible, setVisible] = useState(false);
   const [showTip, setShowTip] = useState(false);
   const tipShown = useRef(false);
@@ -48,7 +50,7 @@ export default function WhatsAppButton() {
       </AnimatePresence>
 
       <motion.a
-        href="https://wa.me/918870571536"
+        href={shop.whatsappUrl}
         target="_blank"
         rel="noreferrer"
         aria-label="Chat on WhatsApp"

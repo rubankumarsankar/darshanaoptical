@@ -1,10 +1,11 @@
+import type { LensKind } from "./LensArt";
 // Static content for the home page. Kept as typed data so the section
 // components stay purely presentational.
 
 export const PHONE_DISPLAY = "+91 88705 71536";
 export const PHONE_TEL = "tel:+918870571536";
 export const WHATSAPP_URL = "https://wa.me/918870571536";
-export const EMAIL = "darshanado@gmail.com";
+export const EMAIL = "darshanaoptical31@gmail.com";
 export const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Darshana+Optical+Harur";
 export const MAP_EMBED_URL =
   "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3899.886!2d78.47462!3d12.0559335!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bac65dd021a596d%3A0xf21d8bcfdefaeddb!2sDarshana%20Optical!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin";
@@ -122,15 +123,28 @@ export interface Frame {
   style: FrameStyle;
   color: string;
   price: number;
+  /** Product photo in /public/images. */
+  image: string;
 }
 
 export const FRAMES: readonly Frame[] = [
-  { model: "DO-101", style: "Full Rim", color: "Black", price: 1499 },
-  { model: "DO-205", style: "Aviator", color: "Gunmetal", price: 1899 },
-  { model: "DO-301", style: "Square", color: "Tortoise", price: 2199 },
-  { model: "DO-404", style: "Round", color: "Silver", price: 1699 },
-  { model: "DO-505", style: "Wayfarer", color: "Brown", price: 1799 },
-  { model: "DO-606", style: "Transparent", color: "Clear", price: 1299 },
+  { model: "DO-101", style: "Full Rim", color: "Black", price: 1499, image: "/images/frame-1.jpg" },
+  { model: "DO-205", style: "Aviator", color: "Gunmetal", price: 1899, image: "/images/frame-2.jpg" },
+  { model: "DO-301", style: "Square", color: "Tortoise", price: 2199, image: "/images/frame-3.jpg" },
+  { model: "DO-404", style: "Round", color: "Silver", price: 1699, image: "/images/frame-4.jpg" },
+  { model: "DO-505", style: "Wayfarer", color: "Brown", price: 1799, image: "/images/frame-5.jpg" },
+  { model: "DO-606", style: "Transparent", color: "Clear", price: 1299, image: "/images/frame-6.jpg" },
+];
+
+export interface Sunglass {
+  name: string;
+  detail: string;
+  image: string;
+}
+
+export const SUNGLASSES: readonly Sunglass[] = [
+  { name: "Round metal", detail: "Gold rim, green polarised lens", image: "/images/cat-premium.jpg" },
+  { name: "Everyday classic", detail: "Black acetate, gradient UV400 lens", image: "/images/cat-sunglasses.jpg" },
 ];
 
 export const formatPrice = (value: number) => `₹${value.toLocaleString("en-IN")}`;
@@ -184,14 +198,15 @@ export interface LensType {
   text: string;
   background: string;
   effect?: "tint" | "glare";
+  kind: LensKind;
 }
 
 export const LENSES: readonly LensType[] = [
-  { title: "Screen-use", text: "Eases strain from long mobile and computer hours.", background: "#E4EEFF" },
-  { title: "Sun-changing", text: "Clear indoors, turns dark outdoors.", background: "#EEF0F2", effect: "tint" },
-  { title: "Night driving", text: "Cuts glare from oncoming headlights.", background: "#FFF3D6", effect: "glare" },
-  { title: "Thin & light", text: "Slimmer, lighter lenses for high power.", background: "#F3F2EE" },
-  { title: "Progressive", text: "One pair for every distance.", background: "#FFE7D9" },
+  { title: "Screen-use", text: "Eases strain from long mobile and computer hours.", background: "#E4EEFF", kind: "screen" },
+  { title: "Sun-changing", text: "Clear indoors, turns dark outdoors.", background: "#EEF0F2", effect: "tint", kind: "sun" },
+  { title: "Night driving", text: "Cuts glare from oncoming headlights.", background: "#FFF3D6", effect: "glare", kind: "night" },
+  { title: "Thin & light", text: "Slimmer, lighter lenses for high power.", background: "#F3F2EE", kind: "thin" },
+  { title: "Progressive", text: "One pair for every distance.", background: "#FFE7D9", kind: "progressive" },
 ];
 
 export interface LensZone {
